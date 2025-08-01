@@ -141,9 +141,9 @@ type TabVisibility = {
 };
 
 const HierarchicalTree = () => {
-  const [treeData, setTreeData] = useState<TreeNodeType | null>();
+  // const [treeData, setTreeData] = useState<TreeNodeType | null>();
   const [approvalComment, setApprovalComment] = useState("");
-  const [isAllExpanded, setIsAllExpanded] = useState(true);
+  const [isAllExpanded, setIsAllExpanded] = useState(false);
   const [selectedNode, setSelectedNode] = useState<TreeNodeType | null>(null);
   const [Visibility, setVisibility] = useState<TabVisibility>({
     approve: false,
@@ -153,6 +153,15 @@ const HierarchicalTree = () => {
   const [loading, setLoading] = useState(true); // 👈 Loading state
 
   const { notify } = useNotification();
+  const [treeData, setTreeData] = useState<TreeNodeType | null>();
+  const lineColors = [
+    "border-l-blue-600",
+    "border-l-green-600", 
+    "border-l-yellow-600",
+    "border-l-purple-600",
+    // "border-l-pink-600",
+    // "border-l-indigo-600"
+  ];
 
   useEffect(() => {
     const syncAndFetchHierarchy = async () => {
@@ -271,9 +280,17 @@ const HierarchicalTree = () => {
     node: TreeNodeType | TreeNodeType[] | null
   ): string[] => {
     if (!node) return [];
+    
     if (Array.isArray(node)) {
-      return node.flatMap(getAllNodeIds);
+      return node.flatMap((n) => {
+        const ids = [n.id];
+        if (n.children) {
+          ids.push(...getAllNodeIds(n.children));
+        }
+        return ids;
+      });
     }
+    
     const ids = [node.id];
     if (node.children) {
       node.children.forEach((child) => {
@@ -284,7 +301,7 @@ const HierarchicalTree = () => {
   };
 
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(
-    new Set(getAllNodeIds(treeData))
+    new Set()
   );
 
   // Effects
@@ -297,6 +314,18 @@ const HierarchicalTree = () => {
     }
   }, [treeData, selectedNode?.id]);
 
+  // Reset expanded nodes when treeData changes
+  useEffect(() => {
+    if (treeData) {
+      if (isAllExpanded) {
+        const allNodeIds = getAllNodeIds(treeData);
+        setExpandedNodes(new Set(allNodeIds));
+      } else {
+        setExpandedNodes(new Set());
+      }
+    }
+  }, [treeData, isAllExpanded]);
+
   // Node operations
   const toggleNode = (nodeId: string) => {
     setExpandedNodes((prev) => {
@@ -308,15 +337,12 @@ const HierarchicalTree = () => {
 
   const toggleAllNodes = () => {
     if (isAllExpanded) {
-      // Collapse: only keep root(s) expanded
-      if (Array.isArray(treeData)) {
-        setExpandedNodes(new Set(treeData.map((n) => n.id)));
-      } else if (treeData) {
-        setExpandedNodes(new Set([treeData.id]));
-      }
+      // Collapse all - completely collapse to level 0
+      setExpandedNodes(new Set());
     } else {
-      // Expand: expand all nodes in current treeData
-      setExpandedNodes(new Set(getAllNodeIds(treeData)));
+      // Expand all - get all node IDs including all children
+      const allNodeIds = getAllNodeIds(treeData);
+      setExpandedNodes(new Set(allNodeIds));
     }
     setIsAllExpanded(!isAllExpanded);
   };
@@ -1003,7 +1029,7 @@ const HierarchicalTree = () => {
     level?: number;
   }) => {
     const hasChildren = node.children?.length > 0;
-    const isExpanded = expandedNodes.has(node.id);
+  const isExpanded = expandedNodes.has(node.id);
     const config = getNodeConfig(node.data.level);
     const Icon = config.icon;
     const status = node.data.approval_status;
@@ -1104,7 +1130,14 @@ const HierarchicalTree = () => {
         </div>
 
         {hasChildren && isExpanded && (
-          <div className="ml-8 pl-6">
+          <div 
+          className={`pl-6 mt-4 border-l-2 ${lineColors[level % lineColors.length]} border-dashed relative`}
+          style={{ 
+            marginLeft: level * 10 + 16, 
+            minHeight: 40,
+            position: 'relative' 
+          }}
+        >
             {node.children.map((child) => (
               <TreeNode key={child.id} node={child} level={level + 1} />
             ))}
@@ -1144,13 +1177,12 @@ const HierarchicalTree = () => {
                 <div className="flex justify-between items-center mt-6 border-b mb-8 pb-2">
                   <h2 className="text-xl font-semibold">Hierarchy Tree</h2>
                   <div className="flex items-center gap-2 w-[7rem] justify-end">
-                    <Button
-                      categories="Medium"
-                      onClick={toggleAllNodes}
-                      // className="px-2 py-1 text-[12px] bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                    >
-                      {isAllExpanded ? "Collapse All" : "Expand All"}
-                    </Button>
+                  <Button
+  categories="Medium"
+  onClick={toggleAllNodes}
+>
+  {isAllExpanded ? "Collapse All" : "Expand All"}
+</Button>
                   </div>
                 </div>
                 {Array.isArray(treeData) ? (
