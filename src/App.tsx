@@ -29,6 +29,8 @@ const FxCancellation = lazy(() => import("./client/fx/fxCancellation/index.tsx")
 const CFODashboardBuilder = lazy(() => import("./client/DashboardBuilder/DashboardBuilder.tsx"));
 // const ExposureSelection = lazy(() => import("./client/Settlement/ExposureSelection.tsx"));
 const Reports = lazy(() => import("./client/Reports/Reports.tsx"));
+const PaymentRollover = lazy(() => import("./client/Settlement/index.tsx"));
+const ExposureSelection = lazy(() => import("./client/Settlement/ExposureSelection.tsx"));
 // Loading component
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -49,6 +51,7 @@ function App() {
               
               {/* Protected Routes */}
               <Route path="/hedging-dashboard" element={<NetExposure />} />
+              
               {/* <Route path="/fxbooking" element={<FXForwardBookingForm />} /> */}
               <Route path="/linking-screen" element={<LinkingScreen />} />
               {/* <Route path="/exposure-selection" element={<ExposureSelection />} /> */}
@@ -70,6 +73,9 @@ function App() {
               <Route path="/exposure-upload" element={<ExposureUpload />} />
               <Route path="/exposure-bucketing" element={<ExposureBucketing />} />
               <Route path="/hedging-proposal" element={<Hedgingproposal />} />
+              <Route path="/settlement" element={<PaymentRollover />} />
+              <Route path="/exposure-selection" element={<ExposureSelection />} />
+
             </Routes>
           </Suspense>
         </BrowserRouter>

@@ -94,7 +94,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       ],
     },
     { label: "Reports", path: "/reports", icon: <Proportions /> },
-    { label: "Settlement", path: "", icon: <Handshake /> },
+    { label: "Settlement", path: "/exposure-selection", icon: <Handshake /> },
   ];
 
   useEffect(() => {
