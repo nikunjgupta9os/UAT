@@ -68,7 +68,7 @@ const Login: React.FC = () => {
   
 
   return (
-  <div className="flex items-start justify-end min-h-screen bg-white pt-64 pr-10"
+  <div className="flex flex-col lg:flex-row items-start justify-center min-h-screen bg-white pt-32 lg:pt-64 px-4 lg:px-10"
    style={{
   backgroundImage: `url(${loginBackground})`,
   backgroundSize: 'cover',
@@ -77,10 +77,10 @@ const Login: React.FC = () => {
 }}
 
     >
-      <div className='relative -left-24'>
-        <img src={loginImage} className='max-w-5xl' alt="Login" />
+      <div className='flex justify-center items-center mb-8 lg:mb-0 lg:mr-16'>
+        <img src={loginImage} className='max-w-4xl w-auto h-auto' alt="Login" />
       </div>
-      <div className='relative right-14 -top-10 w-full max-w-md'>
+      <div className='relative right-14 -top-10 w-full ml-4 max-w-md'>
         <form
           onSubmit={handleSubmit(onSubmit)}
           className={`bg-gradient-to-tr from-blue-400/50 ${bgColor}  border-green-600/20 to-blue-600/50 rounded-2xl z-50 shadow-2xl shadow-green-700 px-10 py-10 w-full max-w-md transition-all duration-300`}
