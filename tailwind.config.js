@@ -22,6 +22,7 @@ module.exports = {
         'primary-bg-active': 'var(--primary-bg-active)',
         'secondary-color': 'var(--secondary-color)',
         'secondary-color-lt': 'var(--secondary-color-lt)',
+        'secondary-color-dark': 'var(--secondary-color-dark)',
         'header-color': 'var(--header-color)',
         'red-color': 'var(--red-color)',
         
