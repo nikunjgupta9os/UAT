@@ -139,6 +139,17 @@ const LinkingScreen = () => {
       setColumnOrder(newOrder);
     }
   };
+
+  function formatDate(rawDate) {
+    const date = new Date(rawDate);
+    if (!rawDate || isNaN(date.getTime())) {
+      return "N/A"; // or return ""
+    }
+    return date.toISOString().slice(0, 10); // YYYY-MM-DD
+  }
+  
+  
+  
   // console.log(
   //   "Selected System Transaction ID:",
   //   selectedSystemTransactionId,
@@ -186,7 +197,8 @@ const LinkingScreen = () => {
         header: "Link Date",
         cell: ({ getValue }) => {
           const rawDate = getValue() as string;
-          const formattedDate = new Date(rawDate).toISOString().slice(0, 10); // YYYY-MM-DD
+          
+          const formattedDate = formatDate(rawDate); 
           return <span className="text-sm text-gray-700">{formattedDate}</span>;
         },
       },
@@ -225,7 +237,7 @@ const LinkingScreen = () => {
         booking_id: String(selectedSystemTransactionId),
         hedged_amount: Number(hedgedValue),
       };
-      console.log("🔗 Linking payload:", payload);
+      // console.log("🔗 Linking payload:", payload);
 
       // Validate input (optional but recommended)
       if (!payload.exposure_header_id || !payload.booking_id) {
@@ -233,7 +245,7 @@ const LinkingScreen = () => {
         return;
       }
 
-      console.log("🔗 Sending linking request with payload:", payload);
+      // console.log("🔗 Sending linking request with payload:", payload);
 
       const response = await axios.post(
         "https://backend-slqi.onrender.com/api/forwards/exposure-hedge-links/link",
@@ -245,14 +257,14 @@ const LinkingScreen = () => {
         }
       );
 
-      console.log("✅ Linking successful:", response.data);
+      // console.log("✅ Linking successful:", response.data);
       alert("Linking successful!");
     } catch (error) {
       console.error(
         "❌ Error linking exposure to forward:",
         error.response?.data || error.message
       );
-      alert("Linking failed. Check console.");
+      // alert("Linking failed. Check console.");
     }
   };
 
