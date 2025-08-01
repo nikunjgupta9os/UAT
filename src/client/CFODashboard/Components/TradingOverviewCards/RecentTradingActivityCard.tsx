@@ -1,7 +1,38 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { TrendingUp, DollarSign, Building2 } from "lucide-react";
 
+interface TradingData {
+  "Total Trades": {
+    value: string;
+  };
+  "Total Volume": {
+    value: string;
+  };
+  "Avg Trade Size": {
+    value: string;
+  };
+  BANKS: any[];
+}
+
 const RecentTradingActivityCard: React.FC = () => {
+  const [tradingData, setTradingData] = useState<TradingData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTradingData = async () => {
+      try {
+        const response = await fetch('https://backend-slqi.onrender.com/api/forwardDash/recent-trades-dashboard');
+        const data = await response.json();
+        setTradingData(data);
+      } catch (error) {
+        console.error('Error fetching trading data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTradingData();
+  }, []);
   return (
     <div className="relative bg-gradient-to-br from-[#4dc37a] to-[#478886] rounded-2xl border border-primary p-6 shadow-sm hover:shadow-md transition-shadow h-[400px] overflow-hidden">
       <div className="absolute inset-0 opacity-20 pointer-events-none">
@@ -43,12 +74,12 @@ const RecentTradingActivityCard: React.FC = () => {
               {[
                 {
                   label: "Total Trades",
-                  value: "150",
+                  value: loading ? "Loading..." : (tradingData?.["Total Trades"]?.value || "0"),
                   icon: <span className="text-xs font-bold text-secondary-text-dark">T</span>,
                 },
                 {
                   label: "Total Volume",
-                  value: "$312.8M",
+                  value: loading ? "Loading..." : (tradingData?.["Total Volume"]?.value || "$0"),
                   icon: <DollarSign className="w-4 h-4 text-secondary-text-dark" />,
                 },
               ].map((stat, idx) => (
@@ -77,7 +108,9 @@ const RecentTradingActivityCard: React.FC = () => {
                     </div>
                     <p className="text-xs text-secondary-text-dark font-medium">Avg Trade Size</p>
                   </div>
-                  <p className="text-xl font-bold text-primary">$6.7M</p>
+                  <p className="text-xl font-bold text-primary">
+                    {loading ? "Loading..." : (tradingData?.["Avg Trade Size"]?.value || "$0")}
+                  </p>
                 </div>
               </div>
             </div>
@@ -88,23 +121,64 @@ const RecentTradingActivityCard: React.FC = () => {
         <div className="flex-1 relative -top-6">
           <div className="space-y-3">
             {/* Show 3 cards with dash values if BANKS is empty, else show real trades */}
-            {Array.from({ length: 3 }).map((_, idx) => (
-              <div
-                key={idx}
-                className="group flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                    <Building2 className="w-4 h-4 text-gray-400" />
+            {loading ? (
+              // Loading state
+              Array.from({ length: 3 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="group flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                      <Building2 className="w-4 h-4 text-gray-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-primary">Loading...</p>
+                      <p className="text-xs text-primary">...</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold text-primary">No Data to Display</p>
-                    <p className="text-xs text-primary">N/A</p>
-                  </div>
+                  <p className="text-lg font-bold text-primary">...</p>
                 </div>
-                <p className="text-lg font-bold text-primary">N/A</p>
-              </div>
-            ))}
+              ))
+            ) : tradingData?.BANKS && tradingData.BANKS.length > 0 ? (
+              // Show real bank data
+              tradingData.BANKS.slice(0, 3).map((bank, idx) => (
+                <div
+                  key={idx}
+                  className="group flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                      <Building2 className="w-4 h-4 text-gray-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-primary">{bank.name || "Bank"}</p>
+                      <p className="text-xs text-primary">{bank.type || "Trade"}</p>
+                    </div>
+                  </div>
+                  <p className="text-lg font-bold text-primary">{bank.amount || "N/A"}</p>
+                </div>
+              ))
+            ) : (
+              // Show default "No Data" cards when BANKS is empty
+              Array.from({ length: 3 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="group flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                      <Building2 className="w-4 h-4 text-gray-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-primary">No Data to Display</p>
+                      <p className="text-xs text-primary">N/A</p>
+                    </div>
+                  </div>
+                  <p className="text-lg font-bold text-primary">N/A</p>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
