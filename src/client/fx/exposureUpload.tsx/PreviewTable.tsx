@@ -11,6 +11,7 @@ interface PreviewTableProps {
 }
 
 interface PreviewRowData {
+  exposure_header_id: string; // Required by EditableRowData
   id: string;
   originalIndex: number;
   [key: string]: any;
@@ -26,6 +27,7 @@ const PreviewTable: React.FC<PreviewTableProps> = ({
     return rows.map((row, index) => {
       const obj: PreviewRowData = {
         id: `row_${index}`,
+        exposure_header_id: `preview_row_${index}`, // Required by EditableRowData
         originalIndex: index,
       };
       
@@ -162,18 +164,16 @@ const PreviewTable: React.FC<PreviewTableProps> = ({
     );
   }
 
-  return (
-    <div className="space-y-4">
-      <NyneOSTable
-        // data ={data}
-        // columns={columns}
-        defaultColumnVisibility={defaultVisibility}
-        expandedRowConfig={expandedRowConfig}
-        className="max-h-[500px]"
-        edit={true}
-      />
-      
-      {/* Footer with row count info */}
+    return (
+      <div className="space-y-4">
+        <NyneOSTable<PreviewRowData>
+          data={data}
+          columns={columns}
+          defaultColumnVisibility={defaultVisibility}
+          expandedRowConfig={expandedRowConfig}
+          className="max-h-[500px]"
+          edit={true}
+        />      {/* Footer with row count info */}
       <div className="bg-gray-50 px-6 py-3 border border-gray-200 rounded-xl">
         <div className="flex justify-between items-center text-sm text-gray-600">
           <span>
