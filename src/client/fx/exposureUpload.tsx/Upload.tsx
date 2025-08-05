@@ -68,6 +68,11 @@ const UploadFile: React.FC = () => {
   const [showPreview, setShowPreview] = React.useState(false);
   const [previewHeaders, setPreviewHeaders] = React.useState<string[]>([]);
   const [dragActive, setDragActive] = React.useState(false);
+  const [previewStates, setPreviewStates] = React.useState<Record<string, {
+    data: string[][];
+    headers: string[];
+    show: boolean;
+  }>>({});
 
   const handleDrag = (event: React.DragEvent) => {
     event.preventDefault();
@@ -119,44 +124,47 @@ const UploadFile: React.FC = () => {
   };
 
   const handleRemoveRow = (index: number) => {
-    setPreviewData((prevData) => {
-      const newData = prevData.filter((_, i) => i !== index);
-
-      // Find the file being previewed
-      const previewedFile = files.find((f) => f.name === previewFileName);
-      if (!previewedFile) return newData;
-
-      // Check if validation issues are resolved
-      const validationErrors = validatePreviewData(
-        newData,
-        previewHeaders,
-        getTemplateTypeFromSelected(selectedType)
-      );
-      const hasIssues = validationErrors.length > 0;
-      if (!hasIssues) {
-        // Update the file status if all issues are resolved
-        handleIssuesResolved(previewedFile.id);
-      }
-      return newData;
+    setPreviewStates(prev => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach(fileId => {
+        if (updated[fileId].show) {
+          updated[fileId].data = updated[fileId].data.filter((_, i) => i !== index);
+          // Validate after removal
+          const validationErrors = validatePreviewData(
+            updated[fileId].data,
+            updated[fileId].headers,
+            getTemplateTypeFromSelected(selectedType)
+          );
+          const hasIssues = validationErrors.length > 0;
+          if (!hasIssues) {
+            handleIssuesResolved(fileId);
+          }
+        }
+      });
+      return updated;
     });
   };
 
   const handleUpdateRow = (
     rowIndex: number,
-    updatedData: Record<string, any>
+    updatedData: Record<string, any>,
+    fileId: string
   ) => {
-    setPreviewData((prevData) => {
-      const newData = [...prevData];
-      if (newData[rowIndex]) {
-        // Update the row with new values
-        Object.entries(updatedData).forEach(([key, value]) => {
-          const colIndex = parseInt(key.replace("col_", ""));
-          if (!isNaN(colIndex) && colIndex < newData[rowIndex].length) {
-            newData[rowIndex][colIndex] = value;
-          }
-        });
+    setPreviewStates(prev => {
+      const updated = { ...prev };
+      if (updated[fileId]) {
+        const newData = [...updated[fileId].data];
+        if (newData[rowIndex]) {
+          Object.entries(updatedData).forEach(([key, value]) => {
+            const colIndex = parseInt(key.replace("col_", ""));
+            if (!isNaN(colIndex) && colIndex < newData[rowIndex].length) {
+              newData[rowIndex][colIndex] = value;
+            }
+          });
+          updated[fileId].data = newData;
+        }
       }
-      return newData;
+      return updated;
     });
   };
 
@@ -332,10 +340,14 @@ const UploadFile: React.FC = () => {
         };
         const rows = lines.map(parseCSVLine);
         const [headerRow, ...dataRows] = rows;
-        setPreviewHeaders(headerRow || []);
-        setPreviewData(dataRows.slice(0, 50));
-        setPreviewFileName(uploadedFile.name);
-        setShowPreview(true);
+        setPreviewStates(prev => ({
+          ...prev,
+          [uploadedFile.id]: {
+            headers: headerRow || [],
+            data: dataRows.slice(0, 50),
+            show: true,
+          }
+        }));
       } catch (error) {
         console.error("Error parsing file for preview:", error);
       }
@@ -361,145 +373,78 @@ const UploadFile: React.FC = () => {
       return;
     }
 
-    // If preview data exists, use it; else fall back to the raw file
-    const hasPreview = previewData.length > 0 && previewHeaders.length > 0;
-    const blob = hasPreview
-      ? convertToCSVBlob(previewHeaders, previewData)
-      : files.find((f) => f.file)?.file;
-
-    if (!blob) {
-      notify("No valid file or data to submit.", "error");
-      return;
-    }
-
-    const formData = new FormData();
-    const fileName = hasPreview
-      ? `${previewFileName || "modified"}_modified.csv`
-      : files.find((f) => f.file)?.name || "file.csv";
-    formData.append(
-      selectedType === "PO"
-        ? "input_purchase_orders"
-        : selectedType === "LC"
-        ? "input_letters_of_credit"
-        : "input_sales_orders",
-      new File([blob], fileName, { type: "text/csv" })
-    );
-
-    try {
-      const res = await axios.post(
-        "https://backend-slqi.onrender.com/api/exposureUpload/batch-upload",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      if (res.data.results[0]?.success) {
-        notify("Data has been successfully sent to the server", "success");
-      } else if (res.data.results && Array.isArray(res.data.results)) {
-        // Beautify duplicate constraint errors
-        const errorMessages = res.data.results
-          .filter((r) => !r.success)
-          .map((r) => {
-            if (r.error && r.error.includes('duplicate key value violates unique constraint')) {
-              // Extract constraint name
-              const match = r.error.match(/constraint "(.+?)"/);
-              const constraint = match ? match[1] : "unknown constraint";
-              return `Duplicate data found in file '${r.filename}'. Constraint violated: ${constraint}`;
-            }
-            return `Error in file '${r.filename}': ${r.error}`;
-          })
-          .join("\n");
-        notify(errorMessages, "error");
+    // For each file, use edited preview if available
+    for (const file of files) {
+      let blob: Blob | File | undefined;
+      let fileName: string;
+      if ((file as any).previewEdited && (file as any).previewHeaders && (file as any).previewData) {
+        blob = convertToCSVBlob((file as any).previewHeaders, (file as any).previewData);
+        fileName = `${file.name.replace(/\.csv$/, '')}_modified.csv`;
+      } else if (file.file) {
+        blob = file.file;
+        fileName = file.name;
       } else {
-        notify("Upload failed: " + res.data.results[0]?.error, "error");
+        continue;
       }
-    } catch (err) {
-      console.error(err);
-      notify("Server error occurred during upload", "error");
+      const formData = new FormData();
+      formData.append(
+        selectedType === "PO"
+          ? "input_purchase_orders"
+          : selectedType === "LC"
+          ? "input_letters_of_credit"
+          : "input_sales_orders",
+        new File([blob], fileName, { type: "text/csv" })
+      );
+      try {
+        const res = await axios.post(
+          "https://backend-slqi.onrender.com/api/exposureUpload/batch-upload",
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+        if (res.data.results[0]?.success) {
+          notify(`Data for ${file.name} has been successfully sent to the server`, "success");
+        } else if (res.data.results && Array.isArray(res.data.results)) {
+          const errorMessages = res.data.results
+            .filter((r) => !r.success)
+            .map((r) => {
+              if (r.error && r.error.includes('duplicate key value violates unique constraint')) {
+                const match = r.error.match(/constraint "(.+?)"/);
+                const constraint = match ? match[1] : "unknown constraint";
+                return `Duplicate data found in file '${r.filename}'. Constraint violated: ${constraint}`;
+              }
+              return `Error in file '${r.filename}': ${r.error}`;
+            })
+            .join("\n");
+          notify(errorMessages, "error");
+        } else {
+          notify(`Upload failed for ${file.name}: ` + res.data.results[0]?.error, "error");
+        }
+      } catch (err) {
+        console.error(err);
+        notify(`Server error occurred during upload for ${file.name}`, "error");
+      }
     }
   };
 
-  // const handleSetManually = async () => {
-  //   const file = files.find((f) => f.file)?.file;
-  //   if (!file || !selectedType) {
-  //     notify("Please select an exposure type and upload a file.", "error");
-  //     return;
-  //   }
-
-  //   const formData = new FormData();
-
-  //   // Dynamically append based on selectedType
-  //   if (selectedType === "PO") {
-  //     formData.append("input_purchase_orders", file);
-  //   } else if (selectedType === "LC") {
-  //     formData.append("input_letters_of_credit", file);
-  //   } else if (selectedType === "SO") {
-  //     formData.append("input_sales_orders", file);
-  //   }
-
-  //   try {
-  //     const res = await axios.post(
-  //       "https://backend-slqi.onrender.com/api/exposureUpload/batch-upload",
-  //       formData,
-  //       {
-  //         headers: {
-  //           "Content-Type": "multipart/form-data",
-  //         },
-  //       }
-  //     );
-
-  //     if (res.data.results.success) {
-  //       notify("Data has been successfully sent to the server", "success");
-  //     } else {
-  //       notify("Upload failed: " + res.data.results.error, "error");
-  //       // notify("Data has been successfully sent to the server", "success");
-  //     }
-  //   } catch (err) {
-  //     console.error(err);
-  //     notify("Server error occurred during upload", "error");
-  //   }
-  // };
-
-  // const handleSetManually = async () => {
-  //   const file = files.find((f) => f.file)?.file;
-  //   if (!file) {
-  //     return;
-  //   }
-
-  //   const formData = new FormData();
-  //   formData.append("file", file);
-
-  //   try {
-  //     const res = await axios.post(
-  //       "https://backend-slqi.onrender.com.onrender.com/api/exposureUpload/batch-upload",
-  //       formData,
-  //       {
-  //         headers: {
-  //           "Content-Type": "multipart/form-data",
-  //         },
-  //       }
-  //     );
-
-  //     if (res.data.success) {
-  //       // alert("Data has been successfully sent to the server");
-  //       notify("Data has been successfully sent to the server", "success");
-  //     } else {
-  //       // notify("Data has been successfully sent to the server", "success");
-
-  //       notify("Upload failed: " + res.data.error, "error");
-  //       // alert("Upload failed ❌: " + res.data.error);
-  //       // alert("Data has been successfully sent to the server");
-  //     }
-  //   } catch (err) {
-  //     console.error(err);
-  //     // alert("Duplicate data found or server error");
-  //     // notify("Error uploading CSV to server", "error");
-  //     notify("Data has been successfully sent to the server", "success");
-  //   }
-  // };
+  const handleSavePreview = (fileId: string) => {
+    // Save the edited preview data to the file state
+    setFiles(prevFiles => prevFiles.map(file => {
+      if (file.id === fileId && previewStates[fileId]) {
+        return {
+          ...file,
+          previewHeaders: previewStates[fileId].headers,
+          previewData: previewStates[fileId].data,
+          previewEdited: true,
+        };
+      }
+      return file;
+    }));
+    notify(`Edits for ${files.find(f => f.id === fileId)?.name || 'file'} saved.`, "success");
+  };
 
   return (
     <React.Fragment>
@@ -757,7 +702,7 @@ const UploadFile: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      {file.status === "success" && file.file && (
+                      {(file.status === "success" || file.status === "error") && file.file && (
                         <button
                           onClick={() => handlePreviewFile(file)}
                           className="p-1 text-blue-600 hover:text-blue-800"
@@ -766,21 +711,24 @@ const UploadFile: React.FC = () => {
                           <Eye className="w-4 h-4" />
                         </button>
                       )}
-
-                      {file.status === "error" && file.file && (
+                      {/* Save button for previewed file */}
+                      {previewStates[file.id]?.show && (
                         <button
-                          onClick={() => handlePreviewFile(file)}
-                          className="p-1 text-blue-600 hover:text-blue-800"
-                          title="Preview Data"
+                          onClick={() => handleSavePreview(file.id)}
+                          className="p-1 text-green-600 hover:text-green-800"
+                          title="Save Edits"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Check className="w-4 h-4" />
                         </button>
                       )}
-
                       <button
                         onClick={() => {
                           removeFile(file.id);
-                          setShowPreview(false);
+                          setPreviewStates(prev => {
+                            const updated = { ...prev };
+                            delete updated[file.id];
+                            return updated;
+                          });
                         }}
                         className="p-1 text-red-600 hover:text-red-800"
                         title="Remove File"
@@ -789,6 +737,15 @@ const UploadFile: React.FC = () => {
                       </button>
                     </div>
                   </div>
+                  {/* Preview for this file */}
+                  {previewStates[file.id]?.show && previewStates[file.id]?.data.length > 0 && (
+                    <PreviewTable
+                      headers={previewStates[file.id].headers}
+                      rows={previewStates[file.id].data}
+                      onRemoveRow={handleRemoveRow}
+                      onUpdateRow={(rowIndex, updatedData) => handleUpdateRow(rowIndex, updatedData, file.id)}
+                    />
+                  )}
                 </div>
               ))}
             </div>
