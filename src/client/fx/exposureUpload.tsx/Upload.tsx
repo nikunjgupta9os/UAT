@@ -32,7 +32,12 @@ interface UploadedFile {
   status: "pending" | "processing" | "success" | "error";
   uploadDate: Date;
   file?: File;
-  validationErrors?: Array<{ description: string; row?: number; column?: number; currentValue?: string }>;
+  validationErrors?: Array<{
+    description: string;
+    row?: number;
+    column?: number;
+    currentValue?: string;
+  }>;
   error?: string;
   rowCount?: number;
   columnCount?: number;
@@ -67,11 +72,11 @@ const UploadFile: React.FC = () => {
   const handleDrag = (event: React.DragEvent) => {
     event.preventDefault();
     event.stopPropagation();
-    
+
     if (!selectedType) {
       return;
     }
-    
+
     if (event.type === "dragenter" || event.type === "dragover") {
       setDragActive(true);
     } else {
@@ -83,12 +88,12 @@ const UploadFile: React.FC = () => {
     event.preventDefault();
     event.stopPropagation();
     setDragActive(false);
-    
+
     if (!selectedType) {
       notify("Please select a type of exposure first.", "warning");
       return;
     }
-    
+
     if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
       handleFiles(event.dataTransfer.files);
     } else {
@@ -122,7 +127,11 @@ const UploadFile: React.FC = () => {
       if (!previewedFile) return newData;
 
       // Check if validation issues are resolved
-      const validationErrors = validatePreviewData(newData, previewHeaders, getTemplateTypeFromSelected(selectedType));
+      const validationErrors = validatePreviewData(
+        newData,
+        previewHeaders,
+        getTemplateTypeFromSelected(selectedType)
+      );
       const hasIssues = validationErrors.length > 0;
       if (!hasIssues) {
         // Update the file status if all issues are resolved
@@ -132,13 +141,16 @@ const UploadFile: React.FC = () => {
     });
   };
 
-  const handleUpdateRow = (rowIndex: number, updatedData: Record<string, any>) => {
+  const handleUpdateRow = (
+    rowIndex: number,
+    updatedData: Record<string, any>
+  ) => {
     setPreviewData((prevData) => {
       const newData = [...prevData];
       if (newData[rowIndex]) {
         // Update the row with new values
         Object.entries(updatedData).forEach(([key, value]) => {
-          const colIndex = parseInt(key.replace('col_', ''));
+          const colIndex = parseInt(key.replace("col_", ""));
           if (!isNaN(colIndex) && colIndex < newData[rowIndex].length) {
             newData[rowIndex][colIndex] = value;
           }
@@ -151,32 +163,54 @@ const UploadFile: React.FC = () => {
   const handleFiles = async (fileList: FileList) => {
     // Check if type is selected
     if (!selectedType) {
-      notify("Please select a type of exposure before uploading files.", "error");
+      notify(
+        "Please select a type of exposure before uploading files.",
+        "error"
+      );
       return;
     }
 
     // Validate file types
-    const invalidFiles = Array.from(fileList).filter(file => {
+    const invalidFiles = Array.from(fileList).filter((file) => {
       const fileName = file.name.toLowerCase();
-      return !fileName.endsWith('.csv') && !fileName.endsWith('.xlsx') && !fileName.endsWith('.xls');
+      return (
+        !fileName.endsWith(".csv") &&
+        !fileName.endsWith(".xlsx") &&
+        !fileName.endsWith(".xls")
+      );
     });
 
     if (invalidFiles.length > 0) {
-      notify(`Invalid file type(s): ${invalidFiles.map(f => f.name).join(', ')}. Only CSV and Excel files are accepted.`, "error");
+      notify(
+        `Invalid file type(s): ${invalidFiles
+          .map((f) => f.name)
+          .join(", ")}. Only CSV and Excel files are accepted.`,
+        "error"
+      );
       return;
     }
 
     // Validate file sizes (10MB limit)
-    const oversizedFiles = Array.from(fileList).filter(file => file.size > 10 * 1024 * 1024);
+    const oversizedFiles = Array.from(fileList).filter(
+      (file) => file.size > 10 * 1024 * 1024
+    );
     if (oversizedFiles.length > 0) {
-      notify(`File(s) too large: ${oversizedFiles.map(f => f.name).join(', ')}. Maximum size is 10MB.`, "error");
+      notify(
+        `File(s) too large: ${oversizedFiles
+          .map((f) => f.name)
+          .join(", ")}. Maximum size is 10MB.`,
+        "error"
+      );
       return;
     }
 
     // Check if files are not empty
-    const emptyFiles = Array.from(fileList).filter(file => file.size === 0);
+    const emptyFiles = Array.from(fileList).filter((file) => file.size === 0);
     if (emptyFiles.length > 0) {
-      notify(`Empty file(s) detected: ${emptyFiles.map(f => f.name).join(', ')}.`, "error");
+      notify(
+        `Empty file(s) detected: ${emptyFiles.map((f) => f.name).join(", ")}.`,
+        "error"
+      );
       return;
     }
 
@@ -249,17 +283,17 @@ const UploadFile: React.FC = () => {
   const handleFileInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!selectedType) {
       notify("Please select a type of exposure first.", "warning");
-      event.target.value = '';
+      event.target.value = "";
       return;
     }
-    
+
     if (event.target.files && event.target.files.length > 0) {
       handleFiles(event.target.files);
     } else {
       notify("No files selected.", "warning");
     }
     // Reset the input so the same file can be selected again if needed
-    event.target.value = '';
+    event.target.value = "";
   };
 
   const clearAllFiles = () => setFiles([]);
@@ -312,23 +346,44 @@ const UploadFile: React.FC = () => {
     reader.readAsText(uploadedFile.file);
   };
 
+  const convertToCSVBlob = (headers: string[], rows: string[][]): Blob => {
+    const csvContent = [headers, ...rows]
+      .map((row) =>
+        row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(",")
+      )
+      .join("\n");
+    return new Blob([csvContent], { type: "text/csv" });
+  };
+
   const handleSetManually = async () => {
-    const file = files.find((f) => f.file)?.file;
-    if (!file || !selectedType) {
-      notify("Please select an exposure type and upload a file.", "error");
+    if (!selectedType) {
+      notify("Please select an exposure type before submitting.", "error");
+      return;
+    }
+
+    // If preview data exists, use it; else fall back to the raw file
+    const hasPreview = previewData.length > 0 && previewHeaders.length > 0;
+    const blob = hasPreview
+      ? convertToCSVBlob(previewHeaders, previewData)
+      : files.find((f) => f.file)?.file;
+
+    if (!blob) {
+      notify("No valid file or data to submit.", "error");
       return;
     }
 
     const formData = new FormData();
-
-    // Dynamically append based on selectedType
-    if (selectedType === "PO") {
-      formData.append("input_purchase_orders", file);
-    } else if (selectedType === "LC") {
-      formData.append("input_letters_of_credit", file);
-    } else if (selectedType === "SO") {
-      formData.append("input_sales_orders", file);
-    }
+    const fileName = hasPreview
+      ? `${previewFileName || "modified"}_modified.csv`
+      : files.find((f) => f.file)?.name || "file.csv";
+    formData.append(
+      selectedType === "PO"
+        ? "input_purchase_orders"
+        : selectedType === "LC"
+        ? "input_letters_of_credit"
+        : "input_sales_orders",
+      new File([blob], fileName, { type: "text/csv" })
+    );
 
     try {
       const res = await axios.post(
@@ -341,17 +396,57 @@ const UploadFile: React.FC = () => {
         }
       );
 
-      if (res.data.success) {
+      if (res.data.results[0]?.success) {
         notify("Data has been successfully sent to the server", "success");
       } else {
-        // notify("Upload failed: " + res.data.error, "error");
-        notify("Data has been successfully sent to the server", "success");
+        notify("Upload failed: " + res.data.results[0]?.error, "error");
       }
     } catch (err) {
       console.error(err);
       notify("Server error occurred during upload", "error");
     }
   };
+
+  // const handleSetManually = async () => {
+  //   const file = files.find((f) => f.file)?.file;
+  //   if (!file || !selectedType) {
+  //     notify("Please select an exposure type and upload a file.", "error");
+  //     return;
+  //   }
+
+  //   const formData = new FormData();
+
+  //   // Dynamically append based on selectedType
+  //   if (selectedType === "PO") {
+  //     formData.append("input_purchase_orders", file);
+  //   } else if (selectedType === "LC") {
+  //     formData.append("input_letters_of_credit", file);
+  //   } else if (selectedType === "SO") {
+  //     formData.append("input_sales_orders", file);
+  //   }
+
+  //   try {
+  //     const res = await axios.post(
+  //       "https://backend-slqi.onrender.com/api/exposureUpload/batch-upload",
+  //       formData,
+  //       {
+  //         headers: {
+  //           "Content-Type": "multipart/form-data",
+  //         },
+  //       }
+  //     );
+
+  //     if (res.data.results.success) {
+  //       notify("Data has been successfully sent to the server", "success");
+  //     } else {
+  //       notify("Upload failed: " + res.data.results.error, "error");
+  //       // notify("Data has been successfully sent to the server", "success");
+  //     }
+  //   } catch (err) {
+  //     console.error(err);
+  //     notify("Server error occurred during upload", "error");
+  //   }
+  // };
 
   // const handleSetManually = async () => {
   //   const file = files.find((f) => f.file)?.file;
@@ -416,7 +511,12 @@ const UploadFile: React.FC = () => {
             onDragLeave={!selectedType ? undefined : handleDrag}
             onDragOver={!selectedType ? undefined : handleDrag}
             onDrop={!selectedType ? undefined : handleDrop}
-            onClick={!selectedType ? () => notify("Please select a type of exposure first.", "warning") : undefined}
+            onClick={
+              !selectedType
+                ? () =>
+                    notify("Please select a type of exposure first.", "warning")
+                : undefined
+            }
           >
             <input
               type="file"
@@ -429,14 +529,20 @@ const UploadFile: React.FC = () => {
               }`}
             />
             <div className="space-y-2">
-              <Upload className={`w-8 h-8 mx-auto ${selectedType ? "text-primary" : "text-gray-400"}`} />
+              <Upload
+                className={`w-8 h-8 mx-auto ${
+                  selectedType ? "text-primary" : "text-gray-400"
+                }`}
+              />
               <p className="text-sm text-gray-600">
                 {selectedType ? (
                   <>
                     <span className="font-medium text-primary">
                       Click to upload
                     </span>{" "}
-                    <span className="text-secondary-text">or drag and drop</span>
+                    <span className="text-secondary-text">
+                      or drag and drop
+                    </span>
                   </>
                 ) : (
                   <span className="text-gray-500">
@@ -445,7 +551,9 @@ const UploadFile: React.FC = () => {
                 )}
               </p>
               <p className="text-xs text-secondary-text-dark">
-                {selectedType ? "CSV, XLSX files up to 10MB" : "Select exposure type to enable upload"}
+                {selectedType
+                  ? "CSV, XLSX files up to 10MB"
+                  : "Select exposure type to enable upload"}
               </p>
             </div>
           </div>
