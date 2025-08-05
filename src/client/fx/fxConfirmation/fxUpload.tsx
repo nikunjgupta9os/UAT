@@ -1,6 +1,6 @@
 import React from "react";
 import Button from "../../ui/Button.tsx";
-import { templates, formatFileSize } from "./component/fxUpload.ts";
+import { templates, formatFileSize, handleDownload } from "./component/fxUpload.ts";
 import {
   validateFileContent,
   getFileTextColor,
@@ -8,6 +8,7 @@ import {
 } from "./component/fxUpload.ts";
 import axios from "axios";
 import { useNotification } from "../../Notification/Notification.tsx";
+import PreviewTable from "../exposureUpload.tsx/PreviewTable.tsx"; // Adjust import path as needed
 import {
   Upload,
   Eye,
@@ -17,6 +18,27 @@ import {
   FileText,
   X,
 } from "lucide-react";
+
+// Import the UploadedFile interface
+interface UploadedFile {
+  id: string;
+  name: string;
+  size: number;
+  status?: "pending" | "processing" | "success" | "error";
+  uploadDate: Date;
+  error?: string;
+  validationErrors?: Array<{
+    description: string;
+    row?: number;
+    column?: number;
+    currentValue?: string;
+  }>;
+  hasHeaders?: boolean;
+  hasMissingValues?: boolean;
+  rowCount?: number;
+  columnCount?: number;
+  file?: File;
+}
 
 const FxUploader: React.FC = () => {
   const [dragActive, setDragActive] = React.useState(false);
@@ -35,6 +57,27 @@ const FxUploader: React.FC = () => {
 
   const removeFile = (id: string) =>
     setFiles((prev) => prev.filter((file) => file.id !== id));
+
+  const handleRemoveRow = (index: number) => {
+    setPreviewData(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateRow = (rowIndex: number, updatedData: Record<string, any>) => {
+    setPreviewData((prevData) => {
+      const newData = [...prevData];
+      if (newData[rowIndex]) {
+        // Update the row with new values
+        Object.entries(updatedData).forEach(([key, value]) => {
+          const colIndex = parseInt(key.replace('col_', ''));
+          if (!isNaN(colIndex) && colIndex < newData[rowIndex].length) {
+            newData[rowIndex][colIndex] = value;
+          }
+        });
+      }
+      return newData;
+    });
+  };
+
   const handlePreviewFile = (uploadedFile: UploadedFile) => {
     if (!uploadedFile.file) {
       console.error("No file found for preview");
@@ -457,7 +500,7 @@ const FxUploader: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        {/* {file.status === "success" && file.file && (
+                        {file.status === "success" && file.file && (
                           <button
                             onClick={() => handlePreviewFile(file)}
                             className="p-1 text-blue-600 hover:text-blue-800"
@@ -465,7 +508,7 @@ const FxUploader: React.FC = () => {
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                        )} */}
+                        )}
 
                         {file.status === "error" && file.file && (
                           <button
@@ -495,6 +538,17 @@ const FxUploader: React.FC = () => {
             </div>
           )}
         </div>
+
+        {showPreview && previewData.length > 0 && (
+          <PreviewTable
+            headers={previewHeaders}
+            rows={previewData}
+            onRemoveRow={handleRemoveRow}
+            onUpdateRow={handleUpdateRow}
+          />
+        )}
+
+      
 
         <div className="bg-secondary-color-lt p-6 rounded-lg shadow-sm border border-border">
           <div className="wi-full px-4 py-6">
@@ -526,7 +580,7 @@ const FxUploader: React.FC = () => {
                       </p>
                     </div>
                     <button
-                      // onClick={() => handleDownload(template)}
+                      onClick={() => handleDownload(template)}
                       className="ml-4 p-1 text-primary-lt hover:text-primary transition-colors duration-200"
                       aria-label={`Download ${template.name}`}
                     >
