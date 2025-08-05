@@ -670,7 +670,7 @@ const AllExposureRequest: React.FC = () => {
     total_original_amount: true,
     total_open_amount: true,
     currency: true,
-    document_date: true,
+    document_date: false,
     value_date: false,
     status: false,
     approval_status: true,
