@@ -41,19 +41,9 @@ interface UploadedFile {
 export const templates = [
   {
     id: "fx",
-    name: "Fx Template",
+    name: "FX Forward Template",
     type: "Excel",
   },
-  //   {
-  //     id: "lc",
-  //     name: "LC Template",
-  //     type: "Excel",
-  //   },
-  //   {
-  //     id: "bs",
-  //     name: "BS Template",
-  //     type: "Excel",
-  //   },
 ];
 
 const parseExcel = (arrayBuffer: ArrayBuffer): string[][] => {
@@ -78,7 +68,6 @@ const parseExcel = (arrayBuffer: ArrayBuffer): string[][] => {
       "currency_pair",
       "base_currency",
       "quote_currency",
-      //   "input_value",
       "value_type",
       "actual_value_base_currency",
       "spot_rate",
@@ -90,14 +79,9 @@ const parseExcel = (arrayBuffer: ArrayBuffer): string[][] => {
       "value_local_currency",
       "internal_dealer",
       "counterparty_dealer",
-      "remarks",
-      "narration",
-      "transaction_timestamp",
-      //   "status",
     ],
     [
       "TX123",
-      "INT123",
       "Corp",
       "DivA",
       "DeptB",
@@ -115,8 +99,8 @@ const parseExcel = (arrayBuffer: ArrayBuffer): string[][] => {
       "USD/INR",
       "USD",
       "INR",
-      "1000000",
       "Contracted",
+      "1000000",
       "83.50",
       "0.25",
       "0.10",
@@ -126,8 +110,6 @@ const parseExcel = (arrayBuffer: ArrayBuffer): string[][] => {
       "83850000",
       "Dealer1",
       "Dealer2",
-      "Urgent trade",
-      "USD-INR forward",
     ],
   ];
 };
@@ -151,7 +133,6 @@ const expectedHeaders = [
   "currency_pair",
   "base_currency",
   "quote_currency",
-  //   "input_value",
   "value_type",
   "actual_value_base_currency",
   "spot_rate",
@@ -163,10 +144,6 @@ const expectedHeaders = [
   "value_local_currency",
   "internal_dealer",
   "counterparty_dealer",
-  "remarks",
-  "narration",
-  "transaction_timestamp",
-  //   "status",
 ];
 
 interface ifValidationError {
@@ -180,7 +157,6 @@ const validateColumns = (
   data: string[][],
   ifValidationErrors: ifValidationError[]
 ) => {
-  //   const ifValidationErrors: string[] = [];
   let rowCount = 0;
   let columnCount = 0;
   let hasHeaders = false;
@@ -194,10 +170,19 @@ const validateColumns = (
     (h) => !headers.includes(h.toLowerCase())
   );
   if (missingHeaders.length > 0) {
-    ifValidationErrors.push(
-      //   `Missing required headers: ${missingHeaders.join(", ")}`
-      { description: `Missing required headers: ${missingHeaders.join(", ")}` }
-    );
+    ifValidationErrors.push({
+      description: `Missing required headers: ${missingHeaders.join(", ")}`
+    });
+  }
+
+  // Check for extra headers
+  const extraHeaders = headers.filter(
+    (h) => !expectedHeaders.map(eh => eh.toLowerCase()).includes(h.toLowerCase())
+  );
+  if (extraHeaders.length > 0) {
+    ifValidationErrors.push({
+      description: `Unexpected headers found: ${extraHeaders.join(", ")}`
+    });
   }
 };
 
@@ -208,12 +193,11 @@ const validateRow = (
 ) => {
   const headers = data[0].map((h) => h.trim().toLowerCase());
   const dataRows = data.slice(1);
+  
   dataRows.forEach((row, index) => {
     if (row.length !== headers.length) {
       ifValidationErrors.push({
-        description: `Row ${index + 2} has ${row.length} columns, expected ${
-          headers.length
-        }`,
+        description: `Row ${index + 2} has ${row.length} columns, expected ${headers.length}`,
         row: index + 2,
       });
       return;
@@ -229,10 +213,7 @@ const validateRow = (
       "internal_reference_id",
       "local_currency",
       "currency_pair",
-      //   "input_value",
       "spot_rate",
-      "transaction_timestamp",
-      //   "status"
     ];
 
     requiredFields.forEach((field) => {
@@ -241,11 +222,14 @@ const validateRow = (
         ifValidationErrors.push({
           description: `Row ${index + 2}: '${field}' is required`,
           row: index + 2,
+          column: headers.indexOf(field) + 1,
+          currentValue: rowObj[field]
         });
       }
     });
 
-    [
+    // Validate numeric fields
+    const numericFields = [
       "spot_rate",
       "forward_points",
       "bank_margin",
@@ -253,62 +237,98 @@ const validateRow = (
       "value_quote_currency",
       "intervening_rate_quote_to_local",
       "value_local_currency",
-    ].forEach((field) => {
-      if (rowObj[field] && isNaN(Number(rowObj[field]))) {
+      "actual_value_base_currency"
+    ];
+    
+    numericFields.forEach((field) => {
+      if (rowObj[field] && rowObj[field] !== "" && isNaN(Number(rowObj[field]))) {
         ifValidationErrors.push({
-          description: `Row ${index + 2}: '${field}' must be a number`,
+          description: `Row ${index + 2}: '${field}' must be a valid number`,
           row: index + 2,
+          column: headers.indexOf(field) + 1,
+          currentValue: rowObj[field]
         });
       }
     });
 
     // Date validations
-    [
+    const dateFields = [
       "add_date",
-      "settlement_date",
+      "settlement_date", 
       "maturity_date",
       "delivery_date",
-      "transaction_timestamp",
-    ].forEach((field) => {
-      if (rowObj[field] && isNaN(Date.parse(rowObj[field]))) {
+    ];
+    
+    dateFields.forEach((field) => {
+      if (rowObj[field] && rowObj[field] !== "") {
+        const date = new Date(rowObj[field]);
+        if (isNaN(date.getTime())) {
+          ifValidationErrors.push({
+            description: `Row ${index + 2}: '${field}' must be a valid date (YYYY-MM-DD format)`,
+            row: index + 2,
+            column: headers.indexOf(field) + 1,
+            currentValue: rowObj[field]
+          });
+        }
+      }
+    });
+
+    // Validate order type
+    const validOrderTypes = ["buy", "sell"];
+    if (rowObj["order_type"] && 
+        !validOrderTypes.includes(rowObj["order_type"].toLowerCase())) {
+      ifValidationErrors.push({
+        description: `Row ${index + 2}: 'order_type' must be 'Buy' or 'Sell'`,
+        row: index + 2,
+        column: headers.indexOf("order_type") + 1,
+        currentValue: rowObj["order_type"]
+      });
+    }
+
+    // Validate transaction type
+    const validTransactionTypes = ["fx spot", "fx forward", "fx swap", "fx option"];
+    if (rowObj["transaction_type"] && 
+        !validTransactionTypes.includes(rowObj["transaction_type"].toLowerCase())) {
+      ifValidationErrors.push({
+        description: `Row ${index + 2}: 'transaction_type' must be one of: ${validTransactionTypes.join(", ").toUpperCase()}`,
+        row: index + 2,
+        column: headers.indexOf("transaction_type") + 1,
+        currentValue: rowObj["transaction_type"]
+      });
+    }
+
+    // Validate currency pair format (should be like USD/INR)
+    if (rowObj["currency_pair"] && rowObj["currency_pair"] !== "") {
+      const currencyPairPattern = /^[A-Z]{3}\/[A-Z]{3}$/;
+      if (!currencyPairPattern.test(rowObj["currency_pair"])) {
         ifValidationErrors.push({
-          description: `Row ${index + 2}: '${field}' must be a valid date`,
+          description: `Row ${index + 2}: 'currency_pair' must be in format 'XXX/YYY' (e.g., USD/INR)`,
           row: index + 2,
+          column: headers.indexOf("currency_pair") + 1,
+          currentValue: rowObj["currency_pair"]
+        });
+      }
+    }
+
+    // Validate currency codes (should be 3 characters)
+    const currencyFields = ["local_currency", "base_currency", "quote_currency"];
+    currencyFields.forEach((field) => {
+      if (rowObj[field] && rowObj[field].length !== 3) {
+        ifValidationErrors.push({
+          description: `Row ${index + 2}: '${field}' must be a 3-character currency code (e.g., USD, EUR, INR)`,
+          row: index + 2,
+          column: headers.indexOf(field) + 1,
+          currentValue: rowObj[field]
         });
       }
     });
 
-    // Validate type field
-    if (
-      rowObj["type"] &&
-      !["buy", "sell"].includes(rowObj["type"].toLowerCase())
-    ) {
-      ifValidationErrors.push(
-        // `Row ${index + 2}: 'type' must be 'payable' or 'receivable'`
-        {
-          description: `Row ${index + 2}: 'type' must be 'buy' or 'sell'`,
-          row: index + 2,
-        }
-      );
-    }
-
-    // Validate amount field
-    // if (
-    //   rowObj["po_amount"] &&
-    //   rowObj["po_amount"] !== "" &&
-    //   isNaN(Number(rowObj["po_amount"]))
-    // ) {
-    //   ifValidationErrors.push(
-    //     // `Row ${index + 2}: 'po_amount' must be a number`
-    //     {
-    //       description: `Row ${index + 2}: 'po_amount' must be a number`,
-    //       row: index + 2,
-    //     }
-    //   );
-    // }
-
-    // Check for empty cells
-    if (row.some((cell) => !cell || cell.trim() === "")) {
+    // Check for empty cells in required fields
+    if (row.some((cell, cellIndex) => {
+      const header = headers[cellIndex];
+      const isRequiredField = requiredFields.includes(header);
+      return isRequiredField && (!cell || cell.trim() === "");
+    })) {
       hasMissingValues = true;
     }
   });
@@ -341,6 +361,11 @@ export const validateFileContent = (
 
         const status = validationErrors.length > 0 ? "error" : "success";
 
+        // Set the actual row and column counts from parsed data
+        rowCount = data.length > 0 ? data.length - 1 : 0; // Subtract 1 for header
+        columnCount = data.length > 0 ? data[0].length : 0;
+        hasHeaders = data.length > 0;
+
         // Only create description string if there are errors
         const errorDescription =
           validationErrors.length > 0
@@ -349,15 +374,15 @@ export const validateFileContent = (
 
         const result: ifDataToRender = {
           status: status,
-          validationErrors: validationErrors.length > 0 ? validationErrors : [], // Empty array instead of error description when successful
+          validationErrors: validationErrors.length > 0 ? validationErrors : [],
           hasHeaders,
           hasMissingValues,
           rowCount,
           columnCount,
-          error: errorDescription, // Only set error if there are actual errors
+          error: errorDescription,
         };
 
-        console.log("Validation result:", result); // Debug log
+        console.log("Validation result:", result);
         resolve(result as Partial<UploadedFile>);
       } catch (error) {
         console.error("Processing error:", error);
@@ -411,8 +436,9 @@ export const validateFileContent = (
         }
 
         // Set the actual row and column counts from parsed data
-        rowCount = parsedData.length;
+        rowCount = parsedData.length > 0 ? parsedData.length - 1 : 0; // Subtract 1 for header
         columnCount = parsedData.length > 0 ? parsedData[0].length : 0;
+        hasHeaders = parsedData.length > 0;
 
         processData(parsedData);
       } catch (error) {
@@ -445,6 +471,11 @@ export const validateFileContent = (
       reader.readAsArrayBuffer(file);
     }
   });
+};
+
+// Keep your existing utility functions
+export const validateFileSize = (size: number) => {
+  return size < MAX_FILE_SIZE ? true : false;
 };
 
 export const getFileStatusColor = (file: UploadedFile) => {
@@ -499,31 +530,71 @@ export const validatePreviewData = (
       const value = row[colIndex] || "";
 
       // Basic required field checks
-      if (
-        !value.trim() &&
-        ["internal_reference_id", "currency_pair"].includes(header)
-      ) {
+      const requiredFields = [
+        "internal_reference_id",
+        "local_currency", 
+        "currency_pair",
+        "spot_rate"
+      ];
+      
+      if (!value.trim() && requiredFields.includes(header)) {
         validationErrors.push(`Row ${rowIndex + 1}: ${header} is required`);
       }
 
-      if (
-        ["input_value", "spot_rate", "total_rate"].includes(header) &&
-        isNaN(Number(value))
-      ) {
-        validationErrors.push(
-          `Row ${rowIndex + 1}: ${header} must be a number`
-        );
+      // Numeric field validation
+      const numericFields = [
+        "spot_rate",
+        "forward_points", 
+        "bank_margin",
+        "total_rate",
+        "value_quote_currency",
+        "intervening_rate_quote_to_local",
+        "value_local_currency",
+        "actual_value_base_currency"
+      ];
+      
+      if (numericFields.includes(header) && value && isNaN(Number(value))) {
+        validationErrors.push(`Row ${rowIndex + 1}: ${header} must be a number`);
       }
 
-      if (
-        ["add_date", "transaction_timestamp", "maturity_date"].includes(header)
-      ) {
+      // Date field validation
+      const dateFields = [
+        "add_date",
+        "settlement_date",
+        "maturity_date", 
+        "delivery_date"
+      ];
+      
+      if (dateFields.includes(header) && value) {
         const date = new Date(value);
         if (isNaN(date.getTime())) {
-          validationErrors.push(
-            `Row ${rowIndex + 1}: ${header} must be a valid date`
-          );
+          validationErrors.push(`Row ${rowIndex + 1}: ${header} must be valid date`);
         }
+      }
+
+      // Order type validation
+      if (header === "order_type" && value && !["buy", "sell"].includes(value.toLowerCase())) {
+        validationErrors.push(`Row ${rowIndex + 1}: order_type must be 'Buy' or 'Sell'`);
+      }
+
+      // Transaction type validation
+      const validTransactionTypes = ["fx spot", "fx forward", "fx swap", "fx option"];
+      if (header === "transaction_type" && value && !validTransactionTypes.includes(value.toLowerCase())) {
+        validationErrors.push(`Row ${rowIndex + 1}: transaction_type must be one of: ${validTransactionTypes.join(", ").toUpperCase()}`);
+      }
+
+      // Currency pair format validation
+      if (header === "currency_pair" && value) {
+        const currencyPairPattern = /^[A-Z]{3}\/[A-Z]{3}$/;
+        if (!currencyPairPattern.test(value)) {
+          validationErrors.push(`Row ${rowIndex + 1}: currency_pair must be in format 'XXX/YYY'`);
+        }
+      }
+
+      // Currency code validation
+      const currencyFields = ["local_currency", "base_currency", "quote_currency"];
+      if (currencyFields.includes(header) && value && value.length !== 3) {
+        validationErrors.push(`Row ${rowIndex + 1}: ${header} must be 3 characters`);
       }
     });
   });
@@ -532,16 +603,51 @@ export const validatePreviewData = (
 };
 
 export const handleDownload = (template: any) => {
-  const csvContent = Object.keys(template)
-    .map((key) => `"${key}","${template[key]}"`)
-    .join("\n");
+  // Create headers row
+  const headers = expectedHeaders.join(",");
+  
+  // Create sample data row for FX Confirmation template
+  const sampleRow = [
+    "TX123",
+    "Corp",
+    "DivA", 
+    "DeptB",
+    "SubDept1",
+    "INR",
+    "Buy",
+    "FX Spot",
+    "Bank A",
+    "Online",
+    "1D",
+    "2024-01-01",
+    "2024-01-02",
+    "2024-01-10",
+    "2024-01-03",
+    "USD/INR",
+    "USD",
+    "INR",
+    "Contracted",
+    "1000000",
+    "83.50",
+    "0.25",
+    "0.10",
+    "83.85",
+    "1000000",
+    "1",
+    "83850000",
+    "Dealer1",
+    "Dealer2",
+  ];
+
+  const csvContent = headers + "\n" + sampleRow.join(",");
 
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.setAttribute("download", `${template.name}.csv`);
+  link.setAttribute("download", template?.name ? `${template.name}.csv` : "FX_Confirmation_Template.csv");
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 };
