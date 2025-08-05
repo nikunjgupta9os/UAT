@@ -54,7 +54,6 @@ const poHeaders = [
   "entity2",
   "entity3",
   "document_no",
-  "document_type",
   "contract_date",
   "reference_no",
   "reference_date",
@@ -145,13 +144,13 @@ const parseExcel = (arrayBuffer: ArrayBuffer, templateType?: string): string[][]
     return [
       poHeaders,
       [
-        "COMP001", "CA01", "ENT01", "ENT1_001", "ENT2_001", "ENT3_001", "DOC001", "PO", 
+        "COMP001", "CA01", "ENT01", "ENT1_001", "ENT2_001", "ENT3_001", "DOC001", 
         "2024-01-15", "REF001", "2024-01-10", "CUST001", "Customer ABC Ltd", "USD",
         "CIF", "NET30", "FOB", "1000000", "LOT001", "Steel Products", "PCS", "100",
         "50.00", "5000.00", "Quality products", "2024-02-15", "Y", "FIXED", "CC001"
       ],
       [
-        "COMP002", "CA02", "ENT02", "ENT1_002", "ENT2_002", "ENT3_002", "DOC002", "PO",
+        "COMP002", "CA02", "ENT02", "ENT1_002", "ENT2_002", "ENT3_002", "DOC002",
         "2024-02-20", "REF002", "2024-02-15", "CUST002", "Customer XYZ Corp", "EUR", 
         "FOB", "NET45", "CIF", "2000000", "LOT002", "Electronic Components", "KG", "500",
         "25.50", "12750.00", "Electronic items", "2024-03-20", "N", "FLOATING", "CC002"
@@ -386,18 +385,6 @@ const validateRow = (
           }
         }
       });
-
-      // Validate document type for PO
-      const validDocTypes = ["po", "purchase order", "purchase_order"];
-      if (rowObj["document_type"] && 
-          !validDocTypes.includes(rowObj["document_type"].toLowerCase())) {
-        ifValidationErrors.push({
-          description: `Row ${index + 2}: 'document_type' should be 'PO' for Purchase Order template`,
-          row: index + 2,
-          column: headers.indexOf("document_type") + 1,
-          currentValue: rowObj["document_type"]
-        });
-      }
 
     } else if (templateType === "lc") {
       // Validate amount field for LC
@@ -757,12 +744,6 @@ export const validatePreviewData = (
           }
         }
 
-        // Document type validation for PO
-        const validDocTypes = ["po", "purchase order", "purchase_order"];
-        if (header === "document_type" && value && !validDocTypes.includes(value.toLowerCase())) {
-          validationErrors.push(`Row ${rowIndex + 1}: document_type should be 'PO' for Purchase Order`);
-        }
-
       } else if (templateType === "lc") {
         // Amount validation for LC
         if (header === "amount" && value && isNaN(Number(value))) {
@@ -845,7 +826,7 @@ export const handleDownload = (template: any) => {
   
   if (template.id === "po") {
     sampleRow = [
-      "COMP001", "CA01", "ENT01", "ENT1_001", "ENT2_001", "ENT3_001", "DOC001", "PO",
+      "COMP001", "CA01", "ENT01", "ENT1_001", "ENT2_001", "ENT3_001", "DOC001",
       "2024-01-15", "REF001", "2024-01-10", "CUST001", "Customer ABC Ltd", "USD",
       "CIF", "NET30", "FOB", "1000000", "LOT001", "Steel Products", "PCS", "100",
       "50.00", "5000.00", "Quality products", "2024-02-15", "Y", "FIXED", "CC001"
