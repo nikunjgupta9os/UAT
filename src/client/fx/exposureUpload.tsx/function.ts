@@ -45,57 +45,14 @@ export const templates = [
   },
 ];
 
+
+
 // Headers for each template type
 const poHeaders = [
   "company_code",
-  "controlling_area", 
-  "entity",
-  "entity1",
-  "entity2",
-  "entity3",
-  "document_no",
-  "contract_date",
-  "reference_no",
-  "reference_date",
-  "customer_name",
-  "currency_code",
-  "price_basis",
-  "payment_terms",
-  "inco_terms",
-  "total_invoice_value",
-  "last_lot_number",
-  "product_description",
-  "uom_code",
-  "uom_quantity",
-  "net_price",
-  "net_value",
-  "remarks",
-  "delivery_date",
-  "lc_indicator",
-  "exchange_rate_preference",
-  "profit_cost_center"
-];
-
-const lcHeaders = [
-  "system_lc_number",
-  "bank_reference_number",
-  "other_references",
-  "lc_type",
-  "applicant_name",
-  "beneficiary_name",
-  "issuing_bank",
-  "currency",
-  "amount",
-  "issue_date",
-  "expiry_date",
-  "linked_po_so_number"
-];
-
-const soHeaders = [
-  "company_code",
   "controlling_area",
   "entity",
-  "entity1", 
+  "entity1",
   "entity2",
   "document_no",
   "lc_indicator",
@@ -118,8 +75,58 @@ const soHeaders = [
   "exchange_rate",
   "exchange_rate_date",
   "documenting",
+  "profit_cost_center",
+  "entity3"
+];
+
+
+const lcHeaders = [
+  "system_lc_number",
+  "bank_reference_number",
+  "other_references",
+  "lc_type",
+  "applicant_name",
+  "beneficiary_name",
+  "issuing_bank",
+  "currency",
+  "amount",
+  "issue_date",
+  "expiry_date",
+  "linked_po_so_number"
+];
+
+const soHeaders = [
+  "company_code",
+  "controlling_area",
+  "entity",
+  "entity1",
+  "entity2",
+  "entity3",
+  "document_no",
+  "document_type",
+  "contract_date",
+  "reference_no",
+  "reference_date",
+  "customer_code",
+  "customer_name",
+  "currency_code",
+  "price_basis",
+  "payment_terms",
+  "inco_terms",
+  "total_invoice_value",
+  "last_lot_number",
+  "product_description",
+  "uom_code",
+  "uom_quantity",
+  "net_price",
+  "net_value",
+  "remarks",
+  "delivery_date",
+  "lc_indicator",
+  "exchange_rate_preference",
   "profit_cost_center"
 ];
+
 
 interface UploadedFile {
   id: string;
@@ -143,16 +150,16 @@ const parseExcel = (arrayBuffer: ArrayBuffer, templateType?: string): string[][]
     return [
       poHeaders,
       [
-        "COMP001", "CA01", "ENT01", "ENT1_001", "ENT2_001", "ENT3_001", "DOC001", 
-        "2024-01-15", "REF001", "2024-01-10", "Customer ABC Ltd", "USD",
-        "CIF", "NET30", "FOB", "1000000", "LOT001", "Steel Products", "PCS", "100",
-        "50.00", "5000.00", "Quality products", "2024-02-15", "Y", "FIXED", "CC001"
+        "COMP001", "CA01", "ENT01", "ENT1_001", "ENT2_001", "DOC001", "Y", "2024",
+        "2024-01-15", "REF001", "2024-01-10", "VEN001", "Vendor ABC Ltd", "CIF", "USD",
+        "NET30", "FOB", "Mumbai Port", "1000000", "PCS", "100", "50.00", "5000.00",
+        "1.0", "2024-01-15", "DOC_001", "CC001", "ENT3_001"
       ],
       [
-        "COMP002", "CA02", "ENT02", "ENT1_002", "ENT2_002", "ENT3_002", "DOC002",
-        "2024-02-20", "REF002", "2024-02-15", "Customer XYZ Corp", "EUR", 
-        "FOB", "NET45", "CIF", "2000000", "LOT002", "Electronic Components", "KG", "500",
-        "25.50", "12750.00", "Electronic items", "2024-03-20", "N", "FLOATING", "CC002"
+        "COMP002", "CA02", "ENT02", "ENT1_002", "ENT2_002", "DOC002", "N", "2024",
+        "2024-02-20", "REF002", "2024-02-15", "VEN002", "Supplier XYZ Corp", "FOB", "EUR",
+        "NET45", "CIF", "Chennai Port", "2000000", "KG", "500", "25.50", "12750.00",
+        "0.85", "2024-02-20", "DOC_002", "CC002", "ENT3_002"
       ]
     ];
   } else if (templateType === "lc") {
@@ -173,16 +180,16 @@ const parseExcel = (arrayBuffer: ArrayBuffer, templateType?: string): string[][]
     return [
       soHeaders,
       [
-        "COMP001", "CA01", "ENT01", "ENT1_001", "ENT2_001", "DOC001", "Y", "2024",
-        "2024-01-15", "REF001", "2024-01-10", "VEN001", "Vendor ABC Ltd", "CIF", "USD",
-        "NET30", "FOB", "Mumbai Port", "1000000", "PCS", "100", "50.00", "5000.00",
-        "1.0", "2024-01-15", "DOC_001", "CC001"
+        "COMP001", "CA01", "ENT01", "ENT1_001", "ENT2_001", "ENT3_001", "DOC001", "SO", 
+        "2024-01-15", "REF001", "2024-01-10", "CUST001", "Customer ABC Ltd", "USD",
+        "CIF", "NET30", "FOB", "1000000", "LOT001", "Steel Products", "PCS", "100",
+        "50.00", "5000.00", "Quality products", "2024-02-15", "Y", "FIXED", "CC001"
       ],
       [
-        "COMP002", "CA02", "ENT02", "ENT1_002", "ENT2_002", "DOC002", "N", "2024", 
-        "2024-02-20", "REF002", "2024-02-15", "VEN002", "Supplier XYZ Corp", "FOB", "EUR",
-        "NET45", "CIF", "Chennai Port", "2000000", "KG", "500", "25.50", "12750.00",
-        "0.85", "2024-02-20", "DOC_002", "CC002"
+        "COMP002", "CA02", "ENT02", "ENT1_002", "ENT2_002", "ENT3_002", "DOC002", "SO",
+        "2024-02-20", "REF002", "2024-02-15", "CUST002", "Customer XYZ Corp", "EUR", 
+        "FOB", "NET45", "CIF", "2000000", "LOT002", "Electronic Components", "KG", "500",
+        "25.50", "12750.00", "Electronic items", "2024-03-20", "N", "FLOATING", "CC002"
       ]
     ];
   }
@@ -191,10 +198,10 @@ const parseExcel = (arrayBuffer: ArrayBuffer, templateType?: string): string[][]
   return [
     soHeaders,
     [
-      "COMP001", "CA01", "ENT01", "ENT1_001", "ENT2_001", "DOC001", "Y", "2024",
-      "2024-01-15", "REF001", "2024-01-10", "VEN001", "Vendor ABC Ltd", "CIF", "USD",
-      "NET30", "FOB", "Mumbai Port", "1000000", "PCS", "100", "50.00", "5000.00", 
-      "1.0", "2024-01-15", "DOC_001", "CC001"
+      "COMP001", "CA01", "ENT01", "ENT1_001", "ENT2_001", "ENT3_001", "DOC001", "SO", 
+      "2024-01-15", "REF001", "2024-01-10", "CUST001", "Customer ABC Ltd", "USD",
+      "CIF", "NET30", "FOB", "1000000", "LOT001", "Steel Products", "PCS", "100",
+      "50.00", "5000.00", "Quality products", "2024-02-15", "Y", "FIXED", "CC001"
     ]
   ];
 };
@@ -223,7 +230,8 @@ const getRequiredFields = (templateType?: string): string[] => {
         "entity", 
         "document_no",
         "reference_no",
-        "customer_name",
+        "vendor_code",
+        "vendor_name",
         "currency_code"
       ];
     case "lc":
@@ -242,8 +250,8 @@ const getRequiredFields = (templateType?: string): string[] => {
         "entity",
         "document_no", 
         "reference_no",
-        "vendor_code",
-        "vendor_name",
+        "customer_code",
+        "customer_name",
         "currency_code"
       ];
     default:
@@ -253,8 +261,8 @@ const getRequiredFields = (templateType?: string): string[] => {
         "entity",
         "document_no",
         "reference_no", 
-        "vendor_code",
-        "vendor_name",
+        "customer_code",
+        "customer_name",
         "currency_code"
       ];
   }
@@ -293,14 +301,14 @@ const validateColumns = (
   }
 
   // Check for extra headers
-  const extraHeaders = headers.filter(
-    (h) => !expectedHeaders.map(eh => eh.toLowerCase()).includes(h.toLowerCase())
-  );
-  if (extraHeaders.length > 0) {
-    ifValidationErrors.push({
-      description: `Unexpected headers found: ${extraHeaders.join(", ")}`
-    });
-  }
+  // const extraHeaders = headers.filter(
+  //   (h) => !expectedHeaders.map(eh => eh.toLowerCase()).includes(h.toLowerCase())
+  // );
+  // if (extraHeaders.length > 0) {
+  //   ifValidationErrors.push({
+  //     description: `Unexpected headers found: ${extraHeaders.join(", ")}`
+  //   });
+  // }
 };
 
 const validateRow = (
@@ -354,7 +362,7 @@ const validateRow = (
       }
 
       // Validate numeric fields for PO
-      const numericFields = ["uom_quantity", "net_price", "net_value", "total_invoice_value"];
+      const numericFields = ["uom_quantity", "net_price", "net_value", "exchange_rate", "payment_to_vendor"];
       numericFields.forEach((numField) => {
         if (rowObj[numField] && 
             rowObj[numField] !== "" && 
@@ -369,7 +377,7 @@ const validateRow = (
       });
 
       // Validate date fields for PO
-      const dateFields = ["contract_date", "reference_date", "delivery_date"];
+      const dateFields = ["contract_date", "reference_date", "exchange_rate_date"];
       dateFields.forEach((dateField) => {
         if (rowObj[dateField] && rowObj[dateField] !== "") {
           const date = new Date(rowObj[dateField]);
@@ -448,21 +456,20 @@ const validateRow = (
         });
       }
 
-      // Validate year field for SO (should be 4 digits)
-      if (rowObj["lc_year"] && rowObj["lc_year"] !== "") {
-        const year = parseInt(rowObj["lc_year"]);
-        if (isNaN(year) || year < 1900 || year > 2100) {
-          ifValidationErrors.push({
-            description: `Row ${index + 2}: 'lc_year' must be a valid 4-digit year`,
-            row: index + 2,
-            column: headers.indexOf("lc_year") + 1,
-            currentValue: rowObj["lc_year"]
-          });
-        }
+      // Validate document type for SO
+      const validDocTypes = ["so", "sales order", "sales_order"];
+      if (rowObj["document_type"] && 
+          !validDocTypes.includes(rowObj["document_type"].toLowerCase())) {
+        ifValidationErrors.push({
+          description: `Row ${index + 2}: 'document_type' should be 'SO' for Sales Order template`,
+          row: index + 2,
+          column: headers.indexOf("document_type") + 1,
+          currentValue: rowObj["document_type"]
+        });
       }
 
       // Validate date fields for SO
-      const dateFields = ["contract_date", "reference_date", "exchange_rate_date"];
+      const dateFields = ["contract_date", "reference_date", "delivery_date"];
       dateFields.forEach((dateField) => {
         if (rowObj[dateField] && rowObj[dateField] !== "") {
           const date = new Date(rowObj[dateField]);
@@ -478,7 +485,7 @@ const validateRow = (
       });
 
       // Validate numeric fields for SO
-      const numericFields = ["uom_quantity", "net_price", "net_value", "exchange_rate"];
+      const numericFields = ["uom_quantity", "net_price", "net_value", "total_invoice_value"];
       numericFields.forEach((numField) => {
         if (rowObj[numField] && 
             rowObj[numField] !== "" && 
@@ -728,13 +735,13 @@ export const validatePreviewData = (
         }
 
         // Number validation for PO
-        const numericFields = ["uom_quantity", "net_price", "net_value", "total_invoice_value"];
+        const numericFields = ["uom_quantity", "net_price", "net_value", "exchange_rate", "payment_to_vendor"];
         if (numericFields.includes(header) && value && isNaN(Number(value))) {
           validationErrors.push(`Row ${rowIndex + 1}: ${header} must be a number`);
         }
 
         // Date validation for PO
-        const dateFields = ["contract_date", "reference_date", "delivery_date"];
+        const dateFields = ["contract_date", "reference_date", "exchange_rate_date"];
         if (dateFields.includes(header) && value) {
           const date = new Date(value);
           if (isNaN(date.getTime())) {
@@ -774,22 +781,20 @@ export const validatePreviewData = (
           validationErrors.push(`Row ${rowIndex + 1}: lc_indicator must be Y or N`);
         }
 
-        // Year validation for SO
-        if (header === "lc_year" && value) {
-          const year = parseInt(value);
-          if (isNaN(year) || year < 1900 || year > 2100) {
-            validationErrors.push(`Row ${rowIndex + 1}: lc_year must be a valid 4-digit year`);
-          }
+        // Document type validation for SO
+        const validDocTypes = ["so", "sales order", "sales_order"];
+        if (header === "document_type" && value && !validDocTypes.includes(value.toLowerCase())) {
+          validationErrors.push(`Row ${rowIndex + 1}: document_type should be 'SO' for Sales Order`);
         }
 
         // Number validation for SO
-        const numericFields = ["uom_quantity", "net_price", "net_value", "exchange_rate"];
+        const numericFields = ["uom_quantity", "net_price", "net_value", "total_invoice_value"];
         if (numericFields.includes(header) && value && isNaN(Number(value))) {
           validationErrors.push(`Row ${rowIndex + 1}: ${header} must be a number`);
         }
 
         // Date validation for SO
-        const dateFields = ["contract_date", "reference_date", "exchange_rate_date"];
+        const dateFields = ["contract_date", "reference_date", "delivery_date"];
         if (dateFields.includes(header) && value) {
           const date = new Date(value);
           if (isNaN(date.getTime())) {
@@ -824,10 +829,10 @@ export const handleDownload = (template: any) => {
   
   if (template.id === "po") {
     sampleRow = [
-      "COMP001", "CA01", "ENT01", "ENT1_001", "ENT2_001", "ENT3_001", "DOC001",
-      "2024-01-15", "REF001", "2024-01-10", "Customer ABC Ltd", "USD",
-      "CIF", "NET30", "FOB", "1000000", "LOT001", "Steel Products", "PCS", "100",
-      "50.00", "5000.00", "Quality products", "2024-02-15", "Y", "FIXED", "CC001"
+      "COMP001", "CA01", "ENT01", "ENT1_001", "ENT2_001", "DOC001", "Y", "2024",
+      "2024-01-15", "REF001", "2024-01-10", "VEN001", "Vendor ABC Ltd", "CIF", "USD",
+      "NET30", "FOB", "Mumbai Port", "1000000", "PCS", "100", "50.00", "5000.00",
+      "1.0", "2024-01-15", "DOC_001", "CC001", "ENT3_001"
     ];
   } else if (template.id === "lc") {
     sampleRow = [
@@ -837,10 +842,10 @@ export const handleDownload = (template: any) => {
     ];
   } else { // so template
     sampleRow = [
-      "COMP001", "CA01", "ENT01", "ENT1_001", "ENT2_001", "DOC001", "Y", "2024",
-      "2024-01-15", "REF001", "2024-01-10", "VEN001", "Vendor ABC Ltd", "CIF",
-      "USD", "NET30", "FOB", "Mumbai Port", "1000000", "PCS", "100", "50.00",
-      "5000.00", "1.0", "2024-01-15", "DOC_001", "CC001"
+      "COMP001", "CA01", "ENT01", "ENT1_001", "ENT2_001", "ENT3_001", "DOC001", "SO",
+      "2024-01-15", "REF001", "2024-01-10", "CUST001", "Customer ABC Ltd", "USD",
+      "CIF", "NET30", "FOB", "1000000", "LOT001", "Steel Products", "PCS", "100",
+      "50.00", "5000.00", "Quality products", "2024-02-15", "Y", "FIXED", "CC001"
     ];
   }
 
