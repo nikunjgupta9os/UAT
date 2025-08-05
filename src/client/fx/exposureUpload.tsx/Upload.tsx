@@ -398,6 +398,21 @@ const UploadFile: React.FC = () => {
 
       if (res.data.results[0]?.success) {
         notify("Data has been successfully sent to the server", "success");
+      } else if (res.data.results && Array.isArray(res.data.results)) {
+        // Beautify duplicate constraint errors
+        const errorMessages = res.data.results
+          .filter((r) => !r.success)
+          .map((r) => {
+            if (r.error && r.error.includes('duplicate key value violates unique constraint')) {
+              // Extract constraint name
+              const match = r.error.match(/constraint "(.+?)"/);
+              const constraint = match ? match[1] : "unknown constraint";
+              return `Duplicate data found in file '${r.filename}'. Constraint violated: ${constraint}`;
+            }
+            return `Error in file '${r.filename}': ${r.error}`;
+          })
+          .join("\n");
+        notify(errorMessages, "error");
       } else {
         notify("Upload failed: " + res.data.results[0]?.error, "error");
       }
