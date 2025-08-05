@@ -8,6 +8,7 @@ interface PreviewTableProps {
   headers: string[];
   rows: string[][];
   onRemoveRow: (index: number) => void;
+  onUpdateRow?: (rowIndex: number, updatedData: Record<string, any>) => void;
 }
 
 interface PreviewRowData {
@@ -21,6 +22,7 @@ const PreviewTable: React.FC<PreviewTableProps> = ({
   headers,
   rows,
   onRemoveRow,
+  onUpdateRow,
 }) => {
   // Transform rows data into format expected by NyneOSTable
   const data: PreviewRowData[] = React.useMemo(() => {
@@ -53,36 +55,49 @@ const PreviewTable: React.FC<PreviewTableProps> = ({
   }, [headers]);
 
   const expandedRowConfig = React.useMemo(() => {
-  if (headers.length === 0) return undefined;
+    if (headers.length === 0) return undefined;
 
-  const capitalize = (str: string) =>
-    str
-      .trim()
-      .split(/\s+/)
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(" ");
+    const capitalize = (str: string) =>
+      str
+        .trim()
+        .split(/\s+/)
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(" ");
 
-  const allColumns = headers.map((header, index) => ({ header, index }));
+    const allColumns = headers.map((header, index) => ({ header, index }));
 
-  return {
-    sections: [
-      {
-        title: "All Columns",
-        fields: allColumns.map(({ index }) => `col_${index}`),
-      },
-    ],
-    fieldLabels: allColumns.reduce((acc, { header, index }) => {
-      acc[`col_${index}`] = capitalize(header) || `Column ${index + 1}`;
-      return acc;
-    }, {} as Record<string, string>),
-    editableFields: allColumns
-      .filter(({ header }) => {
-        const lowerHeader = header.trim().toLowerCase();
-        return lowerHeader !== "reference_no" && lowerHeader !== "business_unit";
-      })
-      .map(({ index }) => `col_${index}`),
-  };
-}, [headers]);
+    return {
+      sections: [
+        {
+          title: "All Columns",
+          fields: allColumns.map(({ index }) => `col_${index}`),
+        },
+      ],
+      fieldLabels: allColumns.reduce((acc, { header, index }) => {
+        acc[`col_${index}`] = capitalize(header) || `Column ${index + 1}`;
+        return acc;
+      }, {} as Record<string, string>),
+      editableFields: allColumns.map(({ index }) => `col_${index}`), // Make all fields editable
+    };
+  }, [headers]);
+
+  // Handle row updates from the table
+  const handleRowUpdate = React.useCallback(async (exposureHeaderId: string, updatedFields: Record<string, any>) => {
+    if (!onUpdateRow) return true;
+
+    // Extract the row index from the exposure_header_id
+    const rowIndex = parseInt(exposureHeaderId.replace('preview_row_', ''));
+    
+    if (isNaN(rowIndex)) return false;
+
+    try {
+      onUpdateRow(rowIndex, updatedFields);
+      return true;
+    } catch (error) {
+      console.error('Error updating row:', error);
+      return false;
+    }
+  }, [onUpdateRow]);
 
 
 
@@ -173,6 +188,7 @@ const PreviewTable: React.FC<PreviewTableProps> = ({
           expandedRowConfig={expandedRowConfig}
           className="max-h-[500px]"
           edit={true}
+          onUpdate={handleRowUpdate}
         />      {/* Footer with row count info */}
       <div className="bg-gray-50 px-6 py-3 border border-gray-200 rounded-xl">
         <div className="flex justify-between items-center text-sm text-gray-600">
