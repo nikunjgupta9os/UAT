@@ -1,13 +1,15 @@
 import React from "react";
 import Button from "../../ui/Button.tsx";
-import { templates, formatFileSize } from "./component/fxUploader.ts";
+import { templates, formatFileSize, handleDownload } from "./component/fxUploader.ts";
 import {
   validateFileContent,
   getFileTextColor,
   getFileStatusColor,
+  validatePreviewData,
 } from "./component/fxUploader.ts";
 import axios from "axios";
 import { useNotification } from "../../Notification/Notification.tsx";
+import PreviewTable from "../exposureUpload.tsx/PreviewTable.tsx"; // Adjust import path as needed
 import {
   Upload,
   Eye,
@@ -35,6 +37,27 @@ const FxUploader: React.FC = () => {
 
   const removeFile = (id: string) =>
     setFiles((prev) => prev.filter((file) => file.id !== id));
+
+  const handleRemoveRow = (index: number) => {
+    setPreviewData(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateRow = (rowIndex: number, updatedData: Record<string, any>) => {
+    setPreviewData((prevData) => {
+      const newData = [...prevData];
+      if (newData[rowIndex]) {
+        // Update the row with new values
+        Object.entries(updatedData).forEach(([key, value]) => {
+          const colIndex = parseInt(key.replace('col_', ''));
+          if (!isNaN(colIndex) && colIndex < newData[rowIndex].length) {
+            newData[rowIndex][colIndex] = value;
+          }
+        });
+      }
+      return newData;
+    });
+  };
+
   const handlePreviewFile = (uploadedFile: UploadedFile) => {
     if (!uploadedFile.file) {
       console.error("No file found for preview");
@@ -457,7 +480,7 @@ const FxUploader: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        {/* {file.status === "success" && file.file && (
+                        {file.status === "success" && file.file && (
                           <button
                             onClick={() => handlePreviewFile(file)}
                             className="p-1 text-blue-600 hover:text-blue-800"
@@ -465,7 +488,7 @@ const FxUploader: React.FC = () => {
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                        )} */}
+                        )}
 
                         {file.status === "error" && file.file && (
                           <button
@@ -495,6 +518,37 @@ const FxUploader: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Preview Section */}
+        {showPreview && previewData.length > 0 && (
+          <PreviewTable
+            headers={previewHeaders}
+            rows={previewData}
+            onRemoveRow={handleRemoveRow}
+            onUpdateRow={handleUpdateRow}
+          />
+        )}
+        {/* {showPreview && (
+          <div className="bg-secondary-color-lt p-6 rounded-lg shadow-sm border border-border">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-secondary-text-dark">
+                Preview: {previewFileName}
+              </h2>
+              <button
+                onClick={() => setShowPreview(false)}
+                className="p-1 text-gray-500 hover:text-gray-700"
+                title="Close Preview"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <PreviewTable
+              headers={previewHeaders}
+              rows={previewData}
+              onRemoveRow={handleRemoveRow}
+            />
+          </div>
+        )} */}
 
         <div className="bg-secondary-color-lt p-6 rounded-lg shadow-sm border border-border">
           <div className="wi-full px-4 py-6">
@@ -526,7 +580,7 @@ const FxUploader: React.FC = () => {
                       </p>
                     </div>
                     <button
-                      // onClick={() => handleDownload(template)}
+                      onClick={() => handleDownload(template)}
                       className="ml-4 p-1 text-primary-lt hover:text-primary transition-colors duration-200"
                       aria-label={`Download ${template.name}`}
                     >
