@@ -57,7 +57,6 @@ const poHeaders = [
   "contract_date",
   "reference_no",
   "reference_date",
-  "customer_code",
   "customer_name",
   "currency_code",
   "price_basis",
@@ -145,13 +144,13 @@ const parseExcel = (arrayBuffer: ArrayBuffer, templateType?: string): string[][]
       poHeaders,
       [
         "COMP001", "CA01", "ENT01", "ENT1_001", "ENT2_001", "ENT3_001", "DOC001", 
-        "2024-01-15", "REF001", "2024-01-10", "CUST001", "Customer ABC Ltd", "USD",
+        "2024-01-15", "REF001", "2024-01-10", "Customer ABC Ltd", "USD",
         "CIF", "NET30", "FOB", "1000000", "LOT001", "Steel Products", "PCS", "100",
         "50.00", "5000.00", "Quality products", "2024-02-15", "Y", "FIXED", "CC001"
       ],
       [
         "COMP002", "CA02", "ENT02", "ENT1_002", "ENT2_002", "ENT3_002", "DOC002",
-        "2024-02-20", "REF002", "2024-02-15", "CUST002", "Customer XYZ Corp", "EUR", 
+        "2024-02-20", "REF002", "2024-02-15", "Customer XYZ Corp", "EUR", 
         "FOB", "NET45", "CIF", "2000000", "LOT002", "Electronic Components", "KG", "500",
         "25.50", "12750.00", "Electronic items", "2024-03-20", "N", "FLOATING", "CC002"
       ]
@@ -224,7 +223,6 @@ const getRequiredFields = (templateType?: string): string[] => {
         "entity", 
         "document_no",
         "reference_no",
-        "customer_code",
         "customer_name",
         "currency_code"
       ];
@@ -827,7 +825,7 @@ export const handleDownload = (template: any) => {
   if (template.id === "po") {
     sampleRow = [
       "COMP001", "CA01", "ENT01", "ENT1_001", "ENT2_001", "ENT3_001", "DOC001",
-      "2024-01-15", "REF001", "2024-01-10", "CUST001", "Customer ABC Ltd", "USD",
+      "2024-01-15", "REF001", "2024-01-10", "Customer ABC Ltd", "USD",
       "CIF", "NET30", "FOB", "1000000", "LOT001", "Steel Products", "PCS", "100",
       "50.00", "5000.00", "Quality products", "2024-02-15", "Y", "FIXED", "CC001"
     ];
