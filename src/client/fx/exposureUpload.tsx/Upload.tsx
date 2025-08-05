@@ -132,6 +132,22 @@ const UploadFile: React.FC = () => {
     });
   };
 
+  const handleUpdateRow = (rowIndex: number, updatedData: Record<string, any>) => {
+    setPreviewData((prevData) => {
+      const newData = [...prevData];
+      if (newData[rowIndex]) {
+        // Update the row with new values
+        Object.entries(updatedData).forEach(([key, value]) => {
+          const colIndex = parseInt(key.replace('col_', ''));
+          if (!isNaN(colIndex) && colIndex < newData[rowIndex].length) {
+            newData[rowIndex][colIndex] = value;
+          }
+        });
+      }
+      return newData;
+    });
+  };
+
   const handleFiles = async (fileList: FileList) => {
     // Check if type is selected
     if (!selectedType) {
@@ -661,6 +677,7 @@ const UploadFile: React.FC = () => {
             headers={previewHeaders}
             rows={previewData}
             onRemoveRow={handleRemoveRow}
+            onUpdateRow={handleUpdateRow}
           />
         )}
 
