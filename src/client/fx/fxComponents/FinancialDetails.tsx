@@ -169,7 +169,7 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
             </label>
             <input
               type="number"
-              className="h-[37px] border p-2 bg-secondary-color-lt text-secondary-text-dark rounded border-border"
+              className="h-[37px] border p-2 text-secondary-text-dark rounded border-border"
               value={formData[field.key as keyof FinancialDetailsResponse] ?? ""}
               onChange={(e) =>
                 setFormData((prev) => ({
