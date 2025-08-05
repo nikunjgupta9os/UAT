@@ -757,7 +757,7 @@ const UploadFile: React.FC = () => {
             headers={previewHeaders}
             rows={previewData}
             onRemoveRow={handleRemoveRow}
-            onUpdateRow={handleUpdateRow}
+            onUpdateRow={(rowIndex, updatedData) => handleUpdateRow(rowIndex, updatedData, /* fileId not available here */ "preview")}
           />
         )}
 
