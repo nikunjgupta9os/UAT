@@ -25,6 +25,35 @@ import {
 import PreviewTable from "./PreviewTable.tsx";
 // import { set } from "date-fns";
 
+interface UploadedFile {
+  id: string;
+  name: string;
+  size: number;
+  status: "pending" | "processing" | "success" | "error";
+  uploadDate: Date;
+  file?: File;
+  validationErrors?: Array<{ description: string; row?: number; column?: number; currentValue?: string }>;
+  error?: string;
+  rowCount?: number;
+  columnCount?: number;
+  hasHeaders?: boolean;
+  hasMissingValues?: boolean;
+}
+
+// Helper function to map selected type to template type
+const getTemplateTypeFromSelected = (selectedType: string): string => {
+  switch (selectedType) {
+    case "PO":
+      return "po";
+    case "LC":
+      return "lc";
+    case "SO":
+      return "so";
+    default:
+      return "so"; // default to SO
+  }
+};
+
 const UploadFile: React.FC = () => {
   const [files, setFiles] = React.useState<UploadedFile[]>([]);
   const { notify } = useNotification();
@@ -38,6 +67,11 @@ const UploadFile: React.FC = () => {
   const handleDrag = (event: React.DragEvent) => {
     event.preventDefault();
     event.stopPropagation();
+    
+    if (!selectedType) {
+      return;
+    }
+    
     if (event.type === "dragenter" || event.type === "dragover") {
       setDragActive(true);
     } else {
@@ -49,8 +83,16 @@ const UploadFile: React.FC = () => {
     event.preventDefault();
     event.stopPropagation();
     setDragActive(false);
+    
+    if (!selectedType) {
+      notify("Please select a type of exposure first.", "warning");
+      return;
+    }
+    
     if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
       handleFiles(event.dataTransfer.files);
+    } else {
+      notify("No valid files dropped.", "warning");
     }
   };
 
@@ -80,7 +122,7 @@ const UploadFile: React.FC = () => {
       if (!previewedFile) return newData;
 
       // Check if validation issues are resolved
-      const validationErrors = validatePreviewData(newData, previewHeaders);
+      const validationErrors = validatePreviewData(newData, previewHeaders, getTemplateTypeFromSelected(selectedType));
       const hasIssues = validationErrors.length > 0;
       if (!hasIssues) {
         // Update the file status if all issues are resolved
@@ -91,6 +133,37 @@ const UploadFile: React.FC = () => {
   };
 
   const handleFiles = async (fileList: FileList) => {
+    // Check if type is selected
+    if (!selectedType) {
+      notify("Please select a type of exposure before uploading files.", "error");
+      return;
+    }
+
+    // Validate file types
+    const invalidFiles = Array.from(fileList).filter(file => {
+      const fileName = file.name.toLowerCase();
+      return !fileName.endsWith('.csv') && !fileName.endsWith('.xlsx') && !fileName.endsWith('.xls');
+    });
+
+    if (invalidFiles.length > 0) {
+      notify(`Invalid file type(s): ${invalidFiles.map(f => f.name).join(', ')}. Only CSV and Excel files are accepted.`, "error");
+      return;
+    }
+
+    // Validate file sizes (10MB limit)
+    const oversizedFiles = Array.from(fileList).filter(file => file.size > 10 * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+      notify(`File(s) too large: ${oversizedFiles.map(f => f.name).join(', ')}. Maximum size is 10MB.`, "error");
+      return;
+    }
+
+    // Check if files are not empty
+    const emptyFiles = Array.from(fileList).filter(file => file.size === 0);
+    if (emptyFiles.length > 0) {
+      notify(`Empty file(s) detected: ${emptyFiles.map(f => f.name).join(', ')}.`, "error");
+      return;
+    }
+
     const newFiles: UploadedFile[] = Array.from(fileList).map((file) => ({
       id: crypto.randomUUID(),
       name: file.name,
@@ -101,19 +174,13 @@ const UploadFile: React.FC = () => {
     }));
 
     setFiles((prev) => [...prev, ...newFiles]);
+    notify(`Processing ${fileList.length} file(s)...`, "info");
     const processFile = async (file: File, fileData: UploadedFile) => {
       try {
-        // Skip validation if type is LC or SO
-        if (selectedType === "LC" || selectedType === "SO") {
-          return {
-            id: fileData.id,
-            update: {
-              status: "success" as const,
-            },
-          };
-        }
+        // Map selectedType to template type for validation
+        const templateType = getTemplateTypeFromSelected(selectedType);
 
-        const validation = await validateFileContent(file);
+        const validation = await validateFileContent(file, templateType);
 
         if (!validation || !validation.status) {
           throw new Error("Invalid validation result");
@@ -164,10 +231,19 @@ const UploadFile: React.FC = () => {
   };
 
   const handleFileInput = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      handleFiles(event.target.files);
+    if (!selectedType) {
+      notify("Please select a type of exposure first.", "warning");
+      event.target.value = '';
+      return;
     }
-    console.log("files", event.target.files);
+    
+    if (event.target.files && event.target.files.length > 0) {
+      handleFiles(event.target.files);
+    } else {
+      notify("No files selected.", "warning");
+    }
+    // Reset the input so the same file can be selected again if needed
+    event.target.value = '';
   };
 
   const clearAllFiles = () => setFiles([]);
@@ -314,32 +390,46 @@ const UploadFile: React.FC = () => {
             className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
               dragActive
                 ? "border-green-500 bg-green-50"
+                : !selectedType
+                ? "border-gray-300 bg-gray-50 cursor-not-allowed"
                 : "border-border hover:border-primary-lt"
             }`}
             // className="relative border-2 border-dashed rounded-lg p-8 text-center transition-colors hover:border-primary-lt bg-secondary-color-lt text-secondary-text-dark"
             // Upload
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
+            onDragEnter={!selectedType ? undefined : handleDrag}
+            onDragLeave={!selectedType ? undefined : handleDrag}
+            onDragOver={!selectedType ? undefined : handleDrag}
+            onDrop={!selectedType ? undefined : handleDrop}
+            onClick={!selectedType ? () => notify("Please select a type of exposure first.", "warning") : undefined}
           >
             <input
               type="file"
               multiple
               accept=".csv,.xlsx,.xls"
               onChange={handleFileInput}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              disabled={!selectedType}
+              className={`absolute inset-0 w-full h-full opacity-0 ${
+                selectedType ? "cursor-pointer" : "cursor-not-allowed"
+              }`}
             />
             <div className="space-y-2">
-              <Upload className="w-8 h-8 text-primary mx-auto" />
+              <Upload className={`w-8 h-8 mx-auto ${selectedType ? "text-primary" : "text-gray-400"}`} />
               <p className="text-sm text-gray-600">
-                <span className="font-medium text-primary">
-                  Click to upload
-                </span>{" "}
-                <span className="text-secondary-text">or drag and drop</span>
+                {selectedType ? (
+                  <>
+                    <span className="font-medium text-primary">
+                      Click to upload
+                    </span>{" "}
+                    <span className="text-secondary-text">or drag and drop</span>
+                  </>
+                ) : (
+                  <span className="text-gray-500">
+                    Please select a type of exposure first
+                  </span>
+                )}
               </p>
               <p className="text-xs text-secondary-text-dark">
-                CSV, XLSX files up to 10MB
+                {selectedType ? "CSV, XLSX files up to 10MB" : "Select exposure type to enable upload"}
               </p>
             </div>
           </div>
@@ -602,7 +692,7 @@ const UploadFile: React.FC = () => {
                       <p className="text-sm text-gray-500">{template.type}</p>
                     </div>
                     <button
-                      onClick={() => handleDownload("po")}
+                      onClick={() => handleDownload(template)}
                       className="ml-4 p-1 text-gray-400 hover:text-gray-600 transition-colors duration-200"
                       aria-label={`Download ${template.name}`}
                     >
