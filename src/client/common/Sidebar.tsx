@@ -25,6 +25,7 @@ import {
   Proportions,
   Handshake,
   BookUp,
+  LogOut,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -47,54 +48,76 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const [floatingSubMenu, setFloatingSubMenu] = useState<NavItem | null>(null);
   const floatingMenuRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
+
   const toggleCollapse = () => {
     setCollapsed(prev => !prev);
     setOpenSubMenus(new Set());
     setFloatingSubMenu(null);
   };
 
+  // Logout handler
+  const handleLogout = async () => {
+    const userId = localStorage.getItem("userId");
+    try {
+      await fetch("https://backend-slqi.onrender.com/api/auth/logout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      localStorage.removeItem("userId");
+      localStorage.removeItem("userRole");
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("isLoggedIn");
+      navigate("/", { replace: true });
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
   const navItems: NavItem[] = [
-    { label: "Entity", path: "/entity", icon: <Building /> },
-    { label: "Entity hierarchy", path: "/hierarchical", icon: <Layers /> },
-    {
-      label: "Settings",
-      icon: <Settings />,
-      subItems: [
-        { label: "Roles", path: "/role", icon: <UserRoundCog /> },
-        { label: "Permissions", path: "/permission", icon: <HandCoins /> },
-        { label: "Users", path: "/user", icon: <UserPlus /> },
-      ],
-    },
-    {
-      label: "Dashboard",
-      icon: <FileBarChart />,
-      subItems: [
-        { label: "CFO Dashboard", path: "/cfo-dashboard", icon: <ChartArea /> },
-        { label: "FX Ops Dashboard", path: "/ops-dashboard", icon: <SquareChartGantt /> },
-        { label: "Hedging Dashboard", path: "/hedging-dashboard", icon: <LayoutDashboard /> },
-        { label: "Dashboard Builder", path: "/cfo-dashboard-builder", icon: <Proportions /> },
-      ],
-    },
-    {
-      label: "Exposure",
-      icon: <Landmark />,
-      subItems: [
-        { label: "Exposure Upload", path: "/exposure-upload", icon: <Upload /> },
-        { label: "Exposure Bucketing", path: "/exposure-bucketing", icon: <BarChart2 /> },
-        { label: "Hedging Proposal", path: "/hedging-proposal", icon: <FileText /> },
-        { label: "Exposure Linkage", path: "/linking-screen", icon: <FileSymlink /> },
-      ],
-    },
-    {
-      label: "Forwards",
-      icon: <Receipt />,
-      subItems: [
-        { label: "FX Forward Booking", path: "/fxbooking", icon: <BookUp /> },
-        { label: "FX Confirmation", path: "/fx-confirmation", icon: <CheckCircle /> },
-      ],
-    },
-    { label: "Reports", path: "/reports", icon: <Proportions /> },
-    { label: "Settlement", path: "/exposure-selection", icon: <Handshake /> },
+  { label: "Entity", path: "/entity", icon: <Building /> },
+  { label: "Entity hierarchy", path: "/hierarchical", icon: <Layers /> },
+  {
+    label: "Settings",
+    icon: <Settings />,
+    subItems: [
+      { label: "Roles", path: "/role", icon: <UserRoundCog /> },
+      { label: "Permissions", path: "/permission", icon: <HandCoins /> },
+      { label: "Users", path: "/user", icon: <UserPlus /> },
+    ],
+  },
+  {
+    label: "Dashboard",
+    icon: <FileBarChart />,
+    subItems: [
+      { label: "CFO Dashboard", path: "/cfo-dashboard", icon: <ChartArea /> },
+      { label: "FX Ops Dashboard", path: "/ops-dashboard", icon: <SquareChartGantt /> },
+      { label: "Hedging Dashboard", path: "/hedging-dashboard", icon: <LayoutDashboard /> },
+      { label: "Dashboard Builder", path: "/cfo-dashboard-builder", icon: <Proportions /> },
+    ],
+  },
+  {
+    label: "Exposure",
+    icon: <Landmark />,
+    subItems: [
+      { label: "Exposure Upload", path: "/exposure-upload", icon: <Upload /> },
+      { label: "Exposure Bucketing", path: "/exposure-bucketing", icon: <BarChart2 /> },
+      { label: "Hedging Proposal", path: "/hedging-proposal", icon: <FileText /> },
+      { label: "Exposure Linkage", path: "/linking-screen", icon: <FileSymlink /> },
+    ],
+  },
+  {
+    label: "Forwards",
+    icon: <Receipt />,
+    subItems: [
+      { label: "FX Forward Booking", path: "/fxbooking", icon: <BookUp /> },
+      { label: "FX Confirmation", path: "/fx-confirmation", icon: <CheckCircle /> },
+    ],
+  },
+  { label: "Reports", path: "/reports", icon: <Proportions /> },
+  { label: "Settlement", path: "/exposure-selection", icon: <Handshake /> },
+  // Logout nav item
+  { label: "Logout", icon: <LogOut />, path: "__logout__" },
   ];
 
   useEffect(() => {
@@ -135,6 +158,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     }
 
     if (item.path) {
+      if (item.path === "__logout__") {
+        handleLogout();
+        return;
+      }
       navigate(item.path);
       if (!collapsed) {
         onClose();
@@ -281,6 +308,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             );
           })}
         </nav>
+
+      
 
         {/* Floating submenu */}
         {collapsed && floatingSubMenu && (
