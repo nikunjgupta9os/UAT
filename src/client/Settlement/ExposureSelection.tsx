@@ -1054,11 +1054,11 @@ const ExposureSelection = () => {
             }
             placeholder="Select bank"
             isClearable={false}
-            isDisabled={true}
+            isDisabled={false}
           />
         </div>
 
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center justify-end gap-2 z-1">
           <div className="w-15rem">
             <Button onClick={handlePaymentClick}>Payment</Button>
           </div>
@@ -1072,7 +1072,7 @@ const ExposureSelection = () => {
 
         {/* Search and Action Buttons */}
 
-        <div className="shadow-lg border border-border rounded-lg">
+        <div className="shadow-lg border border-border rounded-lg z-1">
           <DndContext
             onDragEnd={handleDragEnd}
             modifiers={[restrictToFirstScrollableAncestor]}
