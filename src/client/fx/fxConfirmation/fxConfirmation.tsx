@@ -113,6 +113,46 @@ type OptionType = {
   label: string;
 };
 
+// API payload type matching the backend requirements
+type ApiPayload = {
+  internal_reference_id: string;
+  entity_level_0: string;
+  entity_level_1: string;
+  entity_level_2: string;
+  entity_level_3: string;
+  local_currency: string;
+  order_type: string;
+  transaction_type: string;
+  counterparty: string;
+  mode_of_delivery: string;
+  delivery_period: string;
+  add_date: string;
+  settlement_date: string;
+  maturity_date: string;
+  delivery_date: string;
+  currency_pair: string;
+  base_currency: string;
+  quote_currency: string;
+  booking_amount: number;
+  value_type: string;
+  actual_value_base_currency: number;
+  spot_rate: number;
+  forward_points: number;
+  bank_margin: number;
+  total_rate: number;
+  value_quote_currency: number;
+  intervening_rate_quote_to_local: number;
+  value_local_currency: number;
+  internal_dealer: string;
+  counterparty_dealer: string;
+  remarks: string;
+  narration: string;
+  transaction_timestamp: string;
+  bank_transaction_id: string;
+  swift_unique_id: string;
+  bank_confirmation_date: string;
+};
+
 const FxBookingForm: React.FC = () => {
   const [transactionInfo, setTransactionInfo] = useState({
     systemTransactionId: "Auto-Generated",
@@ -359,6 +399,115 @@ const FxBookingForm: React.FC = () => {
 
   const internalRefOptions = allTransactions.map((t) => t.internalReferenceId);
 
+  // Function to prepare API payload
+  const prepareApiPayload = (): ApiPayload => {
+    const { base_currency, quote_currency } = extractCurrencies(
+      financialData.currencyPair
+    );
+
+    return {
+      internal_reference_id: transactionInfo.internalReferenceId,
+      entity_level_0: entityValues.buEntity0 || "",
+      entity_level_1: entityValues.buEntity1 || "",
+      entity_level_2: entityValues.buEntity2 || "",
+      entity_level_3: entityValues.buEntity3 || "",
+      local_currency: orderDetails.localCurrency,
+      order_type: orderDetails.orderType,
+      transaction_type: orderDetails.transactionType,
+      counterparty: orderDetails.counterparty,
+      mode_of_delivery: deliveryDetails.modeOfDelivery,
+      delivery_period: deliveryDetails.deliveryPeriod,
+      add_date: formatDateForApi(deliveryDetails.addDate),
+      settlement_date: formatDateForApi(deliveryDetails.settlementDate),
+      maturity_date: formatDateForApi(deliveryDetails.maturityDate),
+      delivery_date: formatDateForApi(deliveryDetails.deliveryDate),
+      currency_pair: financialData.currencyPair,
+      base_currency: financialData.baseCurrency || base_currency,
+      quote_currency: financialData.quoteCurrency || quote_currency,
+      booking_amount: financialData.inputValue || 0,
+      value_type: financialData.valueType,
+      actual_value_base_currency: financialData.actualValueBaseCurrency || 0,
+      spot_rate: financialData.spotRate || 0,
+      forward_points: financialData.forwardPoints || 0,
+      bank_margin: financialData.bankMargin || 0,
+      total_rate: financialData.totalRate || 0,
+      value_quote_currency: financialData.valueQuoteCurrency || 0,
+      intervening_rate_quote_to_local: financialData.interveningRateQuoteToLocal || 0,
+      value_local_currency: financialData.valueLocalCurrency || 0,
+      internal_dealer: dealerInfo.internalDealer,
+      counterparty_dealer: dealerInfo.counterpartyDealer,
+      remarks: additionalDetails.remarks || "",
+      narration: additionalDetails.narration || "",
+      transaction_timestamp: formatTimestampForApi(additionalDetails.timestamp || ""),
+      bank_transaction_id: confirmationDetails.bankTransactionId,
+      swift_unique_id: confirmationDetails.swiftUniqueId,
+      bank_confirmation_date: formatDateForApi(confirmationDetails.bankConfirmationDate),
+    };
+  };
+
+  // Function to validate required fields
+  const validateForm = (): string | null => {
+    if (!transactionInfo.internalReferenceId)
+      return "Internal Reference ID is required";
+    if (!confirmationDetails.bankTransactionId)
+      return "Bank Transaction ID is required";
+    if (!confirmationDetails.swiftUniqueId)
+      return "SWIFT Unique ID is required";
+    if (!confirmationDetails.bankConfirmationDate)
+      return "Bank Confirmation Date is required";
+
+    return null;
+  };
+
+  // Function to submit the confirmation
+  const handleSubmitBooking = async () => {
+    try {
+      setIsSubmitting(true);
+      setSubmitError(null);
+      setSubmitSuccess(false);
+
+      // Validate form before submission
+      const validationError = validateForm();
+      if (validationError) {
+        notify(validationError, "error");
+        setSubmitError(validationError);
+        return;
+      }
+
+      // Prepare payload
+      const payload = prepareApiPayload();
+      console.log("Submitting confirmation payload:", payload);
+
+      const response = await axios.post(
+        "https://backend-slqi.onrender.com/api/forwards/forward-confirmations/manual-entry",
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      notify("Confirmation submitted successfully!", "success");
+      console.log("Confirmation submitted successfully:", response.data);
+
+      setSubmitSuccess(true);
+      // Optionally reset form or redirect user
+    } catch (error) {
+      console.error("Error submitting confirmation:", error);
+
+      let errorMessage = "An error occurred while submitting the confirmation";
+      if (axios.isAxiosError(error)) {
+        errorMessage = error.response?.data?.message || error.message;
+      }
+
+      notify(`Error submitting confirmation: ${errorMessage}`, "error");
+      setSubmitError(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Function to format timestamp to ISO format
   const formatTimestampForApi = (timestamp: string): string => {
     if (!timestamp) return new Date().toISOString();
@@ -426,6 +575,11 @@ const FxBookingForm: React.FC = () => {
         hour12: true,
       }),
     });
+    setConfirmationDetails({
+      bankTransactionId: "",
+      swiftUniqueId: "",
+      bankConfirmationDate: "",
+    });
     setSubmitError(null);
     setSubmitSuccess(false);
   };
@@ -441,10 +595,10 @@ const FxBookingForm: React.FC = () => {
             <div className="flex items-center justify-end gap-2">
               <div className="w-15rem">
                 <Button
-                  // onClick={handleSubmitBooking}
+                  onClick={handleSubmitBooking}
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Submitting..." : "Submit Booking"}
+                  {isSubmitting ? "Submitting..." : "Submit Confirmation"}
                 </Button>
               </div>
               <div className="w-15rem">
