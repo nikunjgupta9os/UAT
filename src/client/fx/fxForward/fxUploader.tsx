@@ -1,6 +1,10 @@
 import React from "react";
 import Button from "../../ui/Button.tsx";
-import { templates, formatFileSize, handleDownload } from "./component/fxUploader.ts";
+import {
+  templates,
+  formatFileSize,
+  handleDownload,
+} from "./component/fxUploader.ts";
 import {
   validateFileContent,
   getFileTextColor,
@@ -23,38 +27,93 @@ import {
 const FxUploader: React.FC = () => {
   const [dragActive, setDragActive] = React.useState(false);
   const [files, setFiles] = React.useState<UploadedFile[]>([]);
-  const [previewFileName, setPreviewFileName] = React.useState<string>("");
-  const [showPreview, setShowPreview] = React.useState(false);
-  const [previewHeaders, setPreviewHeaders] = React.useState<string[]>([]);
-  const [previewData, setPreviewData] = React.useState<string[][]>([]);
-  const {notify}  = useNotification();
+  const [selectedType, setSelectedType] = React.useState<string>("");
+  const [previewStates, setPreviewStates] = React.useState<
+    Record<
+      string,
+      {
+        data: string[][];
+        headers: string[];
+        show: boolean;
+      }
+    >
+  >({});
+  const { notify } = useNotification();
+
   const handleFileInput = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
+    
+    if (event.target.files && event.target.files.length > 0) {
       handleFiles(event.target.files);
+    } else {
+      notify("No files selected.", "warning");
     }
-    console.log("files", event.target.files);
+    // Reset the input so the same file can be selected again if needed
+    event.target.value = "";
+  };
+
+  const handleIssuesResolved = (fileId: string) => {
+    setFiles((prevFiles) =>
+      prevFiles.map((file) =>
+        file.id === fileId
+          ? {
+              ...file,
+              status: "success",
+              validationErrors: [],
+              error: undefined,
+              hasMissingValues: false,
+            }
+          : file
+      )
+    );
+    // notify("All validation issues resolved!", "success");
   };
 
   const removeFile = (id: string) =>
     setFiles((prev) => prev.filter((file) => file.id !== id));
 
   const handleRemoveRow = (index: number) => {
-    setPreviewData(prev => prev.filter((_, i) => i !== index));
+    setPreviewStates((prev) => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach((fileId) => {
+        if (updated[fileId].show) {
+          updated[fileId].data = updated[fileId].data.filter(
+            (_, i) => i !== index
+          );
+          // Validate after removal
+          const validationErrors = validatePreviewData(
+            updated[fileId].data,
+            updated[fileId].headers
+          );
+          const hasIssues = validationErrors.length > 0;
+          if (!hasIssues) {
+            handleIssuesResolved(fileId);
+          }
+        }
+      });
+      return updated;
+    });
   };
 
-  const handleUpdateRow = (rowIndex: number, updatedData: Record<string, any>) => {
-    setPreviewData((prevData) => {
-      const newData = [...prevData];
-      if (newData[rowIndex]) {
-        // Update the row with new values
-        Object.entries(updatedData).forEach(([key, value]) => {
-          const colIndex = parseInt(key.replace('col_', ''));
-          if (!isNaN(colIndex) && colIndex < newData[rowIndex].length) {
-            newData[rowIndex][colIndex] = value;
-          }
-        });
+  const handleUpdateRow = (
+    rowIndex: number,
+    updatedData: Record<string, any>,
+    fileId: string
+  ) => {
+    setPreviewStates((prev) => {
+      const updated = { ...prev };
+      if (updated[fileId]) {
+        const newData = [...updated[fileId].data];
+        if (newData[rowIndex]) {
+          Object.entries(updatedData).forEach(([key, value]) => {
+            const colIndex = parseInt(key.replace("col_", ""));
+            if (!isNaN(colIndex) && colIndex < newData[rowIndex].length) {
+              newData[rowIndex][colIndex] = value;
+            }
+          });
+          updated[fileId].data = newData;
+        }
       }
-      return newData;
+      return updated;
     });
   };
 
@@ -90,10 +149,16 @@ const FxUploader: React.FC = () => {
         };
         const rows = lines.map(parseCSVLine);
         const [headerRow, ...dataRows] = rows;
-        setPreviewHeaders(headerRow || []);
-        setPreviewData(dataRows.slice(0, 50));
-        setPreviewFileName(uploadedFile.name);
-        setShowPreview(true);
+        
+        // Store in preview states for the new system
+        setPreviewStates(prev => ({
+          ...prev,
+          [uploadedFile.id]: {
+            data: dataRows.slice(0, 50),
+            headers: headerRow || [],
+            show: true
+          }
+        }));
       } catch (error) {
         console.error("Error parsing file for preview:", error);
       }
@@ -169,71 +234,126 @@ const FxUploader: React.FC = () => {
     }
   };
 
-  const handleSetManually = async () => {
-    // Filter out files that have validation errors
-    const validFiles = files.filter(
-      (file) =>
-        file.status === "success" &&
-        (!file.validationErrors || file.validationErrors.length === 0)
-    );
+  const convertToCSVBlob = (headers: string[], rows: string[][]): Blob => {
+    const csvContent = [headers, ...rows]
+      .map((row) =>
+        row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(",")
+      )
+      .join("\n");
+    return new Blob([csvContent], { type: "text/csv" });
+  };
 
-    if (validFiles.length === 0) {
-      alert("No valid files to upload. Please fix validation errors first.");
-      return;
-    }
+const handleSetManually = async () => {
+  const validFiles = files.filter(
+    (file) =>
+      file.status === "success" &&
+      (!file.validationErrors || file.validationErrors.length === 0)
+  );
 
-    try {
-      // Create FormData for each file and upload sequentially
-      for (const file of validFiles) {
-        if (!file.file) continue;
+  if (validFiles.length === 0) {
+    notify("No valid files to upload.", "warning");
+    return;
+  }
 
-        const formData = new FormData();
-        formData.append("files", file.file);
+  try {
+    for (const file of validFiles) {
+      let blob: Blob | File | undefined;
+      let fileName: string;
+      
+      // Check if file has edited preview data
+      if ((file as any).previewEdited && (file as any).previewHeaders && (file as any).previewData) {
+        blob = convertToCSVBlob((file as any).previewHeaders, (file as any).previewData);
+        fileName = `${file.name.replace(/\.csv$/, '')}_modified.csv`;
+      } else if (file.file) {
+        blob = file.file;
+        fileName = file.name;
+      } else {
+        continue;
+      }
 
-        // You might want to add additional form data if needed
-        // formData.append("type", "forward-booking");
-        // formData.append("businessUnit", "FX");
+      const formData = new FormData();
+      formData.append(
+        "files",
+        new File([blob], fileName, { type: "text/csv" })
+      );
 
-        const response = await axios.post(
-          "https://backend-slqi.onrender.com/api/forwards/forward-bookings/upload-multi",
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-              // Add authorization header if needed
-              // "Authorization": `Bearer ${yourAuthToken}`
-            },
+      // Add this line to skip duplicates
+      formData.append("skipDuplicates", "true");
+
+      const response = await axios.post(
+        "https://backend-slqi.onrender.com/api/forwards/forward-bookings/upload-multi",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      // Check if the overall upload was successful
+      if (response.data.success && response.data.results) {
+        const results = response.data.results;
+        
+        let allSucceeded = true;
+
+        // Check for errors in each file's result
+        results.forEach((result) => {
+          if (result.errors?.length > 0 || result.invalidRows?.length > 0) {
+            allSucceeded = false;
+            const errorMessage =
+              result.errors?.join(", ") ||
+              `Invalid rows: ${result.invalidRows?.join(", ")}`;
+            notify(
+              `Upload partially failed for ${result.filename}: ${errorMessage}`,
+              "error"
+            );
+          } else {
+            notify(`Upload successful for ${result.filename} (${result.inserted || 0} records)`, "success");
           }
-        );
+        });
 
-        // console.log("Upload successful:", response.data);
-
-        // Update file status to success
+        if (allSucceeded) {
+          // Clear preview states and files
+          setPreviewStates({});
+          setFiles([]);
+        }
+      } else {
+        // Handle case when overall upload failed
+        notify("Upload failed: " + (response.data.message || "Unknown error"), "error");
         setFiles((prev) =>
           prev.map((f) =>
-            f.id === file.id ? { ...f, status: "success", error: undefined } : f
+            f.id === file.id
+              ? { ...f, status: "error", error: response.data.message || "Upload failed" }
+              : f
           )
         );
       }
-
-      // alert("Files uploaded successfully!");
-      notify("Files uploaded successfully!", "success");
-
-    } catch (error) {
-      console.error("Error uploading files:", error);
-
-      // Update all files to error state
-      setFiles((prev) =>
-        prev.map((f) => ({
-          ...f,
-          status: "error",
-          error: "Upload failed",
-        }))
-      );
-
-      // alert("Error uploading files. Please try again.");
-      notify("Error uploading files. Please try again.", "error");
     }
+  } catch (error) {
+    console.error("Error uploading files:", error);
+    setFiles((prev) =>
+      prev.map((f) => ({
+        ...f,
+        status: "error",
+        error: "Upload failed",
+      }))
+    );
+    notify("Error uploading files. Please try again.", "error");
+  }
+};    const handleSavePreview = (fileId: string) => {
+    // Save the edited preview data to the file state
+    setFiles(prevFiles => prevFiles.map(file => {
+      if (file.id === fileId && previewStates[fileId]) {
+        return {
+          ...file,
+          previewHeaders: previewStates[fileId].headers,
+          previewData: previewStates[fileId].data,
+          previewEdited: true,
+        };
+      }
+      return file;
+    }));
+    notify(`Edits for ${files.find(f => f.id === fileId)?.name || 'file'} saved.`, "success");
   };
 
   const clearAllFiles = () => setFiles([]);
@@ -307,12 +427,12 @@ const FxUploader: React.FC = () => {
               </label>
               <select
                 className="w-full px-3 py-2 border border-border rounded-md focus:outline-none bg-secondary-color-lt text-secondary-text"
-                // value={selectedType}
-                // onChange={(e) => setSelectedType(e.target.value)}
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
               >
                 <option value="">Choose...</option>
-                <option value="payable">Buy</option>
-                <option value="receivable">Sell</option>
+                <option value="buy">Buy</option>
+                <option value="sell">Sell</option>
               </select>
             </div>
 
@@ -480,7 +600,8 @@ const FxUploader: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        {file.status === "success" && file.file && (
+                      {(file.status === "success" || file.status === "error") &&
+                        file.file && (
                           <button
                             onClick={() => handlePreviewFile(file)}
                             className="p-1 text-blue-600 hover:text-blue-800"
@@ -489,66 +610,51 @@ const FxUploader: React.FC = () => {
                             <Eye className="w-4 h-4" />
                           </button>
                         )}
-
-                        {file.status === "error" && file.file && (
-                          <button
-                            onClick={() => handlePreviewFile(file)}
-                            className="p-1 text-blue-600 hover:text-blue-800"
-                            title="Preview Data"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                        )}
-
+                      {/* Save button for previewed file */}
+                      {previewStates[file.id]?.show && (
                         <button
-                          onClick={() => {
-                            removeFile(file.id);
-                            setShowPreview(false);
-                          }}
-                          className="p-1 text-red-600 hover:text-red-800"
-                          title="Remove File"
+                          onClick={() => handleSavePreview(file.id)}
+                          className="p-1 text-green-600 hover:text-green-800"
+                          title="Save Edits"
                         >
-                          <X className="w-4 h-4" />
+                          <Check className="w-4 h-4" />
                         </button>
-                      </div>
+                      )}
+                      <button
+                        onClick={() => {
+                          removeFile(file.id);
+                          setPreviewStates((prev) => {
+                            const updated = { ...prev };
+                            delete updated[file.id];
+                            return updated;
+                          });
+                        }}
+                        className="p-1 text-red-600 hover:text-red-800"
+                        title="Remove File"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
                     </div>
+                  </div>
+                  {/* Preview for this file */}
+                  {previewStates[file.id]?.show && previewStates[file.id]?.data.length > 0 && (
+                    <div className="mt-4">
+                      <PreviewTable
+                        headers={previewStates[file.id].headers}
+                        rows={previewStates[file.id].data}
+                        onRemoveRow={handleRemoveRow}
+                        onUpdateRow={(rowIndex, updatedData) => 
+                          handleUpdateRow(rowIndex, updatedData, file.id)
+                        }
+                      />
+                    </div>
+                  )}
                   </div>
                 ))}
               </div>
             </div>
           )}
         </div>
-
-        {/* Preview Section */}
-        {showPreview && previewData.length > 0 && (
-          <PreviewTable
-            headers={previewHeaders}
-            rows={previewData}
-            onRemoveRow={handleRemoveRow}
-            onUpdateRow={handleUpdateRow}
-          />
-        )}
-        {/* {showPreview && (
-          <div className="bg-secondary-color-lt p-6 rounded-lg shadow-sm border border-border">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-secondary-text-dark">
-                Preview: {previewFileName}
-              </h2>
-              <button
-                onClick={() => setShowPreview(false)}
-                className="p-1 text-gray-500 hover:text-gray-700"
-                title="Close Preview"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <PreviewTable
-              headers={previewHeaders}
-              rows={previewData}
-              onRemoveRow={handleRemoveRow}
-            />
-          </div>
-        )} */}
 
         <div className="bg-secondary-color-lt p-6 rounded-lg shadow-sm border border-border">
           <div className="wi-full px-4 py-6">
