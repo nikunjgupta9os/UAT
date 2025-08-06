@@ -5,7 +5,7 @@ import { Download, Trash2, Upload } from "lucide-react";
 import NyneOSTable from "./ReusableTable";
 import type { ColumnDef } from "@tanstack/react-table";
 import { exportToExcel } from "../../ui/exportToExcel";
-
+import LoadingSpinner from "../../ui/LoadingSpinner";
 const cURLHOST = "https://backend-slqi.onrender.com/api";
 
 const fallbackUserVars: IfPayload["userVars"] = {
@@ -194,10 +194,11 @@ const AllExposureRequest: React.FC = () => {
   const [userJourney, setUserJourney] = useState<
     IfPayload["userJourney"] | null
   >(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [data, setData] = useState<ExposureRequest[]>([]);
   const [statusFilter, setStatusFilter] = useState("All");
+  const [loading, setLoading] = useState(true);
 
   const roleName = localStorage.getItem("userRole");
     const [Visibility, setVisibility] = useState<TabVisibility>({
@@ -226,8 +227,12 @@ const AllExposureRequest: React.FC = () => {
       }
   
       if (statusFilter !== "All") {
-        result = result.filter((item) => item.status === statusFilter);
-      }
+      result = result.filter(
+        (item) =>
+          item.approval_status &&
+          item.approval_status.toLowerCase() === statusFilter.toLowerCase()
+      );
+    }
   
       return result;
     }, [data, searchTerm, statusFilter]);
@@ -242,7 +247,7 @@ const AllExposureRequest: React.FC = () => {
   };
 
   useEffect(() => {
-    setIsLoading(true);
+    // setIsLoading(false);
 
     fetchRenderVars()
       .then((renderVarsRes) => {
@@ -255,13 +260,16 @@ const AllExposureRequest: React.FC = () => {
         )
         if (Array.isArray(renderVarsRes.pageData)) {
           setData(renderVarsRes.pageData);
+          setLoading(false);
         } else {
           setData([]);
+          setLoading(false);
         }
       })
       .catch((err) => {
          console.error("Error fetching renderVars:", err);
         setRenderVars(fallbackRenderVars);
+        setLoading(false);
       });
 
     // fetchUserVars()
@@ -815,6 +823,10 @@ const AllExposureRequest: React.FC = () => {
       return false;
     }
   };
+
+  if(loading){
+    return <LoadingSpinner />
+  }
 
   return (
     <div className="space-y-6">
