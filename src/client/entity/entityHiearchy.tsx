@@ -156,7 +156,7 @@ const HierarchicalTree = () => {
   const [treeData, setTreeData] = useState<TreeNodeType | null>();
   const lineColors = [
     "border-l-blue-600",
-    "border-l-green-600", 
+    "border-l-green-600",
     "border-l-yellow-600",
     "border-l-purple-600",
     // "border-l-pink-600",
@@ -169,7 +169,7 @@ const HierarchicalTree = () => {
       try {
         await axios.post(`${cURL}/entity/sync-relationships`);
         const response = await axios.get(
-          `${cURL}/entity/getRenderVarsHierarchical`,
+          `${cURL}/entity/getRenderVarsHierarchical`
           // {
           //   userId: localStorage.getItem("UserId"),
           //   roleName: localStorage.getItem("userRole"), // 👈 Ensure userId is set
@@ -280,7 +280,7 @@ const HierarchicalTree = () => {
     node: TreeNodeType | TreeNodeType[] | null
   ): string[] => {
     if (!node) return [];
-    
+
     if (Array.isArray(node)) {
       return node.flatMap((n) => {
         const ids = [n.id];
@@ -290,7 +290,7 @@ const HierarchicalTree = () => {
         return ids;
       });
     }
-    
+
     const ids = [node.id];
     if (node.children) {
       node.children.forEach((child) => {
@@ -300,9 +300,7 @@ const HierarchicalTree = () => {
     return ids;
   };
 
-  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(
-    new Set()
-  );
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
 
   // Effects
   useEffect(() => {
@@ -1028,11 +1026,25 @@ const HierarchicalTree = () => {
     node: TreeNodeType;
     level?: number;
   }) => {
+    // Hide rejected nodes when edit visibility is false
+    if (node.data.approval_status === "Rejected" && !Visibility.edit) {
+      return null;
+    }
+
     const hasChildren = node.children?.length > 0;
-  const isExpanded = expandedNodes.has(node.id);
+    const isExpanded = expandedNodes.has(node.id);
     const config = getNodeConfig(node.data.level);
     const Icon = config.icon;
     const status = node.data.approval_status;
+
+    // Filter children to hide rejected nodes when edit visibility is false
+    const visibleChildren = hasChildren && node.children 
+      ? node.children.filter(child => 
+          !(child.data.approval_status === "rejected" && !Visibility.edit)
+        )
+      : [];
+
+    const hasVisibleChildren = visibleChildren.length > 0;
 
     return (
       <div className="relative">
@@ -1049,7 +1061,7 @@ const HierarchicalTree = () => {
 
             {/* Main content area */}
             <div className="flex items-center gap-2 p-3 flex-grow">
-              {hasChildren && (
+              {hasVisibleChildren && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -1129,16 +1141,18 @@ const HierarchicalTree = () => {
           </div>
         </div>
 
-        {hasChildren && isExpanded && (
-          <div 
-          className={`pl-6 mt-4 border-l-2 ${lineColors[level % lineColors.length]} border-dashed relative`}
-          style={{ 
-            marginLeft: level * 10 + 16, 
-            minHeight: 40,
-            position: 'relative' 
-          }}
-        >
-            {node.children.map((child) => (
+        {hasVisibleChildren && isExpanded && (
+          <div
+            className={`pl-6 mt-4 border-l-2 ${
+              lineColors[level % lineColors.length]
+            } border-dashed relative`}
+            style={{
+              marginLeft: level * 10 + 16,
+              minHeight: 40,
+              position: "relative",
+            }}
+          >
+            {visibleChildren.map((child) => (
               <TreeNode key={child.id} node={child} level={level + 1} />
             ))}
           </div>
@@ -1177,12 +1191,9 @@ const HierarchicalTree = () => {
                 <div className="flex justify-between items-center mt-6 border-b mb-8 pb-2">
                   <h2 className="text-xl font-semibold">Hierarchy Tree</h2>
                   <div className="flex items-center gap-2 w-[7rem] justify-end">
-                  <Button
-  categories="Medium"
-  onClick={toggleAllNodes}
->
-  {isAllExpanded ? "Collapse All" : "Expand All"}
-</Button>
+                    <Button categories="Medium" onClick={toggleAllNodes}>
+                      {isAllExpanded ? "Collapse All" : "Expand All"}
+                    </Button>
                   </div>
                 </div>
                 {Array.isArray(treeData) ? (
@@ -1205,18 +1216,20 @@ const HierarchicalTree = () => {
                         Current Node: {selectedNode.id}
                       </h3>
                       <div className="flex justify-end gap-2 ml-10 mt-4">
-                        {Visibility.approve && (
+                      
+                        {Visibility.approve &&  selectedNode.data.approval_status !== ("Approved" )  &&(
                           <button
                             onClick={() => {
                               updateApprovalStatus(selectedNode.id, "approved");
                               handleApprove(selectedNode.data.entity_id);
                             }}
                             className="bg-primary hover:bg-primary-hover text-center text-white rounded px-4 py-2 font-bold transition min-w-[4rem]"
+
                           >
                             Approve
                           </button>
                         )}
-                        {Visibility.reject && (
+                        {Visibility.reject && selectedNode.data.approval_status !== ("Approved" )  &&(
                           <button
                             onClick={() => {
                               updateApprovalStatus(selectedNode.id, "rejected");
