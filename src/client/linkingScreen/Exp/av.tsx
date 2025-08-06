@@ -433,7 +433,7 @@ const UnlinkedExposure: React.FC<TableProps> = ({
           onDragEnd={handleDragEnd}
           modifiers={[restrictToFirstScrollableAncestor]}
         >
-          <table className="min-w-[800px] w-full table-auto">
+          <table className="min-w-[800px] w-full table-auto max-h-[400px] overflow-auto">
             <thead className="bg-secondary-color rounded-xl">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
@@ -445,7 +445,7 @@ const UnlinkedExposure: React.FC<TableProps> = ({
                     return (
                       <th
                         key={header.id}
-                        className="px-6 py-4 text-left text-xs font-semibold text-header-color uppercase tracking-wider border-b border-border sticky top-0 bg-secondary-color z-10"
+                        className="px-6 py-4 text-left text-xs font-semibold text-header-color uppercase tracking-wider border-b border-border sticky top-0 bg-secondary-color z-1"
                         style={{ width: header.getSize() }}
                       >
                         {isDraggable ? (
