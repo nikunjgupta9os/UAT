@@ -8,6 +8,7 @@ import {
   flexRender,
   getExpandedRowModel,
   getSortedRowModel,
+  getPaginationRowModel, // Add this import
   type ColumnDef,
   type Row,
   type HeaderContext,
@@ -25,6 +26,7 @@ import {
   CircleArrowDown,
 } from "lucide-react";
 import Button from "../../../client/ui/Button";
+import Pagination from "../../ui/Pagination.tsx"; // Add this import
 import "../../styles/theme.css";
 
 interface EditableRowData {
@@ -219,6 +221,10 @@ function NyneOSTable<T extends EditableRowData>({
     defaultColumnVisibility
   );
   const [sorting, setSorting] = useState<any[]>([]);
+  const [pagination, setPagination] = useState({ // Add pagination state
+    pageIndex: 0,
+    pageSize: 10,
+  });
 
   // Enhanced columns with sorting capability
   const enhancedColumns: ColumnDef<T>[] = columns.map((col) => {
@@ -330,20 +336,23 @@ function NyneOSTable<T extends EditableRowData>({
     columns: finalColumns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(), // Add this
     getExpandedRowModel: expandedRowConfig ? getExpandedRowModel() : undefined,
     getRowCanExpand: expandedRowConfig ? () => true : undefined,
     onColumnOrderChange: setColumnOrder,
     onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    onPaginationChange: setPagination, // Add this
     state: {
       columnOrder,
       columnVisibility,
       sorting,
       rowSelection,
+      pagination, // Add this
     },
     enableRowSelection: true,
-    getRowId: (row) => row.exposure_header_id, // Add this to specify the unique row identifier
+    getRowId: (row) => row.exposure_header_id,
   });
 
   const { notify } = useNotification();
@@ -402,6 +411,12 @@ function NyneOSTable<T extends EditableRowData>({
       setColumnOrder(table.getAllLeafColumns().map((col) => col.id));
     }
   }, [table, columnOrder]);
+
+  // Calculate pagination values
+  const totalItems = table.getFilteredRowModel().rows.length;
+  const currentPageItems = table.getRowModel().rows.length;
+  const startIndex = pagination.pageIndex * pagination.pageSize + 1;
+  const endIndex = Math.min(startIndex + currentPageItems - 1, totalItems);
 
   return (
     <>
@@ -501,7 +516,7 @@ function NyneOSTable<T extends EditableRowData>({
                           config={expandedRowConfig}
                           onUpdate={onUpdate}
                           visibleColumnCount={row.getVisibleCells().length}
-                          edit={edit} // Always allow editing in expanded row
+                          edit={edit}
                         />
                       )}
                     </React.Fragment>
@@ -511,6 +526,15 @@ function NyneOSTable<T extends EditableRowData>({
             </table>
           </DndContext>
         </div>
+        
+        {/* Add Pagination Component */}
+        <Pagination
+          table={table}
+          totalItems={totalItems}
+          currentPageItems={currentPageItems}
+          startIndex={startIndex}
+          endIndex={endIndex}
+        />
       </div>
     </>
   );
