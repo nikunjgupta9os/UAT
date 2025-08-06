@@ -1,3 +1,4 @@
+
 import React from "react";
 import Select from "react-select";
 
@@ -9,7 +10,7 @@ type OptionType = {
 interface CustomSelectProps {
   label: string;
   options: OptionType[];
-  selectedValue ? : string;
+  selectedValue?: string;
   onChange: (value: string) => void;
   placeholder?: string;
   isDisabled?: boolean;
@@ -24,23 +25,26 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
   options,
   selectedValue,
   onChange,
-  placeholder = "Choose...",
+  placeholder = "Select...",
   isDisabled = false,
   isClearable = true,
   isSearchable = true,
   isRequired = false,
   menuPlacement = "auto",
 }) => {
+  // Find the selected option or return null if not found (which will show placeholder)
+  const selectedOption = selectedValue ? options.find((opt) => opt.value === selectedValue) : null;
+
   return (
     <div className="w-full">
       <label className="block text-sm font-medium text-secondary-text mb-1">
         {label}
       </label>
       <Select
-        className="w-full text-sm rounded z-20"
+        className="w-full text-sm rounded z-21"
         classNamePrefix="react-select"
         options={options}
-        value={options.find((opt) => opt.value === selectedValue)}
+        value={selectedOption}
         onChange={(selectedOption) =>
           onChange(selectedOption?.value || "")
         }
@@ -48,7 +52,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         isDisabled={isDisabled}
         isClearable={isClearable}
         isSearchable={isSearchable}
-        required
+        required={isRequired}
         menuPlacement={menuPlacement}
       />
     </div>
