@@ -219,6 +219,27 @@ const FxBookingForm: React.FC = () => {
       financialData.currencyPair
     );
 
+    // Function to get multiplier based on value type
+    const getValueTypeMultiplier = (valueType: string): number => {
+      switch (valueType) {
+        case "Actual":
+          return 1;
+        case "Thousands":
+          return 1000;
+        case "Millions":
+          return 1000000;
+        default:
+          return 1;
+      }
+    };
+
+    const multiplier = getValueTypeMultiplier(financialData.valueType);
+
+    // Apply multiplier to financial values
+    const getMultipliedValue = (value: number | null): number => {
+      return value ? value * multiplier : 0;
+    };
+
     return {
       internal_reference_id: transactionInfo.internalReferenceId,
       entity_level_0: entityValues.buEntity0 || "",
@@ -238,18 +259,16 @@ const FxBookingForm: React.FC = () => {
       currency_pair: financialData.currencyPair,
       base_currency: financialData.baseCurrency || base_currency,
       quote_currency: financialData.quoteCurrency || quote_currency,
-         booking_amount: financialData.inputValue,
-
+      booking_amount: getMultipliedValue(financialData.inputValue),
       value_type: financialData.valueType,
-      actual_value_base_currency: financialData.actualValueBaseCurrency,
-      spot_rate: financialData.spotRate,
-      forward_points: financialData.forwardPoints,
-      bank_margin: financialData.bankMargin,
-      total_rate: financialData.totalRate,
-      value_quote_currency: financialData.valueQuoteCurrency,
-      intervening_rate_quote_to_local:
-        financialData.interveningRateQuoteToLocal,
-      value_local_currency: financialData.valueLocalCurrency,
+      actual_value_base_currency: getMultipliedValue(financialData.actualValueBaseCurrency),
+      spot_rate: financialData.spotRate || 0, // Don't multiply rates
+      forward_points: financialData.forwardPoints || 0, // Don't multiply rates
+      bank_margin: financialData.bankMargin || 0, // Don't multiply rates
+      total_rate: financialData.totalRate || 0, // Don't multiply rates
+      value_quote_currency: getMultipliedValue(financialData.valueQuoteCurrency),
+      intervening_rate_quote_to_local: financialData.interveningRateQuoteToLocal || 0, // Don't multiply rates
+      value_local_currency: getMultipliedValue(financialData.valueLocalCurrency),
       internal_dealer: dealerInfo.internalDealer,
       counterparty_dealer: dealerInfo.counterpartyDealer,
       remarks: additionalDetails.remarks || "",
