@@ -737,10 +737,10 @@ const AwaitingApproval: React.FC = () => {
                           </svg>
                         </div>
                         <p className="text-lg font-medium text-gray-900 mb-1">
-                          No users found
+                          No roles found
                         </p>
                         <p className="text-sm text-gray-500">
-                          There are no users to display at the moment.
+                          There are no roles to display at the moment.
                         </p>
                       </div>
                     </td>
