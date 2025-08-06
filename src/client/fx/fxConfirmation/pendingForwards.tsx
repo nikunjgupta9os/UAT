@@ -5,10 +5,12 @@ import { DndContext, type DragEndEvent } from "@dnd-kit/core";
 import { restrictToFirstScrollableAncestor } from "@dnd-kit/modifiers";
 import { Eye, ChevronDown, ChevronUp } from "lucide-react";
 import axios from "axios";
+import Pagination from "../../ui/Pagination";
 import Button from "../../ui/Button";
 import {
   flexRender,
   getCoreRowModel,
+  getPaginationRowModel,
   useReactTable,
   type ColumnDef,
 } from "@tanstack/react-table";
@@ -54,54 +56,11 @@ interface Transaction {
   status: string;
 }
 
-  const formatDateForApi = (dateString: string): string => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toISOString().split("T")[0];
-  };
-
-// const mockTransactionData: Transaction[] = [
-//   {
-//     systemTransactionId: "SYS001",
-//     internalReferenceId: "INT001",
-//     entityLevel0: "Corporate",
-//     entityLevel1: "Treasury",
-//     entityLevel2: "FX Desk",
-//     entityLevel3: "Spot Trading",
-//     localCurrency: "INR",
-//     orderType: "Buy",
-//     transactionType: "Spot",
-//     counterparty: "Bank ABC",
-//     modeOfDelivery: "Electronic",
-//     deliveryPeriod: "T+2",
-//     addDate: "2025-01-15",
-//     settlementDate: "2025-01-17",
-//     maturityDate: "2025-01-17",
-//     deliveryDate: "2025-01-17",
-//     currencyPair: "USD/INR",
-//     baseCurrency: "USD",
-//     quoteCurrency: "INR",
-//     inputValue: 100000,
-//     valueType: "Actual",
-//     actualValueBaseCurrency: 100000,
-//     spotRate: 83.25,
-//     forwardPoints: 0.15,
-//     bankMargin: 0.05,
-//     totalRate: 83.45,
-//     valueQuoteCurrency: 8345000,
-//     interveningRateQuoteToLocal: 1.0,
-//     valueLocalCurrency: 8345000,
-//     internalDealer: "John Doe",
-//     counterpartyDealer: "Jane Smith",
-//     remarks: "Regular spot transaction",
-//     narration: "Monthly forex requirement",
-//     transactionTimestamp: new Date(),
-//     bankTransactionId: "BANK123",
-//     swiftUniqueId: "SWIFT456",
-//     bankConfirmationDate: "2025-01-15",
-//     status: "approved",
-//   },
-// ];
+const formatDateForApi = (dateString: string): string => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toISOString().split("T")[0];
+};
 
 const nonDraggableColumns = ["expand", "select"];
 
@@ -482,6 +441,12 @@ const TransactionTable: React.FC = () => {
     onColumnOrderChange: setColumnOrder,
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: 10,
+      },
+    },
     state: {
       columnOrder,
       rowSelection: selectedRowIds,
@@ -581,6 +546,16 @@ const TransactionTable: React.FC = () => {
   //     alert("An error occurred while updating status.");
   //   }
   // };
+
+  // Calculate pagination values
+  const pagination = table.getState().pagination;
+  const totalItems = data.length;
+  const startIndex = pagination.pageIndex * pagination.pageSize + 1;
+  const endIndex = Math.min(
+    (pagination.pageIndex + 1) * pagination.pageSize,
+    totalItems
+  );
+  const currentPageItems = table.getRowModel().rows.length;
 
   const selectedRows = table.getSelectedRowModel().rows;
   const totalInputValue = selectedRows.reduce(
@@ -848,6 +823,15 @@ const TransactionTable: React.FC = () => {
           </table>
         </DndContext>
       </div>
+
+      {/* Add Pagination Component */}
+      <Pagination
+        table={table}
+        totalItems={totalItems}
+        currentPageItems={currentPageItems}
+        startIndex={startIndex}
+        endIndex={endIndex}
+      />
     </div>
   );
 };
