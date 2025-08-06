@@ -386,7 +386,7 @@ const AvailableForward: React.FC<TableProps> = ({ filters , setEntityOptions, se
         Avaliable Forward
       </h2>
 
-      <div className="shadow-lg border border-border">
+      <div className="shadow-lg border border-border rounded-lg max-h-[400px] overflow-auto">
         <DndContext
           onDragEnd={handleDragEnd}
           modifiers={[restrictToFirstScrollableAncestor]}
@@ -403,7 +403,7 @@ const AvailableForward: React.FC<TableProps> = ({ filters , setEntityOptions, se
                     return (
                       <th
                         key={header.id}
-                        className="px-6 py-4 text-left text-xs font-semibold text-header-color uppercase tracking-wider border-b border-border sticky top-0 bg-secondary-color z-10"
+                        className="px-6 py-4 text-left text-xs font-semibold text-header-color uppercase tracking-wider border-b border-border sticky top-0 bg-secondary-color z-1"
                         style={{ width: header.getSize() }}
                       >
                         {isDraggable ? (
