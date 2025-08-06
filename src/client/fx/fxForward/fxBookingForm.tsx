@@ -129,16 +129,16 @@ const FxBookingForm: React.FC = () => {
 
   const [financialData, setFinancialData] = useState<FinancialDetailsResponse>({
     currencyPair: "",
-    inputValue: 0,
+    inputValue: null,
     valueType: "",
-    actualValueBaseCurrency: 0,
-    spotRate: 0,
-    forwardPoints: 0,
-    bankMargin: 0,
-    totalRate: 0,
-    valueQuoteCurrency: 0,
-    interveningRateQuoteToLocal: 0,
-    valueLocalCurrency: 0,
+    actualValueBaseCurrency: null,
+    spotRate: null,
+    forwardPoints: null,
+    bankMargin: null,
+    totalRate: null,
+    valueQuoteCurrency: null,
+    interveningRateQuoteToLocal: null,
+    valueLocalCurrency: null,
     baseCurrency: "",
     quoteCurrency: "",
   });
@@ -269,7 +269,6 @@ const FxBookingForm: React.FC = () => {
     if (!orderDetails.counterparty) return "Counterparty is required";
     if (!financialData.currencyPair) return "Currency Pair is required";
     if (!financialData.inputValue || financialData.inputValue <= 0) return "Valid booking amount is required";
-    if (!dealerInfo.internalDealer) return "Internal Dealer is required";
     if (!deliveryDetails.modeOfDelivery) return "Mode of Delivery is required";
 
     return null;
@@ -281,6 +280,14 @@ const FxBookingForm: React.FC = () => {
       setIsSubmitting(true);
       setSubmitError(null);
       setSubmitSuccess(false);
+
+      // Validate form before submission
+      const validationError = validateForm();
+      if (validationError) {
+        notify(validationError, "error");
+        setSubmitError(validationError);
+        return;
+      }
 
       // Prepare payload
       const payload = prepareApiPayload();
@@ -340,16 +347,16 @@ const FxBookingForm: React.FC = () => {
     });
     setFinancialData({
       currencyPair: "",
-        inputValue: 0,
+      inputValue: null,
       valueType: "",
-      actualValueBaseCurrency: 0,
-      spotRate: 0,
-      forwardPoints: 0,
-      bankMargin: 0,
-      totalRate: 0,
-      valueQuoteCurrency: 0,
-      interveningRateQuoteToLocal: 0,
-      valueLocalCurrency: 0,
+      actualValueBaseCurrency: null,
+      spotRate: null,
+      forwardPoints: null,
+      bankMargin: null,
+      totalRate: null,
+      valueQuoteCurrency: null,
+      interveningRateQuoteToLocal: null,
+      valueLocalCurrency: null,
       baseCurrency: "",
       quoteCurrency: "",
     });
@@ -433,6 +440,7 @@ const FxBookingForm: React.FC = () => {
                   setFormData={setFinancialData}
                   currencyPairs={currencyPairs}
                   isLoading={false}
+                  orderType={orderDetails.orderType} // Pass order type to FinancialDetails
                 />
               </div>
               <div>
