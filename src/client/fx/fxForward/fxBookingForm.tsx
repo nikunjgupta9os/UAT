@@ -9,7 +9,7 @@ import DeliveryDateDetails from "../fxComponents/DeliveryDateDetails";
 import FinancialDetails from "../fxComponents/FinancialDetails";
 import AdditionalDetails from "../fxComponents/AdditionalDetails";
 import { useNotification } from "../../Notification/Notification";
-import jsPDF from 'jspdf';
+import jsPDF from "jspdf";
 
 type EntityState = {
   buEntity0: string | null;
@@ -86,7 +86,7 @@ type ApiPayload = {
   currency_pair: string;
   base_currency: string;
   quote_currency: string;
-    booking_amount: number;
+  booking_amount: number;
   value_type: string;
   actual_value_base_currency: number;
   spot_rate: number;
@@ -271,19 +271,29 @@ const FxBookingForm: React.FC = () => {
       quote_currency: (financialData.quoteCurrency || quote_currency).trim(),
       booking_amount: getMultipliedValue(financialData.inputValue),
       value_type: financialData.valueType.trim(),
-      actual_value_base_currency: getMultipliedValue(financialData.actualValueBaseCurrency),
+      actual_value_base_currency: getMultipliedValue(
+        financialData.actualValueBaseCurrency
+      ),
       spot_rate: getRate(financialData.spotRate),
       forward_points: getRate(financialData.forwardPoints),
       bank_margin: getRate(financialData.bankMargin),
       total_rate: getRate(financialData.totalRate),
-      value_quote_currency: getMultipliedValue(financialData.valueQuoteCurrency),
-      intervening_rate_quote_to_local: getRate(financialData.interveningRateQuoteToLocal),
-      value_local_currency: getMultipliedValue(financialData.valueLocalCurrency),
+      value_quote_currency: getMultipliedValue(
+        financialData.valueQuoteCurrency
+      ),
+      intervening_rate_quote_to_local: getRate(
+        financialData.interveningRateQuoteToLocal
+      ),
+      value_local_currency: getMultipliedValue(
+        financialData.valueLocalCurrency
+      ),
       internal_dealer: dealerInfo.internalDealer.trim(),
       counterparty_dealer: dealerInfo.counterpartyDealer.trim(),
       remarks: additionalDetails.remarks?.trim() || "",
       narration: additionalDetails.narration?.trim() || "",
-      transaction_timestamp: formatTimestampForApi(additionalDetails.timestamp || ""),
+      transaction_timestamp: formatTimestampForApi(
+        additionalDetails.timestamp || ""
+      ),
     };
   };
 
@@ -295,13 +305,14 @@ const FxBookingForm: React.FC = () => {
     if (!orderDetails.transactionType) return "Transaction Type is required";
     if (!orderDetails.counterparty) return "Counterparty is required";
     if (!financialData.currencyPair) return "Currency Pair is required";
-    if (!financialData.inputValue || financialData.inputValue <= 0) 
+    if (!financialData.inputValue || financialData.inputValue <= 0)
       return "Valid booking amount is required";
     if (!deliveryDetails.modeOfDelivery) return "Mode of Delivery is required";
-    
+
     // Add these additional validations
     if (!dealerInfo.internalDealer) return "Internal Dealer is required";
-    if (!dealerInfo.counterpartyDealer) return "Counterparty Dealer is required";
+    if (!dealerInfo.counterpartyDealer)
+      return "Counterparty Dealer is required";
     if (!entityValues.buEntity0) return "Entity Level 0 is required";
     if (!financialData.valueType) return "Value Type is required";
 
@@ -334,7 +345,7 @@ const FxBookingForm: React.FC = () => {
         {
           headers: {
             "Content-Type": "application/json",
-            "Accept": "application/json",
+            Accept: "application/json",
           },
           timeout: 30000, // 30 second timeout
         }
@@ -343,28 +354,29 @@ const FxBookingForm: React.FC = () => {
       console.log("Response from API:", response.data);
       notify("Booking submitted successfully!", "success");
       setSubmitSuccess(true);
-
+      handleResetForm();
     } catch (error) {
       console.error("Full error details:", error);
 
       let errorMessage = "An error occurred while submitting the booking";
-      
+
       if (axios.isAxiosError(error)) {
         if (error.response) {
           // Server responded with error status
           console.error("Response data:", error.response.data);
           console.error("Response status:", error.response.status);
           console.error("Response headers:", error.response.headers);
-          
+
           errorMessage = `Server Error (${error.response.status}): ${
-            error.response.data?.message || 
-            error.response.data?.error || 
-            'Unknown server error'
+            error.response.data?.message ||
+            error.response.data?.error ||
+            "Unknown server error"
           }`;
         } else if (error.request) {
           // Request was made but no response received
           console.error("Request failed:", error.request);
-          errorMessage = "Network error: Unable to reach server. Please check your connection.";
+          errorMessage =
+            "Network error: Unable to reach server. Please check your connection.";
         } else {
           // Something else happened
           console.error("Error message:", error.message);
@@ -446,7 +458,7 @@ const FxBookingForm: React.FC = () => {
       notify("Generating PDF...", "info");
 
       // Create PDF with structured data approach (more reliable)
-      const pdf = new jsPDF('portrait');
+      const pdf = new jsPDF("portrait");
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       let yPosition = 30;
@@ -463,29 +475,33 @@ const FxBookingForm: React.FC = () => {
 
       // Helper function to check if value has actual data
       const hasValue = (value: any): boolean => {
-        return value !== null && 
-               value !== undefined && 
-               value !== '' && 
-               value !== 'Not Selected' && 
-               value !== 'Not Set' &&
-               value !== 'None' &&
-               !(typeof value === 'string' && value.trim() === '');
+        return (
+          value !== null &&
+          value !== undefined &&
+          value !== "" &&
+          value !== "Not Selected" &&
+          value !== "Not Set" &&
+          value !== "None" &&
+          !(typeof value === "string" && value.trim() === "")
+        );
       };
 
       // Helper function to add section - only show fields with data
       const addSection = (title: string, data: Record<string, any>) => {
         // Filter data to only include fields with actual values
-        const filteredData = Object.entries(data).filter(([_, value]) => hasValue(value));
-        
+        const filteredData = Object.entries(data).filter(([_, value]) =>
+          hasValue(value)
+        );
+
         // Only add section if there's data to show
         if (filteredData.length === 0) return;
 
         // Section title
         pdf.setFontSize(12);
-        pdf.setFont(undefined, 'bold');
+        pdf.setFont(undefined, "bold");
         pdf.setTextColor(41, 128, 185);
         yPosition = addText(title, 15, yPosition);
-        
+
         // Underline
         pdf.setDrawColor(41, 128, 185);
         pdf.line(15, yPosition - 2, pageWidth - 15, yPosition - 2);
@@ -493,12 +509,15 @@ const FxBookingForm: React.FC = () => {
 
         // Section content
         pdf.setFontSize(9);
-        pdf.setFont(undefined, 'normal');
+        pdf.setFont(undefined, "normal");
         pdf.setTextColor(0, 0, 0);
-        
+
         filteredData.forEach(([key, value]) => {
-          const displayValue = typeof value === 'number' ? value.toLocaleString() : String(value);
-          const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+          const displayValue =
+            typeof value === "number" ? value.toLocaleString() : String(value);
+          const label = key
+            .replace(/([A-Z])/g, " $1")
+            .replace(/^./, (str) => str.toUpperCase());
           yPosition = addText(`${label}: ${displayValue}`, 20, yPosition);
         });
         yPosition += 8;
@@ -506,76 +525,94 @@ const FxBookingForm: React.FC = () => {
 
       // Header
       pdf.setFillColor(41, 128, 185);
-      pdf.rect(0, 0, pageWidth, 25, 'F');
+      pdf.rect(0, 0, pageWidth, 25, "F");
       pdf.setFontSize(16);
       pdf.setTextColor(255, 255, 255);
-      pdf.text('FX Forward Booking Form', pageWidth / 2, 16, { align: 'center' });
+      pdf.text("FX Forward Booking Form", pageWidth / 2, 16, {
+        align: "center",
+      });
+
+      pdf.setFontSize(10);
+      pdf.setTextColor(220, 230, 240); // Light gray for subtext
+
+      pdf.text(
+        `Internal Ref ID: ${transactionInfo.internalReferenceId || "—"}`,
+        pageWidth / 2,
+        20,
+        { align: "center" }
+      );
 
       // Generation info
       pdf.setTextColor(0, 0, 0);
       pdf.setFontSize(8);
-      yPosition = addText(`Generated: ${new Date().toLocaleString()}`, 15, yPosition);
+      yPosition = addText(
+        `Generated: ${new Date().toLocaleString()}`,
+        15,
+        yPosition
+      );
       yPosition += 10;
 
       // Add all sections with form data - only non-empty fields
-      addSection('Transaction Details', {
-        'System Transaction ID': transactionInfo.systemTransactionId,
-        'Internal Reference ID': transactionInfo.internalReferenceId
+      addSection("Transaction Details", {
+        "System Transaction ID": transactionInfo.systemTransactionId,
+        "Internal Reference ID": transactionInfo.internalReferenceId,
       });
 
-      addSection('Entity Details', {
-        'Entity Level 0': entityValues.buEntity0,
-        'Entity Level 1': entityValues.buEntity1,
-        'Entity Level 2': entityValues.buEntity2,
-        'Entity Level 3': entityValues.buEntity3
+      addSection("Entity Details", {
+        "Entity Level 0": entityValues.buEntity0,
+        "Entity Level 1": entityValues.buEntity1,
+        "Entity Level 2": entityValues.buEntity2,
+        "Entity Level 3": entityValues.buEntity3,
       });
 
-      addSection('Dealer Details', {
-        'Internal Dealer': dealerInfo.internalDealer,
-        'Counterparty Dealer': dealerInfo.counterpartyDealer
+      addSection("Dealer Details", {
+        "Internal Dealer": dealerInfo.internalDealer,
+        "Counterparty Dealer": dealerInfo.counterpartyDealer,
       });
 
-      addSection('Order Details', {
-        'Order Type': orderDetails.orderType,
-        'Transaction Type': orderDetails.transactionType,
-        'Counterparty': orderDetails.counterparty,
-        'Local Currency': orderDetails.localCurrency
+      addSection("Order Details", {
+        "Order Type": orderDetails.orderType,
+        "Transaction Type": orderDetails.transactionType,
+        Counterparty: orderDetails.counterparty,
+        "Local Currency": orderDetails.localCurrency,
       });
 
-      addSection('Financial Details', {
-        'Currency Pair': financialData.currencyPair,
-        'Booking Amount': financialData.inputValue,
-        'Value Type': financialData.valueType,
-        'Base Currency': financialData.baseCurrency,
-        'Quote Currency': financialData.quoteCurrency,
-        'Spot Rate': financialData.spotRate,
-        'Forward Points': financialData.forwardPoints,
-        'Bank Margin': financialData.bankMargin,
-        'Total Rate': financialData.totalRate,
-        'Value Quote Currency': financialData.valueQuoteCurrency,
-        'Value Local Currency': financialData.valueLocalCurrency
+      addSection("Financial Details", {
+        "Currency Pair": financialData.currencyPair,
+        "Booking Amount": financialData.inputValue,
+        "Value Type": financialData.valueType,
+        "Base Currency": financialData.baseCurrency,
+        "Quote Currency": financialData.quoteCurrency,
+        "Spot Rate": financialData.spotRate,
+        "Forward Points": financialData.forwardPoints,
+        "Bank Margin": financialData.bankMargin,
+        "Total Rate": financialData.totalRate,
+        "Value Quote Currency": financialData.valueQuoteCurrency,
+        "Value Local Currency": financialData.valueLocalCurrency,
       });
 
-      addSection('Delivery & Date Details', {
-        'Mode of Delivery': deliveryDetails.modeOfDelivery,
-        'Delivery Period': deliveryDetails.deliveryPeriod,
-        'Add Date': deliveryDetails.addDate,
-        'Settlement Date': deliveryDetails.settlementDate,
-        'Maturity Date': deliveryDetails.maturityDate,
-        'Delivery Date': deliveryDetails.deliveryDate
+      addSection("Delivery & Date Details", {
+        "Mode of Delivery": deliveryDetails.modeOfDelivery,
+        "Delivery Period": deliveryDetails.deliveryPeriod,
+        "Add Date": deliveryDetails.addDate,
+        "Settlement Date": deliveryDetails.settlementDate,
+        "Maturity Date": deliveryDetails.maturityDate,
+        "Delivery Date": deliveryDetails.deliveryDate,
       });
 
-      addSection('Additional Details', {
-        'Remarks': additionalDetails.remarks,
-        'Narration': additionalDetails.narration,
-        'Timestamp': additionalDetails.timestamp
+      addSection("Additional Details", {
+        Remarks: additionalDetails.remarks,
+        Narration: additionalDetails.narration,
+        Timestamp: additionalDetails.timestamp,
       });
 
       // Check if any content was added (if yPosition is still at initial value, no content was added)
       if (yPosition <= 40) {
         pdf.setFontSize(12);
         pdf.setTextColor(128, 128, 128);
-        pdf.text('No data available to display', pageWidth / 2, 60, { align: 'center' });
+        pdf.text("No data available to display", pageWidth / 2, 60, {
+          align: "center",
+        });
       }
 
       // Add footer with page numbers
@@ -584,38 +621,33 @@ const FxBookingForm: React.FC = () => {
         pdf.setPage(i);
         pdf.setFontSize(8);
         pdf.setTextColor(150, 150, 150);
-        
+
         // Footer line
         pdf.setDrawColor(200, 200, 200);
         pdf.line(15, pageHeight - 15, pageWidth - 15, pageHeight - 15);
-        
+
         // Page number
-        pdf.text(
-          `Page ${i} of ${totalPages}`,
-          pageWidth / 2,
-          pageHeight - 8,
-          { align: 'center' }
-        );
-        
+        pdf.text(`Page ${i} of ${totalPages}`, pageWidth / 2, pageHeight - 8, {
+          align: "center",
+        });
+
         // Generated by
-        pdf.text(
-          'Generated by FX Booking System',
-          15,
-          pageHeight - 8
-        );
+        pdf.text("Generated by FX Booking System", 15, pageHeight - 8);
       }
 
       // Generate filename
-      const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-      const refId = transactionInfo.internalReferenceId || 'DRAFT';
+      const timestamp = new Date()
+        .toISOString()
+        .slice(0, 19)
+        .replace(/:/g, "-");
+      const refId = transactionInfo.internalReferenceId || "DRAFT";
       const filename = `FX_Booking_Form_${refId}_${timestamp}`;
 
       // Save PDF
       pdf.save(`${filename}.pdf`);
       notify("PDF generated successfully!", "success");
-
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      console.error("Error generating PDF:", error);
       notify("Error generating PDF. Please try again.", "error");
     }
   };
@@ -624,12 +656,12 @@ const FxBookingForm: React.FC = () => {
   const testApiConnection = async () => {
     try {
       // notify("Testing API connection...", "info");
-      
+
       const response = await axios.get(
         "https://backend-slqi.onrender.com/api/forwards/forward-bookings/forwardDetails",
         { timeout: 10000 }
       );
-      
+
       console.log("API connection test successful:", response.status);
       // notify("API connection successful!", "success");
       return true;
@@ -669,8 +701,8 @@ const FxBookingForm: React.FC = () => {
               </div>
             </div>
 
-            <div 
-              ref={formRef} 
+            <div
+              ref={formRef}
               id="pdf-section"
               className="grid lg:grid-cols-2 w-full p-6 gap-4 rounded-lg border border-border bg-white"
             >
@@ -731,6 +763,7 @@ const FxBookingForm: React.FC = () => {
 };
 
 export default FxBookingForm;
+
 
 
 // import React, { useEffect, useState, useCallback } from "react";
