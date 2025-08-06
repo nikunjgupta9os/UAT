@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from "react";
 import type { RowSelectionState } from "@tanstack/react-table";
 import axios from "axios";
@@ -10,6 +8,7 @@ import {
   flexRender,
   getExpandedRowModel,
   getSortedRowModel,
+  getPaginationRowModel,
   type ColumnDef,
   type Row,
   type HeaderContext,
@@ -26,6 +25,7 @@ import {
   CircleArrowDown,
 } from "lucide-react";
 import Button from "../../../client/ui/Button";
+import Pagination from "../../ui/Pagination";
 import "../../styles/theme.css";
 
 interface EditableRowData {
@@ -333,12 +333,18 @@ function NyneOSTable<T extends EditableRowData>({
     columns: finalColumns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     getExpandedRowModel: expandedRowConfig ? getExpandedRowModel() : undefined,
     getRowCanExpand: expandedRowConfig ? () => true : undefined,
     onColumnOrderChange: setColumnOrder,
     onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    initialState: {
+      pagination: {
+        pageSize: 10,
+      },
+    },
     state: {
       columnOrder,
       columnVisibility,
@@ -346,8 +352,18 @@ function NyneOSTable<T extends EditableRowData>({
       rowSelection,
     },
     enableRowSelection: true,
-    getRowId: (row) => row.exposure_header_id, // Add this to specify the unique row identifier
+    getRowId: (row) => row.exposure_header_id,
   });
+
+  // Pagination calculations
+  const pagination = table.getState().pagination;
+  const totalItems = data.length;
+  const startIndex = pagination.pageIndex * pagination.pageSize + 1;
+  const endIndex = Math.min(
+    (pagination.pageIndex + 1) * pagination.pageSize,
+    totalItems
+  );
+  const currentPageItems = table.getRowModel().rows.length;
 
   const { notify } = useNotification();
   const handleApprove = async () => {
@@ -600,6 +616,14 @@ function NyneOSTable<T extends EditableRowData>({
             </table>
           </DndContext>
         </div>
+        {/* Add Pagination Component */}
+        <Pagination
+          table={table}
+          totalItems={totalItems}
+          currentPageItems={currentPageItems}
+          startIndex={startIndex}
+          endIndex={endIndex}
+        />
       </div>
     </>
   );
