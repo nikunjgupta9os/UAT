@@ -407,6 +407,7 @@ const UploadFile: React.FC = () => {
         );
         if (res.data.results[0]?.success) {
           notify(`Data for ${file.name} has been successfully sent to the server`, "success");
+           setFiles([]);
         } else if (res.data.results && Array.isArray(res.data.results)) {
           const errorMessages = res.data.results
             .filter((r) => !r.success)
