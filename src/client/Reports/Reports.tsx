@@ -28,6 +28,7 @@ const mockLinkedSummaryDataByCategory = {
   "Fwd Booking": [],
   "Fwd Rollovers": [],
   "Fwd Cancellation": [],
+  "Exposure Positions": [],
 };
 
 
@@ -132,10 +133,29 @@ function Reports() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Fetch main reports
         const response = await axios.get("https://backend-slqi.onrender.com/api/forwards/linked-summary-by-category");
-        if (response.data && typeof response.data === "object") {
-          setLinkedSummaryData(response.data);
+        let data: Record<string, any[]> = response.data && typeof response.data === "object" ? response.data : {};
+
+        // Fetch exposure positions report
+        try {
+          const exposureRes = await axios.get("https://backend-slqi.onrender.com/api/forwards/exposure/summary");
+          if (
+            exposureRes.data &&
+            Array.isArray(exposureRes.data.summary)
+          ) {
+            data["Exposure Positions"] = exposureRes.data.summary;
+          } else if (Array.isArray(exposureRes.data)) {
+            data["Exposure Positions"] = exposureRes.data;
+          } else {
+            data["Exposure Positions"] = [];
+          }
+        } catch (exposureErr) {
+          // fallback: leave as empty array
+          data["Exposure Positions"] = [];
         }
+
+        setLinkedSummaryData({ ...mockLinkedSummaryDataByCategory, ...data });
       } catch (err) {
         // fallback to mock data
         setLinkedSummaryData(mockLinkedSummaryDataByCategory);
@@ -423,7 +443,18 @@ function Reports() {
   const typeOptions = useMemo(() => getFxTypeOptions(linkedSummaryData), [linkedSummaryData]);
   const orderTypeOptions = useMemo(() => getUniqueOptions(data, "order_type"), [data]);
   const currencyPairOptions = useMemo(() => getUniqueOptions(data, "currency_pair"), [data]);
-  const entityOptions = useMemo(() => getUniqueOptions(data, "entity_level_3"), [data]);
+  // Entity dropdown: use correct key for Exposure Positions, fallback to entity_level_3 for others
+  const entityOptions = useMemo(() => {
+    if (selectedType === "Exposure Positions") {
+      // Try to find a suitable entity key in the data
+      // Common keys: entity, entity_name, entity_level_3, etc.
+      const possibleKeys = ["entity", "entity_name", "entity_level_3", "entity_level_2", "entity_level_0"];
+      const key = data.length > 0 ? possibleKeys.find(k => k in data[0]) : "entity";
+      return getUniqueOptions(data, key || "entity");
+    } else {
+      return getUniqueOptions(data, "entity_level_3");
+    }
+  }, [data, selectedType]);
   const bankOptions = useMemo(() => getUniqueOptions(data, "counterparty"), [data]);
 
   // Filtering logic
@@ -431,7 +462,16 @@ function Reports() {
     let filtered = [...data];
     if (filters.orderType) filtered = filtered.filter(row => row.order_type === filters.orderType);
     if (filters.currencyPair) filtered = filtered.filter(row => row.currency_pair === filters.currencyPair);
-    if (filters.entity) filtered = filtered.filter(row => row.entity_level_3 === filters.entity);
+    // Entity filter: use correct key for Exposure Positions
+    if (filters.entity) {
+      if (selectedType === "Exposure Positions") {
+        const possibleKeys = ["entity", "entity_name", "entity_level_3", "entity_level_2", "entity_level_0"];
+        const key = data.length > 0 ? possibleKeys.find(k => k in data[0]) : "entity";
+        filtered = filtered.filter(row => row[key || "entity"] === filters.entity);
+      } else {
+        filtered = filtered.filter(row => row.entity_level_3 === filters.entity);
+      }
+    }
     if (filters.bank) filtered = filtered.filter(row => row.counterparty === filters.bank);
     setFilteredData(filtered);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
