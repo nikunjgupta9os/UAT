@@ -10,6 +10,7 @@ interface NumberInputProps {
   min?: number;
   onBlur?: (value: number) => void;
   max?: number;
+  isStep? : boolean;
 }
 
 const NumberInput: React.FC<NumberInputProps> = ({
@@ -19,6 +20,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
   step = 1,
   precision = 2,
   min,
+  isStep = true,
   max,
 }) => {
   const [inputValue, setInputValue] = useState(value.toString());
@@ -77,7 +79,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
     <div className="relative inline-block">
       <input
         type="text"
-        className="w-24 h-10 px-3 pr-8 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400"
+        className="w-min-24 h-10 px-3 pr-8 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400"
         value={inputValue}
         onChange={handleChange}
         onBlur={handleBlur}
@@ -85,7 +87,29 @@ const NumberInput: React.FC<NumberInputProps> = ({
       />
       
       {/* Up/Down Arrow Buttons */}
-      <div className="absolute right-1 top-1 bottom-1 flex flex-col">
+      {
+        isStep && (
+          <div className="absolute right-0 top-0 h-full flex flex-col">
+            <button
+              type="button"
+              onClick={increment}
+              className="flex-1 flex items-center justify-center w-6 text-gray-400 hover:text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors duration-150 rounded-tr-md"
+              tabIndex={-1}
+            >
+              <ChevronUp size={14} />
+            </button>
+            <button
+              type="button"
+              onClick={decrement}
+              className="flex-1 flex items-center justify-center w-6 text-gray-400 hover:text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors duration-150 rounded-br-md"
+              tabIndex={-1}
+            >
+              <ChevronDown size={14} />
+            </button>
+          </div>
+        )
+      }
+      {/* <div className="absolute right-1 top-1 bottom-1 flex flex-col">
         <button
           type="button"
           onClick={increment}
@@ -103,7 +127,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
         >
           <ChevronDown size={14} />
         </button>
-      </div>
+      </div> */}
     </div>
   );
 };
