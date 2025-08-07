@@ -92,7 +92,7 @@ const AwaitingApproval: React.FC = () => {
         );
 
         const pages = response.data?.pages;
-        const userTabs = pages?.["user-creation"];
+        const userTabs = pages?.["roles"];
 
         if (userTabs) {
           setVisibility({
@@ -752,10 +752,10 @@ const AwaitingApproval: React.FC = () => {
                           </svg>
                         </div>
                         <p className="text-lg font-medium text-gray-900 mb-1">
-                          No users found
+                          No role found
                         </p>
                         <p className="text-sm text-gray-500">
-                          There are no users to display at the moment.
+                          There are no role to display at the moment.
                         </p>
                       </div>
                     </td>
