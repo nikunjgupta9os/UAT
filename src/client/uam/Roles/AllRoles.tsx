@@ -23,7 +23,7 @@ import { Draggable } from "../../common/Draggable";
 import { Droppable } from "../../common/Droppable";
 import ExpandedRow from "../../common/RenderExpandedCellRole";
 import LoadingSpinner from "../../ui/LoadingSpinner";
-import PaginationFooter from "../../ui/PaginationFooter";
+import Pagination from "../../ui/Pagination"; // Add this import
 import { exportToExcel } from "../../ui/exportToExcel";
 import { useNotification } from "../../Notification/Notification";
 
@@ -161,7 +161,6 @@ const AllRoles: React.FC = () => {
           console.error("Invalid payload structure or empty response:", data);
           return;
         }
-
 
         setData(data.roleData);
         setLoading(false);
@@ -395,7 +394,10 @@ const AllRoles: React.FC = () => {
         header: "Action",
         cell: ({ row }) => (
           <div className="flex items-center space-x-1">
-            <button className="p-1.5 hover:bg-primary-xl rounded transition-colors">
+            <button
+              onClick={() => exportToExcel([row.original], `Role_${row.original.id}`)}
+              className="p-1.5 hover:bg-primary-xl rounded transition-colors"
+            >
               <Download className="w-4 h-4 text-primary" />
             </button>
             {Visibility.delete && (
@@ -487,13 +489,29 @@ const AllRoles: React.FC = () => {
     columns,
     onColumnOrderChange: setColumnOrder,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    getPaginationRowModel: getPaginationRowModel(), // Keep this
     onColumnVisibilityChange: setColumnVisibility,
+    initialState: {
+      pagination: {
+        pageSize: 10, // Set default page size
+      },
+    },
     state: {
       columnOrder,
       columnVisibility,
     },
   });
+
+  // Pagination calculations
+  const pagination = table.getState().pagination;
+  const totalItems = filteredData.length;
+  const startIndex = pagination.pageIndex * pagination.pageSize + 1;
+  const endIndex = Math.min(
+    (pagination.pageIndex + 1) * pagination.pageSize,
+    totalItems
+  );
+  const currentPageItems = table.getRowModel().rows.length;
+
   if (loading) return <LoadingSpinner />;
 
   return (
@@ -731,7 +749,7 @@ const AllRoles: React.FC = () => {
                           No Roles found
                         </p>
                         <p className="text-sm text-primary">
-                          There are no roles to display at the moment.
+                          There are no users to display at the moment.
                         </p>
                       </div>
                     </td>
@@ -773,7 +791,8 @@ const AllRoles: React.FC = () => {
                           visibleColumnCount={
                             table.getVisibleLeafColumns().length
                           }
-                          editableKeys={["name", "description"]}
+                          editableKeys={["startTime", "description","endTime"]}
+                          timeFields={["startTime", "endTime"]} // Add this line for time fields
                           detailsFields={[
                             // "Role ID",
                             "name",
@@ -795,11 +814,19 @@ const AllRoles: React.FC = () => {
                 )}
               </tbody>
             </table>
-            <PaginationFooter table={table} />
           </div>
+          {/* Add Pagination Component */}
+          <Pagination
+            table={table}
+            totalItems={totalItems}
+            currentPageItems={currentPageItems}
+            startIndex={startIndex}
+            endIndex={endIndex}
+          />
         </div>
       </div>
     </>
   );
 };
+
 export default AllRoles;
