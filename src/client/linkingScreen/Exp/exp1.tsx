@@ -26,7 +26,6 @@ type LinkedSummaryData = {
   linkedAmount: number;
   linkDate: string;
 };
-
 const nonDraggableColumns = ["srNo", "actions"];
 
 const typeOptions = [
