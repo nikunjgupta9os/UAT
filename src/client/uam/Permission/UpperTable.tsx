@@ -64,6 +64,10 @@ const pageList = [
   { key: "permissions", label: "Permissions" },
   { key: "user-creation", label: "User Creation" },
   { key: "exposure-upload", label: "Exposure Upload" },
+  { key: "exposure-linkage", label: "Exposure Linkage" },
+  { key: "fx-forward-booking", label: "FX Forward Booking" },
+  { key: "forward-confirmation", label: "Forward Confirmation" },
+  { key: "settlement", label: "Settlement" },
 ];
 
 const pagesWithTabs = [
@@ -71,6 +75,9 @@ const pagesWithTabs = [
   "permissions",
   "user-creation",
   "exposure-upload",
+  "fx-forward-booking",
+  "forward-confirmation",
+  "settlement",
 ];
 
 const tabLabels: Record<string, string> = {
@@ -78,6 +85,12 @@ const tabLabels: Record<string, string> = {
   uploadTab: "Upload Tab",
   pendingTab: "Pending Tab",
   default: "Default",
+  uploadFx: "Upload FX",
+  fxForm: "FX Form",
+  pendingForward: "Pending Forward",
+  payment: "Payment",
+  rollover: "Rollover",
+  cancellation: "Cancellation",
 };
 
 const permissionCheckboxes = [
@@ -107,6 +120,10 @@ const PermissionsTable: React.FC<prop> = ({ roleName }) => {
       permissions: { pagePermissions: { hasAccess: false }, tabs: { allTab: { ...defaultPermissionAttributes }, uploadTab: { ...defaultPermissionAttributes }, pendingTab: { ...defaultPermissionAttributes } } },
       "user-creation": { pagePermissions: { hasAccess: false }, tabs: { allTab: { ...defaultPermissionAttributes }, uploadTab: { ...defaultPermissionAttributes }, pendingTab: { ...defaultPermissionAttributes } } },
       "exposure-upload": { pagePermissions: { hasAccess: false }, tabs: { allTab: { ...defaultPermissionAttributes }, uploadTab: { ...defaultPermissionAttributes }, pendingTab: { ...defaultPermissionAttributes } } },
+      "exposure-linkage": { pagePermissions: { hasAccess: false }, tabs: { default: { ...defaultPermissionAttributes } } },
+      "fx-forward-booking": { pagePermissions: { hasAccess: false }, tabs: { uploadFx: { ...defaultPermissionAttributes }, fxForm: { ...defaultPermissionAttributes } } },
+      "forward-confirmation": { pagePermissions: { hasAccess: false }, tabs: { uploadTab: { ...defaultPermissionAttributes }, fxForm: { ...defaultPermissionAttributes }, pendingForward: { ...defaultPermissionAttributes } } },
+      settlement: { pagePermissions: { hasAccess: false }, tabs: { payment: { ...defaultPermissionAttributes }, rollover: { ...defaultPermissionAttributes }, cancellation: { ...defaultPermissionAttributes } } },
     },
   });
 
@@ -114,6 +131,15 @@ const PermissionsTable: React.FC<prop> = ({ roleName }) => {
 
   // Helper to get tabs for a page
   const getTabsForPage = (pageKey: string) => {
+    if (pageKey === "fx-forward-booking") {
+      return ["uploadFx", "fxForm"];
+    }
+    if (pageKey === "forward-confirmation") {
+      return ["uploadTab", "fxForm", "pendingForward"];
+    }
+    if (pageKey === "settlement") {
+      return ["payment", "rollover", "cancellation"];
+    }
     return pagesWithTabs.includes(pageKey)
       ? ["allTab", "uploadTab", "pendingTab"]
       : ["default"];
@@ -128,28 +154,41 @@ const PermissionsTable: React.FC<prop> = ({ roleName }) => {
 
 
   // Helper to get page access (checked if all tabs have hasAccess true)
-  // Always return true so Page Access checkbox is always clickable
   const getPageAccess = (pageKey: string) => {
-    return true;
+    const page = permissionData.pages[pageKey];
+    if (!page) return false;
+    
+    // Use the pagePermissions.hasAccess if it exists, otherwise fall back to checking tabs
+    return page.pagePermissions?.hasAccess || 
+           Object.values(page.tabs).some(tab => tab.hasAccess);
   };
 
   // Update page access: set all tabs' hasAccess to the new value
   const updatePageAccess = (pageKey: string, hasAccess: boolean) => {
+    console.log(`Updating page access for ${pageKey} to ${hasAccess}`);
     setPermissionData(prev => {
       const page = prev.pages[pageKey];
-      if (!page || !page.tabs) return prev;
+      if (!page || !page.tabs) {
+        // console.log(`No page or tabs found for ${pageKey}`);
+        return prev;
+      }
       const newTabs = Object.fromEntries(
         Object.entries(page.tabs).map(([tab, attrs]) => [
           tab,
           { ...attrs, hasAccess }
         ])
       );
+      // console.log(`New tabs for ${pageKey}:`, newTabs);
       return {
         ...prev,
         pages: {
           ...prev.pages,
           [pageKey]: {
             ...page,
+            pagePermissions: {
+              ...page.pagePermissions,
+              hasAccess
+            },
             tabs: newTabs
           }
         }
@@ -181,34 +220,62 @@ const PermissionsTable: React.FC<prop> = ({ roleName }) => {
   // Normalize backend data to always have {tabs: {tab: {}}} structure for each page
   const normalizePermissions = (rawPages: any): PermissionData["pages"] => {
     const normalizedPages: PermissionData["pages"] = {};
+    
     for (const [pageKey, pageValue] of Object.entries(rawPages)) {
-      // If already has tabs, just use them
-      if (pageValue && typeof pageValue === "object" && "tabs" in pageValue) {
-        normalizedPages[pageKey] = {
-          pagePermissions: { hasAccess: Object.values((pageValue as any).tabs).every((tab: any) => tab.hasAccess) },
-          tabs: (pageValue as any).tabs,
-        };
+      // Skip if pageValue is null or undefined
+      if (!pageValue) {
         continue;
       }
-      // fallback for legacy/empty
-      const tabs = pagesWithTabs.includes(pageKey)
-        ? ["allTab", "uploadTab", "pendingTab"]
-        : ["default"];
+
+      const tabs = getTabsForPage(pageKey);
       const tabsData: PageTabs = {};
-      tabs.forEach((tab) => {
-        const tabData = (pageValue as any)[tab] ?? {};
-        tabsData[tab] = {
-          ...defaultPermissionAttributes,
-          ...tabData,
-        };
+      
+      // Initialize with default values first
+      tabs.forEach(tab => {
+        tabsData[tab] = { ...defaultPermissionAttributes };
       });
+
+      // If tabs exist in the response, merge them
+      if ((pageValue as any).tabs) {
+        for (const [tab, tabData] of Object.entries((pageValue as any).tabs as Record<string, any>)) {
+          if (tabsData[tab]) {
+            tabsData[tab] = {
+              ...tabsData[tab],
+              ...tabData,
+            };
+          }
+        }
+      }
+
+      // Determine page-level access
+      const pageAccess = (pageValue as any).pagePermissions?.hasAccess || 
+                        Object.values(tabsData).some(tab => tab.hasAccess);
+
       normalizedPages[pageKey] = {
         pagePermissions: {
-          hasAccess: Object.values(tabsData).every((tab: any) => tab.hasAccess),
+          hasAccess: (pageValue as any).pagePermissions?.hasAccess || false
         },
         tabs: tabsData,
       };
     }
+
+    // Ensure all expected pages exist, even if not in API response
+    pageList.forEach(page => {
+      if (!normalizedPages[page.key]) {
+        const tabs = getTabsForPage(page.key);
+        const tabsData: PageTabs = {};
+        
+        tabs.forEach(tab => {
+          tabsData[tab] = { ...defaultPermissionAttributes };
+        });
+
+        normalizedPages[page.key] = {
+          pagePermissions: { hasAccess: false },
+          tabs: tabsData,
+        };
+      }
+    });
+
     return normalizedPages;
   };
 
@@ -238,7 +305,7 @@ const PermissionsTable: React.FC<prop> = ({ roleName }) => {
     }));
   };
 
-  console.log("Permission data:", permissionData);
+  // console.log("Permission data:", permissionData);
 
 
   // Fetch permission data from API
@@ -250,8 +317,9 @@ const PermissionsTable: React.FC<prop> = ({ roleName }) => {
         "https://backend-slqi.onrender.com/api/permissions/permissionjson",
         { roleName }
       );
-      console.log("Response:", response.data); 
-      if (response.data.page === null) {
+      console.log("Response data :", response.data); 
+      if (!response.data.pages || Object.keys(response.data.pages).length === 0)
+ {
         // Set all permissions to false, but allow editing by not disabling checkboxes
         setPermissionData({
           role_name: roleName,
@@ -266,6 +334,10 @@ const PermissionsTable: React.FC<prop> = ({ roleName }) => {
             permissions: { pagePermissions: { hasAccess: false }, tabs: { allTab: { ...defaultPermissionAttributes }, uploadTab: { ...defaultPermissionAttributes }, pendingTab: { ...defaultPermissionAttributes } } },
             "user-creation": { pagePermissions: { hasAccess: false }, tabs: { allTab: { ...defaultPermissionAttributes }, uploadTab: { ...defaultPermissionAttributes }, pendingTab: { ...defaultPermissionAttributes } } },
             "exposure-upload": { pagePermissions: { hasAccess: false }, tabs: { allTab: { ...defaultPermissionAttributes }, uploadTab: { ...defaultPermissionAttributes }, pendingTab: { ...defaultPermissionAttributes } } },
+            "exposure-linkage": { pagePermissions: { hasAccess: false }, tabs: { default: { ...defaultPermissionAttributes } } },
+            "fx-forward-booking": { pagePermissions: { hasAccess: false }, tabs: { uploadFx: { ...defaultPermissionAttributes }, fxForm: { ...defaultPermissionAttributes } } },
+            "forward-confirmation": { pagePermissions: { hasAccess: false }, tabs: { uploadTab: { ...defaultPermissionAttributes }, fxForm: { ...defaultPermissionAttributes }, pendingForward: { ...defaultPermissionAttributes } } },
+            settlement: { pagePermissions: { hasAccess: false }, tabs: { payment: { ...defaultPermissionAttributes }, rollover: { ...defaultPermissionAttributes }, cancellation: { ...defaultPermissionAttributes } } },
           },
         });
         return;
@@ -289,7 +361,7 @@ const PermissionsTable: React.FC<prop> = ({ roleName }) => {
   fetchPermissionData();
 }, [roleName]);
 
-console.log("Permission data:", permissionData);
+// console.log("Permission data:", permissionData);
 
 
   // Submit/save handler
@@ -306,7 +378,7 @@ console.log("Permission data:", permissionData);
         "https://backend-slqi.onrender.com/api/permissions/assign",
         dataToSend
       );
-      console.log("Response2:", response.data);
+      console.log("Response2 ww:", response.data);
       if (response.data.success) {
         notify("Permissions saved successfully!", "success");
       } else {
@@ -361,9 +433,13 @@ console.log("Permission data:", permissionData);
                         {tabIdx === 0 ? (
                   <input
                     type="checkbox"
-                    checked={getTabsForPage(page.key).every(tab => getPermissions(page.key, tab).hasAccess)}
-                    onChange={e => updatePageAccess(page.key, e.target.checked)}
-                    className="accent-primary w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2"
+                    checked={getPageAccess(page.key)}
+                    onChange={e => {
+                      // console.log(`Page access checkbox clicked for ${page.key}, checked: ${e.target.checked}`);
+                      updatePageAccess(page.key, e.target.checked);
+                    }}
+                    style={{ pointerEvents: 'auto', zIndex: 10 }}
+                    className="accent-primary w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2 cursor-pointer"
                   />
                         ) : null}
                       </td>
@@ -375,8 +451,8 @@ console.log("Permission data:", permissionData);
                               type="checkbox"
                               checked={tabPerms.hasAccess}
                               onChange={e => updateTabAccess(page.key, tab, e.target.checked)}
-                              // disabled={pageAccess}
-                              className="mr-[5rem] accent-primary w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2"
+                              disabled={!getPageAccess(page.key)}
+                              className="mr-[5rem] accent-primary w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                           </>
                         ) : (
@@ -389,8 +465,8 @@ console.log("Permission data:", permissionData);
                             type="checkbox"
                             checked={tabPerms[perm.key as keyof PermissionAttributes]}
                             onChange={e => updatePermissionCheckbox(page.key, tab, perm.key as keyof PermissionAttributes, e.target.checked)}
-                            disabled={tabs.length > 1 ? (!tabPerms.hasAccess) : false}
-                            className="accent-primary w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2"
+                            disabled={!getPageAccess(page.key) || (tabs.length > 1 ? (!tabPerms.hasAccess) : false)}
+                            className="accent-primary w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
                           />
                         </td>
                       ))}
