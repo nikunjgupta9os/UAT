@@ -80,29 +80,39 @@ function Reports() {
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
 
   // Grouping state
-  const [groupBy, setGroupBy] = useState<string | null>(null);
+  const [groupBy, setGroupBy] = useState<string[]>([]);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
-  // Helper to group data by a key (column id)
-  function groupData(data: Record<string, any>[], key: string | null) {
-    if (!key) return null;
-    const groups: Record<string, Record<string, any>[]> = {};
-    data.forEach(row => {
-      const groupVal = row[key] ?? "(Blank)";
-      if (!groups[groupVal]) groups[groupVal] = [];
-      groups[groupVal].push(row);
-    });
-    return groups;
+
+  // Helper to group data by multiple keys
+  function groupData(data: Record<string, any>[], keys: string[] = []) {
+    if (!keys.length) return null;
+    const groupRecursive = (rows: Record<string, any>[], depth: number): any => {
+      if (depth >= keys.length) return rows;
+      const key = keys[depth];
+      const groups: Record<string, any> = {};
+      rows.forEach(row => {
+        const groupVal = row[key] ?? "(Blank)";
+        if (!groups[groupVal]) groups[groupVal] = [];
+        groups[groupVal].push(row);
+      });
+      // Recursively group subgroups
+      Object.keys(groups).forEach(g => {
+        groups[g] = groupRecursive(groups[g], depth + 1);
+      });
+      return groups;
+    };
+    return groupRecursive(data, 0);
   }
 
   // Grouped data memoized
   const groupedData = useMemo(() => {
-    if (!groupBy) return null;
+    if (!groupBy.length) return null;
     return groupData(filteredData, groupBy);
   }, [filteredData, groupBy]);
 
   // When groupBy changes, reset pagination to first page
   useEffect(() => {
-    if (groupBy) {
+    if (groupBy.length) {
       setPagination((prev) => ({ ...prev, pageIndex: 0 }));
     }
   }, [groupBy]);
@@ -166,12 +176,160 @@ function Reports() {
     return `${day}-${month}-${year}`;
   }
 
+  // Helper: format numbers to 3-4 decimal places
+  function formatNumber(val: number | string, decimals = 3) {
+    if (typeof val === 'number') {
+      return val.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    }
+    if (typeof val === 'string' && !isNaN(Number(val))) {
+      return Number(val).toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    }
+    return val;
+  }
+
+  // Helper: render grouped rows recursively and show sum row for numeric and specified columns
+  function renderGroupedRows(groups: any, depth: number, parentKeys: string[]) {
+    const groupKey = groupBy[depth];
+    const isLastLevel = depth === groupBy.length - 1;
+
+    // Columns to always sum (by accessorKey)
+    const alwaysSumColumns = [
+      // "entity_level_0",
+      // "entity_level_1",
+      // "entity_level_2",
+      // "entity_level_3",
+      // "local_currency",
+      // "order_type",
+      // "transaction_type",
+      // "counterparty",
+      // "mode_of_delivery",
+      // "delivery_period",
+      // "add_date",
+      // "settlement_date",
+      // "maturity_date",
+      // "delivery_date",
+      // "currency_pair",
+      // "base_currency",
+      // "quote_currency",
+      "booking_amount",
+      "value_type",
+      "actual_value_base_currency",
+      // "spot_rate",
+      // "forward_points",
+      "bank_margin",
+      "total_rate",
+      "value_quote_currency",
+      // "intervening_rate_quote_to_local"
+    ];
+
+    return Object.entries(groups).map(([group, rowsOrSubgroups]) => {
+      const groupId = [...parentKeys, group].join("__");
+      const isCollapsed = collapsedGroups[groupId];
+      // If last level, rowsOrSubgroups is array of rows
+      let rows: Record<string, any>[] = [];
+      if (isLastLevel) {
+        rows = rowsOrSubgroups as Record<string, any>[];
+      }
+      // Compute sum for numeric columns and alwaysSumColumns
+      let sumRow: Record<string, number | string> = {};
+      if (isLastLevel && rows.length) {
+        visibleColumns.forEach((col, colIdx) => {
+          const values = rows.map(r => r[col.id]);
+          // Sum if all values are numbers, or if col.id is in alwaysSumColumns and values are numbers
+          if (values.every(v => typeof v === 'number')) {
+            sumRow[col.id] = values.reduce((a, b) => a + b, 0);
+          } else if (alwaysSumColumns.includes(col.id)) {
+            // Try to sum if possible (e.g. string numbers)
+            const numericValues = values.map(v => typeof v === 'number' ? v : (typeof v === 'string' && !isNaN(Number(v)) ? Number(v) : null)).filter(v => typeof v === 'number');
+            if (numericValues.length === values.length && numericValues.length > 0) {
+              sumRow[col.id] = numericValues.reduce((a, b) => a + b, 0);
+            } else {
+              sumRow[col.id] = '';
+            }
+          }
+        });
+      }
+      // Find the first visible column index for alignment
+      const firstColIdx = 0;
+      return (
+        <>
+          <tr key={groupId} className="bg-gray-100 cursor-pointer" onClick={() => setCollapsedGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }))}>
+            <td colSpan={visibleColumns.length} className="px-6 py-2 font-bold text-primary flex items-center">
+              <span className="mr-2">{isCollapsed ? '+' : '-'}</span>
+              {groupKey ? `${columns.find(c => (c as any).accessorKey === groupKey)?.header || groupKey}: ` : ''}{group}
+              {isLastLevel && rows.length ? <span className="ml-2 text-xs text-gray-500">({rows.length})</span> : null}
+            </td>
+          </tr>
+          {!isCollapsed && (
+            isLastLevel ? (
+              <>
+                {rows.map((row, rowIdx) => (
+                  <tr key={groupId + '-' + rowIdx} className={rowIdx % 2 === 0 ? "bg-primary-md" : "bg-secondary-color-lt"}>
+                    {visibleColumns.map((col) => {
+                      const val = row[col.id];
+                      const colDef = columns.find(c => (c as any).accessorKey === col.id);
+                      let cellContent = val;
+                      if (colDef && colDef.cell) {
+                        cellContent = (colDef.cell as any)({ getValue: () => val });
+                      }
+                      return (
+                        <td key={col.id} className="px-6 py-4 whitespace-nowrap text-sm border-b border-border">
+                          {cellContent}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+                {/* Sum row for numeric columns and alwaysSumColumns */}
+                {Object.keys(sumRow).length > 0 && (
+                  <tr key={groupId + '-sum'} className="bg-gray-200 font-semibold">
+                    {visibleColumns.map((col, colIdx) => {
+                      if (colIdx === firstColIdx) {
+                        return (
+                          <td key={col.id} className="px-6 py-2 border-b border-border text-left font-bold">
+                            Total
+                          </td>
+                        );
+                      }
+                      return (
+                        <td key={col.id} className="px-6 py-2 border-b border-border text-right">
+                          {sumRow[col.id] !== undefined && sumRow[col.id] !== '' ? formatNumber(sumRow[col.id]) : ''}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                )}
+              </>
+            ) : (
+              renderGroupedRows(rowsOrSubgroups, depth + 1, [...parentKeys, group])
+            )
+          )}
+        </>
+      );
+    });
+  }
+
   function getColumnsFromData(
     data: Record<string, any>[]
   ): ColumnDef<Record<string, any>>[] {
     if (!data || data.length === 0) return [];
 
-    return Object.keys(data[0]).map((key) => ({
+    // Default columns for Fwd Booking
+    const allKeys = Object.keys(data[0]);
+    let defaultVisible: Set<string>;
+    if (selectedType === "Fwd Booking") {
+      defaultVisible = new Set([
+        "entity_level_0",
+        "order_type",
+        "counterparty",
+        "currency_pair",
+        "booking_amount",
+        "settlement_date"
+      ]);
+    } else {
+      defaultVisible = new Set(allKeys.slice(0, 4));
+    }
+    return allKeys.map((key) => ({
       accessorKey: key,
       header: key
         .replace(/_/g, " ") // optional: makes headers more readable
@@ -182,8 +340,13 @@ function Reports() {
           const formatted = formatDate(val as string);
           return <span>{formatted}</span>;
         }
+        // Format numbers for booking_amount and other numeric columns
+        if (["booking_amount", "actual_value_base_currency", "bank_margin", "total_rate", "value_quote_currency"].includes(key) && val !== undefined && val !== null && val !== "") {
+          return <span>{formatNumber(val as number | string)}</span>;
+        }
         return val === undefined || val === null ? "" : <span>{val as string}</span>;
       },
+      enableHiding: !defaultVisible.has(key),
     }));
   }
 
@@ -225,10 +388,28 @@ function Reports() {
       const newColumnOrder = newData.length > 0 ? Object.keys(newData[0]) : [];
       setColumnOrder(newColumnOrder);
 
-      const defaultVisibility = newColumnOrder.reduce(
-        (acc, key) => ({ ...acc, [key]: true }),
-        {}
-      );
+      // Set default column visibility for Fwd Booking
+      let defaultVisibility: Record<string, boolean> = {};
+      if (selectedType === "Fwd Booking") {
+        const defaultCols = [
+          "entity_level_0",
+          "order_type",
+          "counterparty",
+          "currency_pair",
+          "booking_amount",
+          "settlement_date",
+          "maturity_date"
+        ];
+        defaultVisibility = newColumnOrder.reduce(
+          (acc, key) => ({ ...acc, [key]: defaultCols.includes(key) }),
+          {}
+        );
+      } else {
+        defaultVisibility = newColumnOrder.reduce(
+          (acc, key, idx) => ({ ...acc, [key]: idx < 4 }),
+          {}
+        );
+      }
       setColumnVisibility(defaultVisibility);
 
       setPagination((prev) => ({ ...prev, pageIndex: 0 }));
@@ -260,13 +441,13 @@ function Reports() {
     setFilters({ orderType: null, currencyPair: null, entity: null, bank: null });
     setFilteredData(data);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-    setGroupBy(null);
+    setGroupBy([]);
     setCollapsedGroups({});
   };
-  // Toggle collapse for a group
-  const toggleGroupCollapse = (group: string) => {
-    setCollapsedGroups(prev => ({ ...prev, [group]: !prev[group] }));
-  };
+  // (Unused) Toggle collapse for a group (can be removed, logic is now inline)
+  // const toggleGroupCollapse = (group: string) => {
+  //   setCollapsedGroups(prev => ({ ...prev, [group]: !prev[group] }));
+  // };
 
   // Get visible columns (as per column picker)
   const visibleColumns = table.getVisibleLeafColumns();
@@ -295,6 +476,27 @@ function Reports() {
       });
       return obj;
     });
+    // Add sum row at the end
+    if (rows.length) {
+      let sumRow: Record<string, number | string> = {};
+      cols.forEach((col, colIdx) => {
+        const values = rows.map(r => r[col.id]);
+        if (colIdx === 0) {
+          sumRow[col.id] = 'Total';
+        } else if (values.every(v => typeof v === 'number')) {
+          sumRow[col.id] = values.reduce((a, b) => a + b, 0);
+        } else {
+          // Try to sum if possible (e.g. string numbers)
+          const numericValues = values.map(v => typeof v === 'number' ? v : (typeof v === 'string' && !isNaN(Number(v)) ? Number(v) : null)).filter(v => typeof v === 'number');
+          if (numericValues.length === values.length && numericValues.length > 0) {
+            sumRow[col.id] = numericValues.reduce((a, b) => a + b, 0);
+          } else {
+            sumRow[col.id] = '';
+          }
+        }
+      });
+      exportRows.push(sumRow);
+    }
     exportToExcel(exportRows, `reports_${selectedType || "all"}`);
   };
 
@@ -305,8 +507,28 @@ function Reports() {
       header: col.columnDef.header,
       accessorKey: col.id
     }));
+    // Add sum row at the end
+    let sumRow: Record<string, number | string> = {};
+    if (rows.length) {
+      visibleColumns.forEach((col, colIdx) => {
+        const values = rows.map(r => r[col.id]);
+        if (colIdx === 0) {
+          sumRow[col.id] = 'Total';
+        } else if (values.every(v => typeof v === 'number')) {
+          sumRow[col.id] = values.reduce((a, b) => a + b, 0);
+        } else {
+          // Try to sum if possible (e.g. string numbers)
+          const numericValues = values.map(v => typeof v === 'number' ? v : (typeof v === 'string' && !isNaN(Number(v)) ? Number(v) : null)).filter(v => typeof v === 'number');
+          if (numericValues.length === values.length && numericValues.length > 0) {
+            sumRow[col.id] = numericValues.reduce((a, b) => a + b, 0);
+          } else {
+            sumRow[col.id] = '';
+          }
+        }
+      });
+    }
     exportToPDF(
-      rows,
+      [...rows, Object.keys(sumRow).length > 0 ? sumRow : {}],
       `reports_${selectedType || "all"}`,
       pdfColumns,
       selectedType // Pass selectedType as fxType for the PDF title
@@ -327,7 +549,7 @@ function Reports() {
             label="Select FX Type"
             options={typeOptions}
             selectedValue={selectedType}
-            onChange={(value) => setSelectedType(value)}
+            onChange={(value) => setSelectedType(Array.isArray(value) ? value[0] : value as string)}
             placeholder="Select type"
             isClearable={false}
           />
@@ -338,7 +560,7 @@ function Reports() {
               label="Order type"
               options={orderTypeOptions}
               selectedValue={filters.orderType}
-              onChange={(value) => setFilters((f) => ({ ...f, orderType: value }))}
+              onChange={(value) => setFilters((f) => ({ ...f, orderType: Array.isArray(value) ? value[0] : value as string }))}
               placeholder="Order type"
               isClearable={true}
             />
@@ -346,7 +568,7 @@ function Reports() {
               label="Currency pair"
               options={currencyPairOptions}
               selectedValue={filters.currencyPair}
-              onChange={(value) => setFilters((f) => ({ ...f, currencyPair: value }))}
+              onChange={(value) => setFilters((f) => ({ ...f, currencyPair: Array.isArray(value) ? value[0] : value as string }))}
               placeholder="Currency pair"
               isClearable={true}
             />
@@ -354,7 +576,7 @@ function Reports() {
               label="Entity"
               options={entityOptions}
               selectedValue={filters.entity}
-              onChange={(value) => setFilters((f) => ({ ...f, entity: value }))}
+              onChange={(value) => setFilters((f) => ({ ...f, entity: Array.isArray(value) ? value[0] : value as string }))}
               placeholder="Entity"
               isClearable={true}
             />
@@ -362,7 +584,7 @@ function Reports() {
               label="Bank"
               options={bankOptions}
               selectedValue={filters.bank}
-              onChange={(value) => setFilters((f) => ({ ...f, bank: value }))}
+              onChange={(value) => setFilters((f) => ({ ...f, bank: Array.isArray(value) ? value[0] : value as string }))}
               placeholder="Bank"
               isClearable={true}
             />
@@ -384,21 +606,22 @@ function Reports() {
 
         {/* Group By Dropdown */}
         <div className="flex gap-4 items-end max-w-5xl mb-2">
-          <div style={{ minWidth: 180, maxWidth: 220 }}>
+          <div style={{ minWidth: 180, maxWidth: 320 }}>
             <CustomSelect
               label="Group By"
               options={groupByOptions}
-              selectedValue={groupBy || ''}
-              onChange={(val) => {
-                if (!val) {
-                  setGroupBy(null);
+              selectedValue={groupBy}
+              onChange={(vals) => {
+                if (!vals || (Array.isArray(vals) && vals.length === 0)) {
+                  setGroupBy([]);
                   setCollapsedGroups({});
                 } else {
-                  setGroupBy(val);
+                  setGroupBy(Array.isArray(vals) ? vals : [vals]);
                 }
               }}
-              placeholder="Select column to group by"
+              placeholder="Select column(s) to group by"
               isClearable={true}
+              isMulti={true}
             />
           </div>
         </div>
@@ -498,8 +721,8 @@ function Reports() {
                     ))}
                   </thead>
                   <tbody className="divide-y">
-                    {/* Grouped rendering */}
-                    {groupBy && groupedData ? (
+                    {/* Grouped rendering (recursive, multi-level, unique keys, sum rows) */}
+                    {groupBy.length && groupedData ? (
                       Object.entries(groupedData).length === 0 ? (
                         <tr>
                           <td colSpan={visibleColumns.length} className="px-6 py-12 text-left text-gray-500">
@@ -515,34 +738,7 @@ function Reports() {
                           </td>
                         </tr>
                       ) : (
-                        Object.entries(groupedData).map(([group, rows]) => (
-                          <>
-                            <tr key={group} className="bg-gray-100 cursor-pointer" onClick={() => toggleGroupCollapse(group)}>
-                              <td colSpan={visibleColumns.length} className="px-6 py-2 font-bold text-primary flex items-center">
-                                <span className="mr-2">{collapsedGroups[group] ? '+' : '-'}</span>
-                                {group}
-                                <span className="ml-2 text-xs text-gray-500">({rows.length})</span>
-                              </td>
-                            </tr>
-                            {!collapsedGroups[group] && rows.map((row, rowIdx) => (
-                              <tr key={group + '-' + rowIdx} className={rowIdx % 2 === 0 ? "bg-primary-md" : "bg-secondary-color-lt"}>
-                                {visibleColumns.map((col) => {
-                                  const val = row[col.id];
-                                  const colDef = columns.find(c => (c as any).accessorKey === col.id);
-                                  let cellContent = val;
-                                  if (colDef && colDef.cell) {
-                                    cellContent = (colDef.cell as any)({ getValue: () => val });
-                                  }
-                                  return (
-                                    <td key={col.id} className="px-6 py-4 whitespace-nowrap text-sm border-b border-border">
-                                      {cellContent}
-                                    </td>
-                                  );
-                                })}
-                              </tr>
-                            ))}
-                          </>
-                        ))
+                        renderGroupedRows(groupedData, 0, [])
                       )
                     ) : (
                       table.getPaginationRowModel().rows.length === 0 ? (
@@ -609,7 +805,7 @@ function Reports() {
         </div>
         
         {/* Pagination controls: hide when grouped */}
-        {!groupBy && (
+        {groupBy.length === 0 && (
           <div className="flex items-center justify-between bg-gray-50 px-4 py-2 text-sm text-gray-700">
             <div className="flex items-center gap-2">
               <span>Show</span>
