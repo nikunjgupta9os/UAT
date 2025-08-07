@@ -16,11 +16,10 @@ import {
   getFileStatusColor,
   getFileTextColor,
   validatePreviewData,
-  handleDownload,
   templates,
   formatFileSize,
 } from "./function.ts";
-import * as XLSX from 'xlsx';
+import * as XLSX from "xlsx";
 import PreviewTable from "./PreviewTable.tsx";
 
 interface UploadedFile {
@@ -181,22 +180,24 @@ const UploadFile: React.FC = () => {
 
   const parseExcel = (arrayBuffer: ArrayBuffer): string[][] => {
     try {
-      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      const workbook = XLSX.read(arrayBuffer, { type: "array" });
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
-      
-      const data: any[][] = XLSX.utils.sheet_to_json(worksheet, { 
+
+      const data: any[][] = XLSX.utils.sheet_to_json(worksheet, {
         header: 1,
-        defval: '',
-        raw: false
+        defval: "",
+        raw: false,
       });
-      
+
       return data
-        .filter(row => row.some(cell => cell !== '' && cell !== null && cell !== undefined))
-        .map(row => row.map(cell => String(cell || '').trim()));
+        .filter((row) =>
+          row.some((cell) => cell !== "" && cell !== null && cell !== undefined)
+        )
+        .map((row) => row.map((cell) => String(cell || "").trim()));
     } catch (error) {
-      console.error('Error parsing Excel file:', error);
-      throw new Error('Failed to parse Excel file');
+      console.error("Error parsing Excel file:", error);
+      throw new Error("Failed to parse Excel file");
     }
   };
 
@@ -220,13 +221,30 @@ const UploadFile: React.FC = () => {
 
           // Re-validate after update
           const templateType = getTemplateTypeFromSelected(selectedType);
+
+          // Ensure validationErrors is always an array of objects with description
           const validationErrors = validatePreviewData(
             newData,
             updated[fileId].headers,
             templateType
           );
-          
-          updated[fileId].validationErrors = validationErrors;
+          let mappedValidationErrors: { description: string; row?: number; column?: number; currentValue?: string }[] = [];
+          if (Array.isArray(validationErrors)) {
+            mappedValidationErrors = validationErrors
+              .map((err) => {
+                if (typeof err === "string") {
+                  return { description: err };
+                } else if (typeof err === "object" && err !== null && "description" in err) {
+                  return err as { description: string; row?: number; column?: number; currentValue?: string };
+                } else {
+                  return null;
+                }
+              })
+              .filter((e): e is { description: string; row?: number; column?: number; currentValue?: string } => e !== null);
+          } else {
+            mappedValidationErrors = [];
+          }
+          updated[fileId].validationErrors = mappedValidationErrors;
 
           // Update file status if issues are resolved
           if (validationErrors.length === 0) {
@@ -397,10 +415,10 @@ const UploadFile: React.FC = () => {
     }
 
     const fileName = uploadedFile.file.name.toLowerCase();
-    const isExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
+    const isExcel = fileName.endsWith(".xlsx") || fileName.endsWith(".xls");
 
     const reader = new FileReader();
-    
+
     reader.onload = (e) => {
       try {
         const fileData = e.target?.result;
@@ -420,14 +438,32 @@ const UploadFile: React.FC = () => {
         if (rows.length === 0) return;
 
         const [headerRow, ...dataRows] = rows;
-        
+
         // Validate the preview data
         const templateType = getTemplateTypeFromSelected(selectedType);
+
+        // Ensure validationErrors is always an array of objects with description
         const validationErrors = validatePreviewData(
           dataRows.slice(0, 50), // Limit to first 50 rows for preview
           headerRow || [],
           templateType
         );
+        let mappedValidationErrors: { description: string; row?: number; column?: number; currentValue?: string }[] = [];
+        if (Array.isArray(validationErrors)) {
+          mappedValidationErrors = validationErrors
+            .map((err) => {
+              if (typeof err === "string") {
+                return { description: err };
+              } else if (typeof err === "object" && err !== null && "description" in err) {
+                return err as { description: string; row?: number; column?: number; currentValue?: string };
+              } else {
+                return null;
+              }
+            })
+            .filter((e): e is { description: string; row?: number; column?: number; currentValue?: string } => e !== null);
+        } else {
+          mappedValidationErrors = [];
+        }
 
         setPreviewStates((prev) => ({
           ...prev,
@@ -435,20 +471,25 @@ const UploadFile: React.FC = () => {
             headers: headerRow || [],
             data: dataRows.slice(0, 50), // Limit to first 50 rows for performance
             show: true,
-            validationErrors: validationErrors
+            validationErrors: mappedValidationErrors,
           },
         }));
 
         // Show validation status
         if (validationErrors.length > 0) {
-          notify(`Preview loaded with ${validationErrors.length} validation issues`, "warning");
+          notify(
+            `Preview loaded with ${validationErrors.length} validation issues`,
+            "warning"
+          );
         } else {
           notify("Preview loaded successfully", "success");
         }
-
       } catch (error) {
         console.error("Error parsing file for preview:", error);
-        notify("Error parsing file for preview. Please check file format.", "error");
+        notify(
+          "Error parsing file for preview. Please check file format.",
+          "error"
+        );
       }
     };
 
@@ -481,12 +522,15 @@ const UploadFile: React.FC = () => {
     }
 
     // Check if there are any files with validation errors
-    const filesWithErrors = files.filter(file => 
-      file.validationErrors && file.validationErrors.length > 0
+    const filesWithErrors = files.filter(
+      (file) => file.validationErrors && file.validationErrors.length > 0
     );
 
     if (filesWithErrors.length > 0) {
-      notify("Please resolve all validation errors before submitting.", "error");
+      notify(
+        "Please resolve all validation errors before submitting.",
+        "error"
+      );
       return;
     }
 
@@ -501,8 +545,9 @@ const UploadFile: React.FC = () => {
         let fileName: string;
 
         // Check if file is Excel format
-        const isExcelFile = file.name.toLowerCase().endsWith('.xlsx') || 
-                           file.name.toLowerCase().endsWith('.xls');
+        const isExcelFile =
+          file.name.toLowerCase().endsWith(".xlsx") ||
+          file.name.toLowerCase().endsWith(".xls");
 
         // Use edited preview data if available
         if (
@@ -515,26 +560,42 @@ const UploadFile: React.FC = () => {
             previewStates[file.id].headers,
             previewStates[file.id].data
           );
-          fileName = `${file.name.replace(/\.(csv|xlsx|xls)$/i, "")}_modified.csv`;
+          fileName = `${file.name.replace(
+            /\.(csv|xlsx|xls)$/i,
+            ""
+          )}_modified.csv`;
         } else if (isExcelFile && file.file) {
           // Convert Excel file to CSV for upload
           try {
             const arrayBuffer = await file.file.arrayBuffer();
             const excelData = parseExcel(arrayBuffer);
-            
+
             if (excelData.length === 0) {
               throw new Error("Excel file appears to be empty");
             }
 
             const [headers, ...rows] = excelData;
             blob = convertToCSVBlob(headers, rows);
-            fileName = `${file.name.replace(/\.(xlsx|xls)$/i, "")}_converted.csv`;
-            
+            fileName = `${file.name.replace(
+              /\.(xlsx|xls)$/i,
+              ""
+            )}_converted.csv`;
+
             notify(`Converting ${file.name} to CSV format...`, "info");
           } catch (excelError) {
             errorCount++;
-            console.error(`Error converting Excel file ${file.name}:`, excelError);
-            notify(`✗ Failed to convert Excel file ${file.name}: ${excelError instanceof Error ? excelError.message : 'Unknown error'}`, "error");
+            console.error(
+              `Error converting Excel file ${file.name}:`,
+              excelError
+            );
+            notify(
+              `✗ Failed to convert Excel file ${file.name}: ${
+                excelError instanceof Error
+                  ? excelError.message
+                  : "Unknown error"
+              }`,
+              "error"
+            );
             continue;
           }
         } else if (file.file) {
@@ -576,47 +637,73 @@ const UploadFile: React.FC = () => {
         } else if (res.data.results && res.data.results[0]) {
           errorCount++;
           const errorMsg = res.data.results[0]?.error || "Unknown error";
-          
+
           // Handle specific error types
           if (errorMsg.includes("duplicate key")) {
-            notify(`✗ Upload failed for ${file.name}: Duplicate data found`, "error");
+            notify(
+              `✗ Upload failed for ${file.name}: Duplicate data found`,
+              "error"
+            );
           } else if (errorMsg.includes("validation")) {
-            notify(`✗ Upload failed for ${file.name}: Data validation error`, "error");
+            notify(
+              `✗ Upload failed for ${file.name}: Data validation error`,
+              "error"
+            );
           } else {
             notify(`✗ Upload failed for ${file.name}: ${errorMsg}`, "error");
           }
         } else {
           errorCount++;
-          notify(`✗ Upload failed for ${file.name}: Invalid response from server`, "error");
+          notify(
+            `✗ Upload failed for ${file.name}: Invalid response from server`,
+            "error"
+          );
         }
-
       } catch (err) {
         errorCount++;
         console.error(`Error uploading ${file.name}:`, err);
-        
+
         if (axios.isAxiosError(err)) {
-          if (err.code === 'ECONNABORTED') {
-            notify(`✗ Upload timeout for ${file.name}. Please try again.`, "error");
+          if (err.code === "ECONNABORTED") {
+            notify(
+              `✗ Upload timeout for ${file.name}. Please try again.`,
+              "error"
+            );
           } else if (err.response?.status === 413) {
             notify(`✗ File ${file.name} is too large`, "error");
           } else if (err.response?.status >= 500) {
-            notify(`✗ Server error occurred during upload for ${file.name}`, "error");
+            notify(
+              `✗ Server error occurred during upload for ${file.name}`,
+              "error"
+            );
           } else {
-            notify(`✗ Network error occurred during upload for ${file.name}`, "error");
+            notify(
+              `✗ Network error occurred during upload for ${file.name}`,
+              "error"
+            );
           }
         } else {
-          notify(`✗ Unexpected error occurred during upload for ${file.name}`, "error");
+          notify(
+            `✗ Unexpected error occurred during upload for ${file.name}`,
+            "error"
+          );
         }
       }
     }
 
     // Final summary
     if (successCount > 0 && errorCount === 0) {
-      notify(`🎉 All ${successCount} file(s) uploaded successfully!`, "success");
+      notify(
+        `🎉 All ${successCount} file(s) uploaded successfully!`,
+        "success"
+      );
       setFiles([]);
       setPreviewStates({});
     } else if (successCount > 0) {
-      notify(`⚠️ ${successCount} file(s) uploaded successfully, ${errorCount} failed`, "warning");
+      notify(
+        `⚠️ ${successCount} file(s) uploaded successfully, ${errorCount} failed`,
+        "warning"
+      );
     } else if (errorCount > 0) {
       notify(`❌ All ${errorCount} file(s) failed to upload`, "error");
     }
@@ -640,6 +727,226 @@ const UploadFile: React.FC = () => {
       `Edits for ${files.find((f) => f.id === fileId)?.name || "file"} saved.`,
       "success"
     );
+  };
+
+  // --- Download menu state and handlers (must be inside the component, before return) ---
+  const [downloadMenuOpen, setDownloadMenuOpen] = React.useState<string | null>(
+    null
+  );
+  React.useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).closest(".Download")) {
+        setDownloadMenuOpen(null);
+      }
+    };
+    if (downloadMenuOpen) {
+      document.addEventListener("mousedown", handleClick);
+      return () => document.removeEventListener("mousedown", handleClick);
+    }
+  }, [downloadMenuOpen]);
+
+  // Download handler for CSV/XLSX (generates and downloads sample template)
+  const handleDownload = (template: any, format: "csv" | "xlsx") => {
+    setDownloadMenuOpen(null);
+    // Generate sample data for download
+    // Get headers and sample row from template type
+    let headers: string[] = [];
+    let sampleRow: string[] = [];
+    if (template.id === "po") {
+      headers = [
+        "company_code",
+        "controlling_area",
+        "entity",
+        "entity1",
+        "entity2",
+        "document_no",
+        "lc_indicator",
+        "lc_year",
+        "contract_date",
+        "reference_no",
+        "reference_date",
+        "vendor_code",
+        "vendor_name",
+        "price_basis",
+        "currency_code",
+        "payment_terms",
+        "inco_terms",
+        "destination_port",
+        "payment_to_vendor",
+        "uom_code",
+        "uom_quantity",
+        "net_price",
+        "net_value",
+        "exchange_rate",
+        "exchange_rate_date",
+        "documenting",
+        "profit_cost_center",
+        "entity3",
+      ];
+      sampleRow = [
+        "COMP001",
+        "CA01",
+        "ENT01",
+        "ENT1_001",
+        "ENT2_001",
+        "DOC001",
+        "Y",
+        "2024",
+        "2024-01-15",
+        "REF001",
+        "2024-01-10",
+        "VEN001",
+        "Vendor ABC Ltd",
+        "CIF",
+        "USD",
+        "NET30",
+        "FOB",
+        "Mumbai Port",
+        "1000000",
+        "PCS",
+        "100",
+        "50.00",
+        "5000.00",
+        "1.0",
+        "2024-01-15",
+        "DOC_001",
+        "CC001",
+        "ENT3_001",
+      ];
+    } else if (template.id === "lc") {
+      headers = [
+        "system_lc_number",
+        "bank_reference_number",
+        "other_references",
+        "lc_type",
+        "applicant_name",
+        "beneficiary_name",
+        "issuing_bank",
+        "currency",
+        "amount",
+        "issue_date",
+        "expiry_date",
+        "linked_po_so_number",
+      ];
+      sampleRow = [
+        "LC001",
+        "BANK001",
+        "REF001",
+        "COMMERCIAL",
+        "ABC Company Ltd",
+        "XYZ Supplier Inc",
+        "Standard Bank",
+        "USD",
+        "100000",
+        "2024-01-15",
+        "2024-06-15",
+        "PO001",
+      ];
+    } else {
+      headers = [
+        "company_code",
+        "controlling_area",
+        "entity",
+        "entity1",
+        "entity2",
+        "entity3",
+        "document_no",
+        "document_type",
+        "contract_date",
+        "reference_no",
+        "reference_date",
+        "customer_code",
+        "customer_name",
+        "currency_code",
+        "price_basis",
+        "payment_terms",
+        "inco_terms",
+        "total_invoice_value",
+        "last_lot_number",
+        "product_description",
+        "uom_code",
+        "uom_quantity",
+        "net_price",
+        "net_value",
+        "remarks",
+        "delivery_date",
+        "lc_indicator",
+        "exchange_rate_preference",
+        "profit_cost_center",
+      ];
+      sampleRow = [
+        "COMP001",
+        "CA01",
+        "ENT01",
+        "ENT1_001",
+        "ENT2_001",
+        "ENT3_001",
+        "DOC001",
+        "SO",
+        "2024-01-15",
+        "REF001",
+        "2024-01-10",
+        "CUST001",
+        "Customer ABC Ltd",
+        "USD",
+        "CIF",
+        "NET30",
+        "FOB",
+        "1000000",
+        "LOT001",
+        "Steel Products",
+        "PCS",
+        "100",
+        "50.00",
+        "5000.00",
+        "Quality products",
+        "2024-02-15",
+        "Y",
+        "FIXED",
+        "CC001",
+      ];
+    }
+
+    if (format === "csv") {
+      // Download as CSV
+      const csvContent = [headers, sampleRow]
+        .map((row) =>
+          row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+        )
+        .join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        template?.name ? `${template.name}.csv` : "Template.csv"
+      );
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } else {
+      // Download as XLSX
+      // Use SheetJS (XLSX) to generate a workbook
+      const wsData = [headers, sampleRow];
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+      const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      const blob = new Blob([wbout], { type: "application/octet-stream" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        template?.name ? `${template.name}.xlsx` : "Template.xlsx"
+      );
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
   };
 
   return (
@@ -875,16 +1182,20 @@ const UploadFile: React.FC = () => {
                               <div className="flex items-center space-x-1 mb-1">
                                 <AlertCircle className="w-3 h-3" />
                                 <span className="font-medium">
-                                  Validation Issues ({file.validationErrors.length}):
+                                  Validation Issues (
+                                  {file.validationErrors.length}):
                                 </span>
                               </div>
                               <ul className="list-disc list-inside space-y-1 ml-4 max-h-20 overflow-y-auto">
-                                {file.validationErrors.slice(0, 3).map((error, index) => (
-                                  <li key={index}>{error.description}</li>
-                                ))}
+                                {file.validationErrors
+                                  .slice(0, 3)
+                                  .map((error, index) => (
+                                    <li key={index}>{error.description}</li>
+                                  ))}
                                 {file.validationErrors.length > 3 && (
                                   <li className="text-gray-500">
-                                    ...and {file.validationErrors.length - 3} more issues
+                                    ...and {file.validationErrors.length - 3}{" "}
+                                    more issues
                                   </li>
                                 )}
                               </ul>
@@ -908,11 +1219,15 @@ const UploadFile: React.FC = () => {
                           <button
                             onClick={() => handlePreviewFile(file)}
                             className={`p-1 transition-colors ${
-                              previewStates[file.id]?.show 
-                                ? "text-blue-800 bg-blue-100 hover:bg-blue-200" 
+                              previewStates[file.id]?.show
+                                ? "text-blue-800 bg-blue-100 hover:bg-blue-200"
                                 : "text-blue-600 hover:text-blue-800"
                             }`}
-                            title={previewStates[file.id]?.show ? "Close Preview" : "Preview Data"}
+                            title={
+                              previewStates[file.id]?.show
+                                ? "Close Preview"
+                                : "Preview Data"
+                            }
                           >
                             <Eye className="w-4 h-4" />
                           </button>
@@ -942,17 +1257,20 @@ const UploadFile: React.FC = () => {
                       </button>
                     </div>
                   </div>
-                  
+
                   {/* Preview for this file */}
                   {previewStates[file.id]?.show &&
                     previewStates[file.id]?.data.length > 0 && (
                       <div className="mt-4">
-                        {previewStates[file.id]?.validationErrors && 
-                         previewStates[file.id].validationErrors.length > 0 && (
-                          <div className="mb-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-600">
-                            Preview validation issues: {previewStates[file.id].validationErrors.length} found
-                          </div>
-                        )}
+                        {previewStates[file.id]?.validationErrors &&
+                          previewStates[file.id].validationErrors.length >
+                            0 && (
+                            <div className="mb-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-600">
+                              Preview validation issues:{" "}
+                              {previewStates[file.id].validationErrors.length}{" "}
+                              found
+                            </div>
+                          )}
                         <PreviewTable
                           headers={previewStates[file.id].headers}
                           rows={previewStates[file.id].data}
@@ -1011,13 +1329,31 @@ const UploadFile: React.FC = () => {
                       </h3>
                       <p className="text-sm text-gray-500">{template.type}</p>
                     </div>
-                    <button
-                      onClick={() => handleDownload(template)}
-                      className="ml-4 p-1 text-gray-400 hover:text-gray-600 transition-colors duration-200"
-                      aria-label={`Download ${template.name}`}
-                    >
-                      <Download size={16} />
-                    </button>
+                    <div className="relative">
+                      <button
+                        onClick={() => setDownloadMenuOpen(template.id)}
+                        className="ml-4 p-1 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                        aria-label={`Download ${template.name}`}
+                      >
+                        <Download size={16} />
+                      </button>
+                      {downloadMenuOpen === template.id && (
+                        <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-10 overflow-hidden">
+                          <button
+                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+                            onClick={() => handleDownload(template, "csv")}
+                          >
+                            Download as CSV
+                          </button>
+                          <button
+                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+                            onClick={() => handleDownload(template, "xlsx")}
+                          >
+                            Download as XLSX
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
