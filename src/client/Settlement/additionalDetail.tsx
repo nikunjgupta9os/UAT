@@ -45,16 +45,13 @@ const AdditionalForwardDetail: React.FC<HedgingDetailsProps> = ({
       try {
         // Ensure exposure_header_ids is an array
         const payload = {
-          exposure_header_ids: Array.isArray(exposure_header_ids)
-            ? exposure_header_ids
-            : [exposure_header_ids],
           currency,
           entity,
         };
         console.log("Payload being sent:", payload);
 
         const res = await axios.post(
-          "https://backend-slqi.onrender.com/api/settlement/filter-forward-bookings",
+          "https://backend-slqi.onrender.com/api/settlement/forwards-by-entity-currency",
           payload
         );
         if (res.data && res.data.success) {
