@@ -8,8 +8,8 @@ type ExpandedRowProps = {
   setEditStates: React.Dispatch<
     React.SetStateAction<Record<string, Partial<UserType>>>
   >;
-  editingRows: Set<string>;
-  setEditingRows: React.Dispatch<React.SetStateAction<Set<string>>>;
+  editingRows?: Set<string>;
+  setEditingRows?: React.Dispatch<React.SetStateAction<Set<string>>>;
   fieldLabels: Record<string, string>;
   visibleColumnCount: number;
   editableKeys?: string[];
@@ -17,6 +17,7 @@ type ExpandedRowProps = {
   approvalFields: string[];
   showDetailsSection?: boolean;
   showApprovalSection?: boolean;
+  edit?: boolean; // Add this new prop
 };
 
 const ExpandedRow: React.FC<ExpandedRowProps> = ({
@@ -33,10 +34,11 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
   approvalFields,
   showDetailsSection = true,
   showApprovalSection = true,
+  edit = true, // Default to true to maintain backward compatibility
 }) => {
   const rowId = row.id;
 
-  const isEditing = editingRows.has(rowId);
+  const isEditing = editingRows?.has(rowId) || false;
   const editValues = editStates[rowId] || {};
 
   const visibleDetailsKeys = detailsFields.filter(
@@ -58,48 +60,47 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
   };
 
   const handleEditToggle = async () => {
-  if (isEditing) {
-    // Saving changes
-    const updatedFields = { ...editValues, status: "Awaiting-Approval" };
+    if (isEditing) {
+      // Saving changes
+      const updatedFields = { ...editValues, status: "Awaiting-Approval" };
 
-    try {
-      const response = await fetch(`https://backend-slqi.onrender.com/api/users/${row.original.id}/update`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedFields),
-      });
+      try {
+        const response = await fetch(`https://backend-slqi.onrender.com/api/users/${row.original.id}/update`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updatedFields),
+        });
 
-      const data = await response.json();
-      if (data.success) {
-        alert("User updated successfully!");
-        setEditStates((prev) => {
-          const updated = { ...prev };
-          delete updated[rowId];
-          return updated;
-        });
-        setEditingRows((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(rowId);
-          return newSet;
-        });
-      } else {
-        alert("Update failed: " + data.message);
+        const data = await response.json();
+        if (data.success) {
+          alert("User updated successfully!");
+          setEditStates((prev) => {
+            const updated = { ...prev };
+            delete updated[rowId];
+            return updated;
+          });
+          setEditingRows?.((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(rowId);
+            return newSet;
+          });
+        } else {
+          alert("Update failed: " + data.message);
+        }
+      } catch (err) {
+        alert("Update error: " + (err as Error).message);
       }
-    } catch (err) {
-      alert("Update error: " + (err as Error).message);
+    } else {
+      // Entering edit mode
+      setEditStates((prev) => ({
+        ...prev,
+        [rowId]: { ...row.original },
+      }));
+      setEditingRows?.((prev) => new Set(prev).add(rowId));
     }
-  } else {
-    // Entering edit mode
-    setEditStates((prev) => ({
-      ...prev,
-      [rowId]: { ...row.original },
-    }));
-    setEditingRows((prev) => new Set(prev).add(rowId));
-  }
-};
-
+  };
 
   const renderField = (key: string) => {
     const typedKey = key as keyof UserType;
@@ -162,11 +163,14 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
             <h4 className="text-lg font-semibold text-secondary-text">
               Additional Information
             </h4>
-            <div>
-              <Button onClick={handleEditToggle}>
-                {isEditing ? "Save" : "Edit"}
-              </Button>
-            </div>
+            {/* Conditionally render the edit button based on the edit prop */}
+            {edit && (
+              <div>
+                <Button onClick={handleEditToggle}>
+                  {isEditing ? "Save" : "Edit"}
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Details Section */}

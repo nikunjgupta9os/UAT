@@ -11,8 +11,6 @@ import { useNotification } from "../../Notification/Notification";
 import "react-date-range/dist/styles.css"; // main style file
 import "react-date-range/dist/theme/default.css"; // theme css file
 import { exportToExcel } from "../../ui/exportToExcel";
-// import LoadingSpinner from "../../ui/LoadingSpinner";
-// import Button from "../../ui/Button";
 
 import { useMemo, useState, useEffect } from "react";
 import { Draggable } from "../../common/Draggable";
@@ -28,7 +26,7 @@ import {
 } from "@tanstack/react-table";
 import ExpandedRow from "./RenderExpandedCell";
 import axios from "axios";
-import PaginationFooter from "../../ui/PaginationFooter";
+import Pagination from "../../ui/Pagination"; // Add this import
 import LoadingSpinner from "../../ui/LoadingSpinner";
 
 const fieldLabels: Record<string, string> = {
@@ -562,14 +560,31 @@ const AllUser: React.FC = () => {
     columns,
     onColumnOrderChange: setColumnOrder,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    getPaginationRowModel: getPaginationRowModel(), // Keep this
     onColumnVisibilityChange: setColumnVisibility,
+    initialState: {
+      pagination: {
+        pageSize: 10, // Set default page size
+      },
+    },
     state: {
       columnOrder,
       columnVisibility,
     },
   });
+
+  // Add pagination calculations
+  const pagination = table.getState().pagination;
+  const totalItems = filteredData.length;
+  const startIndex = pagination.pageIndex * pagination.pageSize + 1;
+  const endIndex = Math.min(
+    (pagination.pageIndex + 1) * pagination.pageSize,
+    totalItems
+  );
+  const currentPageItems = table.getRowModel().rows.length;
+
   if (loading) return <LoadingSpinner />;
+
   return (
     <div className="space-y-6">
       {/* Filters and Search Row */}
@@ -842,6 +857,7 @@ const AllUser: React.FC = () => {
                     {expandedRows.has(row.id) && (
                       <ExpandedRow
                         row={row}
+                        edit={true}
                         columnVisibility={columnVisibility}
                         editStates={editStates}
                         setEditStates={setEditStates}
@@ -865,12 +881,9 @@ const AllUser: React.FC = () => {
                         approvalFields={[
                           "createdBy",
                           "createdDate",
-                          // "status",
                           "approvedBy",
                           "approvedAt",
-                          // "approvalComment",
                         ]}
-                        // setData={setData}
                       />
                     )}
                   </React.Fragment>
@@ -878,10 +891,18 @@ const AllUser: React.FC = () => {
               )}
             </tbody>
           </table>
-          <PaginationFooter table={table} />
         </div>
+        {/* Add Pagination Component */}
+        <Pagination
+          table={table}
+          totalItems={totalItems}
+          currentPageItems={currentPageItems}
+          startIndex={startIndex}
+          endIndex={endIndex}
+        />
       </div>
     </div>
   );
 };
+
 export default AllUser;

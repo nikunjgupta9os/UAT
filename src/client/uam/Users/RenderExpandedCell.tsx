@@ -1,7 +1,7 @@
-import React , {useState,useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import Button from "../../ui/Button";
 import axios from "axios";
-import { set } from 'date-fns';
+
 type ExpandedRowProps = {
   row: any;
   columnVisibility: Record<string, boolean>;
@@ -18,11 +18,11 @@ type ExpandedRowProps = {
   approvalFields: string[];
   showDetailsSection?: boolean;
   showApprovalSection?: boolean;
+  edit?: boolean; // Add this new prop
 };
 
 const ExpandedRow: React.FC<ExpandedRowProps> = ({
   row,
-  // columnVisibility,
   editStates,
   setEditStates,
   editingRows,
@@ -34,12 +34,51 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
   approvalFields,
   showDetailsSection = true,
   showApprovalSection = true,
+  edit = true, // Default to true to maintain backward compatibility
 }) => {
   const rowId = row.id;
-
   const isEditing = editingRows.has(rowId);
   const editValues = editStates[rowId] || {};
 
+  // Permission state
+  type TabVisibility = {
+    edit: boolean;
+  };
+
+  const roleName = localStorage.getItem("userRole");
+  const [Visibility, setVisibility] = useState<TabVisibility>({
+    edit: false, // Default to false
+  });
+
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      try {
+        const response = await axios.post(
+          "https://backend-slqi.onrender.com/api/permissions/permissionjson",
+          { roleName }
+        );
+
+        const pages = response.data?.pages;
+        const userTabs = pages?.["user-management"]; // Adjust this path based on your API structure
+
+        if (userTabs) {
+          setVisibility({
+            edit: userTabs?.tabs?.allTab?.showEditButton || false,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching permissions:", error);
+        // Keep edit as false if permission fetch fails
+        setVisibility({
+          edit: false,
+        });
+      }
+    };
+
+    fetchPermissions();
+  }, [roleName]);
+
+  // Filter visible keys
   const visibleDetailsKeys = detailsFields.filter(
     (key) => key !== "select" && key !== "actions"
   );
@@ -57,49 +96,6 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
       },
     }));
   };
-  type TabVisibility={
-        // add:boolean,
-        edit:boolean,
-        // delete:boolean,
-        // approve:boolean, 
-        // reject:boolean,
-        // view:boolean,
-        // upload:boolean,
-      }
-      const roleName = localStorage.getItem("userRole");
-      const [Visibility, setVisibility] = useState<TabVisibility>({
-        edit: true,
-        // delete: true,    
-    
-      });
-      useEffect(() => {
-        const fetchPermissions = async () => {
-          try {
-            const response = await axios.post(
-              "https://backend-slqi.onrender.com/api/permissions/permissionjson",
-              { roleName }
-            );
-    
-            const pages = response.data?.pages;
-            // const userTabs = pages?.["user-creation"];
-    
-            // if (userTabs) {
-            //   setVisibility({
-            //     edit: userTabs?.tabs?.allTab?.showEditButton,
-            //     // delete: userTabs?.allTab?.showDeletebutton || false,     
-            //   });
-            // }
-          } catch (error) {
-             console.error("Error fetching permissions:", error);
-          }
-        };
-        setVisibility({
-          edit: false,
-          // delete: userTabs?.allTab?.showDeletebutton || false,     
-        });
-    
-        fetchPermissions();
-      }, []);
 
   const handleEditToggle = async () => {
     if (isEditing) {
@@ -109,7 +105,7 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
         status: "Awaiting-Approval",
       };
 
-       console.log("Sending update payload:", updatedFields);
+      console.log("Sending update payload:", updatedFields);
 
       try {
         const response = await fetch(
@@ -124,7 +120,7 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
         );
 
         const text = await response.text();
-         console.log("Raw response:", text);
+        console.log("Raw response:", text);
 
         let data;
         try {
@@ -172,7 +168,6 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
         : isEditing
         ? editValues[typedKey]
         : row.original[typedKey];
-        
 
     // Format date
     if (!isEditing && typedKey === "createdDate") {
@@ -184,8 +179,6 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
     if (!isEditing && typeof value === "boolean") {
       value = value ? "Yes" : "No";
     }
-
-    
 
     return (
       <div key={key} className="flex flex-col space-y-1">
@@ -217,7 +210,6 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
       </div>
     );
   };
-  
 
   return (
     <tr key={`${rowId}-expanded`}>
@@ -227,13 +219,14 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
             <h4 className="text-lg font-semibold text-secondary-text">
               Additional Information
             </h4>
-            <div>
-              {   Visibility.edit && (
+            {/* Show edit button only if both edit prop and Visibility.edit are true */}
+            {edit && Visibility.edit && (
+              <div>
                 <Button onClick={handleEditToggle}>
-                {isEditing ? "Save" : "Edit"}
-              </Button>
-              )}
-            </div>
+                  {isEditing ? "Save" : "Edit"}
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Details Section */}
