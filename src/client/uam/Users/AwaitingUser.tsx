@@ -746,6 +746,7 @@ const Awaitinguser: React.FC = () => {
                       {expandedRows.has(row.id) && (
                         <ExpandedRow
                           row={row}
+                          edit={false}
                           columnVisibility={columnVisibility}
                           editStates={editStates}
                           setEditStates={setEditStates}
