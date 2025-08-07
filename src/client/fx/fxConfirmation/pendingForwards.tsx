@@ -3,7 +3,7 @@ import { Draggable } from "../../common/Draggable";
 import { Droppable } from "../../common/Droppable";
 import { DndContext, type DragEndEvent } from "@dnd-kit/core";
 import { restrictToFirstScrollableAncestor } from "@dnd-kit/modifiers";
-import { Eye, ChevronDown, ChevronUp } from "lucide-react";
+import { Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import axios from "axios";
 import Pagination from "../../ui/Pagination";
 import Button from "../../ui/Button";
@@ -63,7 +63,7 @@ const formatDateForApi = (dateString: string): string => {
   return date.toISOString().split("T")[0];
 };
 
-const nonDraggableColumns = ["expand", "select"];
+const nonDraggableColumns = ["expand", "action", "select"];
 
 const TransactionTable: React.FC = () => {
   const { notify, confirm } = useNotification();
@@ -76,7 +76,7 @@ const TransactionTable: React.FC = () => {
 
   const [columnOrder, setColumnOrder] = useState<string[]>([
     "select",
-    "action",
+    
     "systemTransactionId",
     "internalReferenceId",
     "orderType",
@@ -88,6 +88,7 @@ const TransactionTable: React.FC = () => {
     "counterparty",
     "settlementDate",
     "status",
+    "action",
     "expand",
   ]);
 
@@ -171,9 +172,10 @@ const TransactionTable: React.FC = () => {
   const renderField = (
     key: keyof Transaction,
     value: any,
-    originalValue: any
+    originalValue: any,
+    isFieldEditable: boolean = false
   ) => {
-    const isEditable = ![
+    const nonEditableFields = [
       "systemTransactionId",
       "transactionTimestamp",
       "addDate",
@@ -183,12 +185,9 @@ const TransactionTable: React.FC = () => {
       "actualValueBaseCurrency",
       "valueLocalCurrency",
       "valueQuoteCurrency",
-    ].includes(key);
+    ];
 
-    // Use originalValue if editValues doesn't have the key or if not editing
-    const displayValue = isEditing
-      ? editValues[key] ?? originalValue
-      : originalValue;
+    const isEditable = !nonEditableFields.includes(key) && isFieldEditable;
 
     return (
       <div key={key} className="flex flex-col space-y-1">
@@ -199,7 +198,7 @@ const TransactionTable: React.FC = () => {
           <>
             <input
               className="border rounded px-2 py-1 text-sm bg-white shadow-sm"
-              value={String(editValues[key] ?? originalValue ?? "")}
+              value={String(value ?? "")}
               type={
                 typeof originalValue === "number"
                   ? "number"
@@ -218,14 +217,16 @@ const TransactionTable: React.FC = () => {
               }
             />
             <span className="text-xs text-gray-500">
-              Original: {String(originalValue ?? "—")}
+              Old: {String(originalValue ?? "—")}
             </span>
           </>
         ) : (
           <span className="font-medium text-primary-lt">
             {key === "transactionTimestamp"
-              ? new Date(displayValue).toLocaleString()
-              : String(displayValue ?? "—")}
+              ? new Date(value).toLocaleString()
+              : typeof value === "number"
+              ? value.toLocaleString()
+              : String(value ?? "—")}
           </span>
         )}
       </div>
@@ -289,9 +290,9 @@ const TransactionTable: React.FC = () => {
         accessorKey: "action",
         header: "Action",
         cell: () => (
-          <div className="flex items-center gap-1">
-            <button className="flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded text-blue-600 hover:bg-blue-100">
-              <Eye className="w-4 h-4" />
+          <div className="flex items-center justify-center gap-1">
+            <button className="flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded text-red-600 hover:bg-blue-100">
+              <Trash2 className="w-4 h-4" />
             </button>
           </div>
         ),
@@ -415,7 +416,7 @@ const TransactionTable: React.FC = () => {
 
   const defaultColumnVisibility: Record<string, boolean> = {
     select: true,
-    action: false,
+    action: true,
     systemTransactionId: false,
     internalReferenceId: true,
     orderType: true,
@@ -666,6 +667,40 @@ const TransactionTable: React.FC = () => {
                           className="px-6 py-4 bg-primary-md"
                         >
                           <div className="bg-secondary-color-lt rounded-lg p-4 shadow-md border border-border">
+                            {/* Edit/Save Button */}
+                            <div className="flex justify-end mb-4">
+                              <button
+                                onClick={() => {
+                                  if (isEditing) {
+                                    setIsSaving(true);
+                                    setTimeout(() => {
+                                      setData((prev) =>
+                                        prev.map((item, idx) =>
+                                          idx === row.index
+                                            ? { ...item, ...editValues }
+                                            : item
+                                        )
+                                      );
+                                      setIsEditing(false);
+                                      setIsSaving(false);
+                                      setEditValues({} as Transaction);
+                                    }, 500);
+                                  } else {
+                                    setEditValues(row.original);
+                                    setIsEditing(true);
+                                  }
+                                }}
+                                className="bg-primary text-white px-4 py-1 rounded shadow hover:bg-primary-dark disabled:opacity-60"
+                                disabled={isSaving}
+                              >
+                                {isEditing
+                                  ? isSaving
+                                    ? "Saving..."
+                                    : "Save"
+                                  : "Edit"}
+                              </button>
+                            </div>
+
                             {/* Basic Information */}
                             <div className="mb-6">
                               <div className="font-semibold mb-2 text-primary-lt">
@@ -684,8 +719,11 @@ const TransactionTable: React.FC = () => {
                                 ).map((key) =>
                                   renderField(
                                     key,
+                                    isEditing
+                                      ? editValues[key] ?? row.original[key]
+                                      : row.original[key],
                                     row.original[key],
-                                    row.original[key]
+                                    isEditing && ["internalReferenceId", "orderType", "transactionType", "counterparty", "status"].includes(key)
                                   )
                                 )}
                               </div>
@@ -707,8 +745,11 @@ const TransactionTable: React.FC = () => {
                                 ).map((key) =>
                                   renderField(
                                     key,
+                                    isEditing
+                                      ? editValues[key] ?? row.original[key]
+                                      : row.original[key],
                                     row.original[key],
-                                    row.original[key]
+                                    isEditing
                                   )
                                 )}
                               </div>
@@ -733,8 +774,11 @@ const TransactionTable: React.FC = () => {
                                 ).map((key) =>
                                   renderField(
                                     key,
+                                    isEditing
+                                      ? editValues[key] ?? row.original[key]
+                                      : row.original[key],
                                     row.original[key],
-                                    row.original[key]
+                                    isEditing && ["spotRate", "forwardPoints", "bankMargin", "totalRate"].includes(key)
                                   )
                                 )}
                               </div>
@@ -757,8 +801,11 @@ const TransactionTable: React.FC = () => {
                                 ).map((key) =>
                                   renderField(
                                     key,
+                                    isEditing
+                                      ? editValues[key] ?? row.original[key]
+                                      : row.original[key],
                                     row.original[key],
-                                    row.original[key]
+                                    isEditing && ["inputValue", "valueType"].includes(key)
                                   )
                                 )}
                               </div>
@@ -782,8 +829,11 @@ const TransactionTable: React.FC = () => {
                                 ).map((key) =>
                                   renderField(
                                     key,
+                                    isEditing
+                                      ? editValues[key] ?? row.original[key]
+                                      : row.original[key],
                                     row.original[key],
-                                    row.original[key]
+                                    isEditing && ["settlementDate", "maturityDate", "deliveryDate", "modeOfDelivery", "deliveryPeriod"].includes(key)
                                   )
                                 )}
                               </div>
@@ -808,8 +858,11 @@ const TransactionTable: React.FC = () => {
                                 ).map((key) =>
                                   renderField(
                                     key,
+                                    isEditing
+                                      ? editValues[key] ?? row.original[key]
+                                      : row.original[key],
                                     row.original[key],
-                                    row.original[key]
+                                    isEditing
                                   )
                                 )}
                               </div>
