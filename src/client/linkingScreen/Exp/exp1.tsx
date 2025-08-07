@@ -45,6 +45,10 @@ const LinkingScreen = () => {
     { value: string; label: string }[]
   >([{ value: "", label: "Select" }]);
 
+  const [currencyOptions, setCurrencyOptions] = useState<
+    { value: string; label: string }[]
+  >([{ value: "", label: "Select" }]);
+
   // const [selectedType, setSelectedType] = useState("");
 
   // const [data, setData] = useState<LinkedSummaryData[]>(mockLinkedSummaryData);
@@ -275,20 +279,20 @@ const LinkingScreen = () => {
         <div className="mt-4 grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-4">
           <CustomSelect
             label="Business Unit"
-            options={typeOptions}
+            options={buOptions}
             selectedValue={filters.businessUnit}
             onChange={(value) => handleFilterChange("businessUnit", value)}
-            placeholder="Select type"
-            isClearable={false}
+            placeholder="Select business unit"
+            isClearable={true}
           />
 
           <CustomSelect
             label="Currency"
-            options={entityOptions}
+            options={currencyOptions}
             selectedValue={filters.currency}
             onChange={(value) => handleFilterChange("currency", value)}
-            placeholder="Select entity"
-            isClearable={false}
+            placeholder="Select currency"
+            isClearable={true}
           />
 
           <CustomSelect
@@ -297,7 +301,7 @@ const LinkingScreen = () => {
             selectedValue={filters.type}
             onChange={(value) => handleFilterChange("type", value)}
             placeholder="Select type"
-            isClearable={false}
+            isClearable={true}
           />
 
           <CustomSelect
@@ -305,8 +309,8 @@ const LinkingScreen = () => {
             options={entityOptions}
             selectedValue={filters.bank}
             onChange={(value) => handleFilterChange("bank", value)}
-            placeholder="Select entity"
-            isClearable={false}
+            placeholder="Select bank"
+            isClearable={true}
           />
         </div>
 
@@ -337,16 +341,17 @@ const LinkingScreen = () => {
               hedgedValue={hedgedValue}
               onEditHedged={setHedgedValue}
               setBuOptions={setBuOptions}
+              setCurrencyOptions={setCurrencyOptions}
               filters={filters}
             />
           </div>
 
           <div className="w-full">
             <AvailableForward
-              // onSelectExposureHeaderId={setSelectedSystemTransactionId}
               selectedSystemTransactionId={selectedSystemTransactionId}
               setSelectedSystemTransactionId={setSelectedSystemTransactionId}
               setEntityOptions={setEntityOptions}
+              setCurrencyOptions={setCurrencyOptions}
               filters={filters}
             />
           </div>
