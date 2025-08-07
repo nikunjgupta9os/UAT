@@ -149,7 +149,7 @@ const AllUser: React.FC = () => {
       });
   }, []);
 
-  const { notify } = useNotification();
+  const { notify, confirm } = useNotification();
 
   useEffect(() => {
     axios
@@ -207,8 +207,9 @@ const AllUser: React.FC = () => {
     });
   };
 
-  const handleDelete = (userId: number) => {
-    if (!window.confirm("Are you sure you want to delete this user?")) return;
+  const handleDelete = async (userId: number) => {
+    const confirmed = await confirm("Are you sure you want to delete this user?");
+    if (!confirmed) return;
 
     axios
       .post(`https://backend-slqi.onrender.com/api/users/${userId}/delete`)
