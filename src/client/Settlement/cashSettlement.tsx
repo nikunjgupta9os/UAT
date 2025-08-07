@@ -39,7 +39,27 @@ const CashSettlementTable: React.FC<CashSettlementTableProps> = ({
   totalAdditionalSettlementAmount,
   total_open_amount,
 }) => {
-  const [rows, setRows] = useState<CashSettlement[]>([]);
+  // Initialize with one default row
+  const [rows, setRows] = useState<CashSettlement[]>(() => {
+    // Calculate initial available amount for default row
+    const initialAvailableAmount =
+      cleanNumber(total_open_amount) -
+      cleanNumber(totalSettlementAmount) -
+      cleanNumber(totalAdditionalSettlementAmount);
+    
+    console.log("Initializing with available amount:", initialAvailableAmount);
+    
+    return [
+      {
+        forwardRef: "FWD-FX-001",
+        settlementAmount: initialAvailableAmount > 0 ? initialAvailableAmount : 0,
+        bankName: bankName || "HDFC Bank",
+        spotRate: 82.50,
+        fwdPremium: 82.75,
+        margin: 0.25,
+      }
+    ];
+  });
 
   // Generate next forwardRef like FWD-FX-001, FWD-FX-002, etc.
   const getNextForwardRef = () => {
@@ -116,21 +136,30 @@ const CashSettlementTable: React.FC<CashSettlementTableProps> = ({
             cleanNumber(total_open_amount) -
             cleanNumber(totalSettlementAmount) -
             cleanNumber(totalAdditionalSettlementAmount);
+          
+          console.log("Available Amount:", availableAmount);
+          console.log("Current Settlement Amount:", row.original.settlementAmount);
 
           return (
-            <NumberInput
-              value={row.original.settlementAmount}
-              onChange={() => {}}
-              onBlur={(val) => {
-                // Clamp value to availableAmount
-                const safeVal = Math.max(0, Math.min(val, availableAmount));
-                handleInputChange(row.index, "settlementAmount", safeVal);
-              }}
-              step={1}
-              precision={2}
-              min={0}
-              max={availableAmount}
-            />
+            <div className="flex flex-col">
+              <NumberInput
+                value={row.original.settlementAmount}
+                onChange={() => {}}
+                onBlur={(val) => {
+                  // Clamp value to availableAmount
+                  const safeVal = Math.max(0, Math.min(val, availableAmount));
+                  handleInputChange(row.index, "settlementAmount", safeVal);
+                }}
+                // step={1}
+                isStep={false}
+                precision={2}
+                min={0}
+                // max={availableAmount}
+              />
+              {/* <small className="text-xs text-gray-500 mt-1">
+                Max: {availableAmount.toLocaleString()}
+              </small> */}
+            </div>
           );
         },
       },
@@ -193,9 +222,9 @@ const CashSettlementTable: React.FC<CashSettlementTableProps> = ({
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
-  console.log(total_open_amount);
-  console.log(totalSettlementAmount);
-  console.log(totalAdditionalSettlementAmount);
+  // console.log(total_open_amount);
+  // console.log(totalSettlementAmount);
+  // console.log(totalAdditionalSettlementAmount);
 
   return (
     <div className="w-full space-y-4 pt-6">
