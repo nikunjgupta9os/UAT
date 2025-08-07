@@ -16,6 +16,7 @@ import {
   useReactTable,
   type ColumnDef,
   getPaginationRowModel,
+  getSortedRowModel,
 } from "@tanstack/react-table";
 import Button from "../ui/Button";
 
@@ -77,6 +78,45 @@ function Reports() {
   const [columns, setColumns] = useState<ColumnDef<Record<string, any>>[]>([]);
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
+
+  // Grouping state
+  const [groupBy, setGroupBy] = useState<string | null>(null);
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  // Helper to group data by a key (column id)
+  function groupData(data: Record<string, any>[], key: string | null) {
+    if (!key) return null;
+    const groups: Record<string, Record<string, any>[]> = {};
+    data.forEach(row => {
+      const groupVal = row[key] ?? "(Blank)";
+      if (!groups[groupVal]) groups[groupVal] = [];
+      groups[groupVal].push(row);
+    });
+    return groups;
+  }
+
+  // Grouped data memoized
+  const groupedData = useMemo(() => {
+    if (!groupBy) return null;
+    return groupData(filteredData, groupBy);
+  }, [filteredData, groupBy]);
+
+  // When groupBy changes, reset pagination to first page
+  useEffect(() => {
+    if (groupBy) {
+      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    }
+  }, [groupBy]);
+  // Group By options (all columns except nonDraggableColumns)
+  const groupByOptions = useMemo(() => {
+    if (!columns.length) return [];
+    // Add a clear option at the top
+    return [
+      { value: '', label: 'Ungroup (Show All)' },
+      ...columns
+        .filter(col => typeof (col as any).accessorKey === 'string' && !nonDraggableColumns.includes((col as any).accessorKey))
+        .map(col => ({ value: (col as any).accessorKey as string, label: (typeof col.header === 'string' ? col.header : String(col.header)) }))
+    ];
+  }, [columns]);
 
   // Fetch API data on mount
   useEffect(() => {
@@ -147,19 +187,24 @@ function Reports() {
     }));
   }
 
+  // Sorting state for react-table
+  const [sorting, setSorting] = useState([]);
   const table = useReactTable({
     data: filteredData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     onColumnOrderChange: setColumnOrder,
     onColumnVisibilityChange: setColumnVisibility,
     state: {
       columnOrder,
       pagination,
       columnVisibility,
+      sorting,
     },
     onPaginationChange: setPagination,
+    onSortingChange: setSorting,
     manualPagination: false,
     pageCount: Math.ceil(filteredData.length / pagination.pageSize),
   });
@@ -215,23 +260,53 @@ function Reports() {
     setFilters({ orderType: null, currencyPair: null, entity: null, bank: null });
     setFilteredData(data);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    setGroupBy(null);
+    setCollapsedGroups({});
+  };
+  // Toggle collapse for a group
+  const toggleGroupCollapse = (group: string) => {
+    setCollapsedGroups(prev => ({ ...prev, [group]: !prev[group] }));
   };
 
-  const getVisibleRows = () =>
-    table.getPaginationRowModel().rows.map((row) => row.original);
+  // Get visible columns (as per column picker)
+  const visibleColumns = table.getVisibleLeafColumns();
+
+  // Get visible data (grouped or ungrouped)
+  const getVisibleRows = () => {
+    if (groupBy && groupedData) {
+      // Flatten all visible group rows
+      return Object.entries(groupedData)
+        .filter(([group]) => !collapsedGroups[group])
+        .flatMap(([_, rows]) => rows);
+    } else {
+      return table.getPaginationRowModel().rows.map((row) => row.original);
+    }
+  };
 
   const handleExportExcel = () => {
-    exportToExcel(getVisibleRows(), `reports_${selectedType || "all"}`);
+    // Only export visible columns and visible data
+    const rows = getVisibleRows();
+    const cols = visibleColumns;
+    // Map rows to only visible columns
+    const exportRows = rows.map(row => {
+      const obj: Record<string, any> = {};
+      cols.forEach(col => {
+        obj[col.id] = row[col.id];
+      });
+      return obj;
+    });
+    exportToExcel(exportRows, `reports_${selectedType || "all"}`);
   };
 
   const handleExportPDF = () => {
-    // Use the actual visible columns from the table
-    const pdfColumns = table.getVisibleLeafColumns().map(col => ({
+    // Only export visible columns and visible data
+    const rows = getVisibleRows();
+    const pdfColumns = visibleColumns.map(col => ({
       header: col.columnDef.header,
       accessorKey: col.id
     }));
     exportToPDF(
-      getVisibleRows(),
+      rows,
       `reports_${selectedType || "all"}`,
       pdfColumns,
       selectedType // Pass selectedType as fxType for the PDF title
@@ -307,6 +382,27 @@ function Reports() {
           </div>
         </div>
 
+        {/* Group By Dropdown */}
+        <div className="flex gap-4 items-end max-w-5xl mb-2">
+          <div style={{ minWidth: 180, maxWidth: 220 }}>
+            <CustomSelect
+              label="Group By"
+              options={groupByOptions}
+              selectedValue={groupBy || ''}
+              onChange={(val) => {
+                if (!val) {
+                  setGroupBy(null);
+                  setCollapsedGroups({});
+                } else {
+                  setGroupBy(val);
+                }
+              }}
+              placeholder="Select column to group by"
+              isClearable={true}
+            />
+          </div>
+        </div>
+
         <div className="flex items-center justify-between gap-2">
           <div>
             <ColumnPicker table={table} />
@@ -350,104 +446,160 @@ function Reports() {
               <div className="min-w-[800px] w-full">
                 <table className="w-full table-auto">
                   <colgroup>
-                    {table.getVisibleLeafColumns().map((col) => (
+                    {visibleColumns.map((col) => (
                       <col key={col.id} className="font-medium min-w-full" />
                     ))}
                   </colgroup>
                   <thead className="bg-secondary-color rounded-xl">
                     {table.getHeaderGroups().map((headerGroup) => (
                       <tr key={headerGroup.id}>
-                        {headerGroup.headers.map((header) => {
-                          const isDraggable = !nonDraggableColumns.includes(
-                            header.column.id
-                          );
-
-                          return (
-                            <th
-                              key={header.id}
-                              className="px-6 py-4 text-left text-xs font-semibold text-header-color uppercase tracking-wider border-b border-border"
-                              style={{ width: header.getSize() }}
-                            >
-                              {isDraggable ? (
-                                <Droppable id={header.column.id}>
-                                  <Draggable id={header.column.id}>
-                                    <div className="cursor-move rounded py-1 transition duration-150 ease-in-out">
-                                      {flexRender(
-                                        header.column.columnDef.header,
-                                        header.getContext()
-                                      )}
-                                    </div>
-                                  </Draggable>
-                                </Droppable>
-                              ) : (
-                                <div className="px-1">
-                                  {flexRender(
-                                    header.column.columnDef.header,
-                                    header.getContext()
-                                  )}
+                        {headerGroup.headers
+                          .filter(header => visibleColumns.some(col => col.id === header.column.id))
+                          .map((header) => {
+                            const isDraggable = !nonDraggableColumns.includes(header.column.id);
+                            const canSort = !nonDraggableColumns.includes(header.column.id);
+                            const isSorted = header.column.getIsSorted?.();
+                            return (
+                              <th
+                                key={header.id}
+                                className="px-6 py-4 text-left text-xs font-semibold text-header-color uppercase tracking-wider border-b border-border select-none group"
+                                style={{ width: header.getSize() }}
+                              >
+                                <div className="flex items-center gap-1">
+                                  <span
+                                    className={canSort ? "cursor-pointer" : ""}
+                                    onClick={canSort ? () => header.column.toggleSorting?.() : undefined}
+                                  >
+                                    {isDraggable ? (
+                                      <Droppable id={header.column.id}>
+                                        <Draggable id={header.column.id}>
+                                          <div className="cursor-move rounded py-1 transition duration-150 ease-in-out">
+                                            {flexRender(header.column.columnDef.header, header.getContext())}
+                                          </div>
+                                        </Draggable>
+                                      </Droppable>
+                                    ) : (
+                                      <div className="px-1">
+                                        {flexRender(header.column.columnDef.header, header.getContext())}
+                                      </div>
+                                    )}
+                                    {/* Sorting arrows */}
+                                    {canSort && (
+                                      <span className="ml-1 text-xs">
+                                        {isSorted === 'asc' ? '▲' : isSorted === 'desc' ? '▼' : <span className="opacity-30">▲▼</span>}
+                                      </span>
+                                    )}
+                                  </span>
                                 </div>
-                              )}
-                            </th>
-                          );
-                        })}
+                              </th>
+                            );
+                          })}
                       </tr>
                     ))}
                   </thead>
                   <tbody className="divide-y">
-                    {table.getPaginationRowModel().rows.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={columns.length}
-                          className="px-6 py-12 text-left text-gray-500"
-                        >
-                          <div className="flex flex-col items-center">
-                            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                              <svg
-                                className="w-6 h-6 text-gray-400"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                                />
-                              </svg>
+                    {/* Grouped rendering */}
+                    {groupBy && groupedData ? (
+                      Object.entries(groupedData).length === 0 ? (
+                        <tr>
+                          <td colSpan={visibleColumns.length} className="px-6 py-12 text-left text-gray-500">
+                            <div className="flex flex-col items-center">
+                              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                              </div>
+                              <p className="text-lg font-medium text-gray-900 mb-1">No Data available</p>
+                              <p className="text-sm text-primary">There are no data to display at the moment.</p>
                             </div>
-                            <p className="text-lg font-medium text-gray-900 mb-1">
-                              No Data available
-                            </p>
-                            <p className="text-sm text-primary">
-                              There are no data to display at the moment.
-                            </p>
-                          </div>
-                        </td>
-                      </tr>
-                    ) : (
-                      table.getPaginationRowModel().rows.map((row) => (
-                        <tr
-                          key={row.id}
-                          className={
-                            row.index % 2 === 0
-                              ? "bg-primary-md"
-                              : "bg-secondary-color-lt"
-                          }
-                        >
-                          {row.getVisibleCells().map((cell) => (
-                            <td
-                              key={cell.id}
-                              className="px-6 py-4 whitespace-nowrap text-sm border-b border-border"
-                            >
-                              {flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext()
-                              )}
-                            </td>
-                          ))}
+                          </td>
                         </tr>
-                      ))
+                      ) : (
+                        Object.entries(groupedData).map(([group, rows]) => (
+                          <>
+                            <tr key={group} className="bg-gray-100 cursor-pointer" onClick={() => toggleGroupCollapse(group)}>
+                              <td colSpan={visibleColumns.length} className="px-6 py-2 font-bold text-primary flex items-center">
+                                <span className="mr-2">{collapsedGroups[group] ? '+' : '-'}</span>
+                                {group}
+                                <span className="ml-2 text-xs text-gray-500">({rows.length})</span>
+                              </td>
+                            </tr>
+                            {!collapsedGroups[group] && rows.map((row, rowIdx) => (
+                              <tr key={group + '-' + rowIdx} className={rowIdx % 2 === 0 ? "bg-primary-md" : "bg-secondary-color-lt"}>
+                                {visibleColumns.map((col) => {
+                                  const val = row[col.id];
+                                  const colDef = columns.find(c => (c as any).accessorKey === col.id);
+                                  let cellContent = val;
+                                  if (colDef && colDef.cell) {
+                                    cellContent = (colDef.cell as any)({ getValue: () => val });
+                                  }
+                                  return (
+                                    <td key={col.id} className="px-6 py-4 whitespace-nowrap text-sm border-b border-border">
+                                      {cellContent}
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            ))}
+                          </>
+                        ))
+                      )
+                    ) : (
+                      table.getPaginationRowModel().rows.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={visibleColumns.length}
+                            className="px-6 py-12 text-left text-gray-500"
+                          >
+                            <div className="flex flex-col items-center">
+                              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                                <svg
+                                  className="w-6 h-6 text-gray-400"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                  />
+                                </svg>
+                              </div>
+                              <p className="text-lg font-medium text-gray-900 mb-1">
+                                No Data available
+                              </p>
+                              <p className="text-sm text-primary">
+                                There are no data to display at the moment.
+                              </p>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        table.getPaginationRowModel().rows.map((row) => (
+                          <tr
+                            key={row.id}
+                            className={
+                              row.index % 2 === 0
+                                ? "bg-primary-md"
+                                : "bg-secondary-color-lt"
+                            }
+                          >
+                            {row.getVisibleCells().map((cell) => (
+                              <td
+                                key={cell.id}
+                                className="px-6 py-4 whitespace-nowrap text-sm border-b border-border"
+                              >
+                                {flexRender(
+                                  cell.column.columnDef.cell,
+                                  cell.getContext()
+                                )}
+                              </td>
+                            ))}
+                          </tr>
+                        ))
+                      )
                     )}
                   </tbody>
                 </table>
@@ -456,66 +608,70 @@ function Reports() {
           </div>
         </div>
         
-        <div className="flex items-center justify-between bg-gray-50 px-4 py-2 text-sm text-gray-700">
-          <div className="flex items-center gap-2">
-            <span>Show</span>
-            <select
-              className="border rounded px-2 py-1"
-              value={pagination.pageSize}
-              onChange={(e) => {
-                table.setPageSize(Number(e.target.value));
-              }}
-            >
-              {[5, 10, 20, 50, 100, 500].map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-            <span>entries</span>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-                className="flex items-center gap-1 px-3 py-1 border border-primary-lt rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+        {/* Pagination controls: hide when grouped */}
+        {!groupBy && (
+          <div className="flex items-center justify-between bg-gray-50 px-4 py-2 text-sm text-gray-700">
+            <div className="flex items-center gap-2">
+              <span>Show</span>
+              <select
+                className="border rounded px-2 py-1"
+                value={pagination.pageSize}
+                onChange={(e) => {
+                  table.setPageSize(Number(e.target.value));
+                }}
               >
-                <ChevronLeft className="w-4 h-4" />
-                Previous
-              </button>
-
-              <span className="flex items-center gap-1">
-                <span>Page</span>
-                <strong className="text-primary">
-                  {table.getState().pagination.pageIndex + 1} of{" "}
-                  {table.getPageCount()}
-                </strong>
-              </span>
-
-              <button
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-                className="flex items-center gap-1 px-3 py-1 border border-primary-lt rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-              >
-                Next
-                <ChevronRight className="w-4 h-4" />
-              </button>
+                {[5, 10, 20, 50, 100, 500].map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+              <span>entries</span>
             </div>
-          </div>
 
-          <div>
-            Showing{" "}
-            <span className="font-medium">
-              {filteredData.length === 0 ? 0 : pagination.pageIndex * pagination.pageSize + 1}
-            </span> to
-            <span className="font-medium">
-              {Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)}
-            </span>
-            of <span className="font-medium">{filteredData.length}</span> entries
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage()}
+                  className="flex items-center gap-1 px-3 py-1 border border-primary-lt rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Previous
+                </button>
+
+                <span className="flex items-center gap-1">
+                  <span>Page</span>
+                  <strong className="text-primary">
+                    {table.getState().pagination.pageIndex + 1} of{" "}
+                    {table.getPageCount()}
+                  </strong>
+                </span>
+
+                <button
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage()}
+                  className="flex items-center gap-1 px-3 py-1 border border-primary-lt rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div>
+  Showing{" "}
+  <span className="font-medium">
+    {filteredData.length === 0 ? 0 : pagination.pageIndex * pagination.pageSize + 1}
+  </span>{" "}
+  to{" "}
+  <span className="font-medium">
+    {Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)}
+  </span>{" "}
+  of <span className="font-medium">{filteredData.length}</span> entries
+</div>
           </div>
-        </div>
+        )}
       </div>
     </Layout>
   );
