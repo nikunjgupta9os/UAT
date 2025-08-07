@@ -7,6 +7,7 @@ import { Eye, ChevronDown, ChevronUp } from "lucide-react";
 import axios from "axios";
 import Pagination from "../../ui/Pagination";
 import Button from "../../ui/Button";
+import { useNotification } from "../../Notification/Notification";
 import {
   flexRender,
   getCoreRowModel,
@@ -65,6 +66,7 @@ const formatDateForApi = (dateString: string): string => {
 const nonDraggableColumns = ["expand", "select"];
 
 const TransactionTable: React.FC = () => {
+  const { notify, confirm } = useNotification();
   const [selectedRowIds, setSelectedRowIds] = useState<Record<string, boolean>>(
     {}
   );
@@ -462,11 +464,11 @@ const TransactionTable: React.FC = () => {
     console.log("Selected IDs:", selectedSystemTransactionIds);
 
     if (selectedSystemTransactionIds.length === 0) {
-      alert("Please select at least one transaction to update.");
+      notify("Please select at least one transaction to update.", "warning");
       return;
     }
 
-    const confirmation = window.confirm(
+    const confirmation = await confirm(
       `Are you sure you want to ${status.toLowerCase()} the selected transaction(s)?`
     );
     if (!confirmation) return;
@@ -481,7 +483,7 @@ const TransactionTable: React.FC = () => {
       );
 
       if (response.data?.success) {
-        alert(`Successfully ${status.toLowerCase()} transactions.`);
+        notify(`Successfully ${status.toLowerCase()} transactions.`, "success");
 
         setData((prevData) =>
           prevData.map((row) =>
@@ -493,11 +495,11 @@ const TransactionTable: React.FC = () => {
 
         setSelectedRowIds({});
       } else {
-        alert("Status update failed. Please try again.");
+        notify("Status update failed. Please try again.", "error");
       }
     } catch (error) {
       console.error("Status update error:", error);
-      alert("An error occurred while updating status.");
+      notify("An error occurred while updating status.", "error");
     }
   };
 
