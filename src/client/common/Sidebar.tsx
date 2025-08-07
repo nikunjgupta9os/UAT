@@ -26,6 +26,10 @@ import {
   Handshake,
   BookUp,
   LogOut,
+  Store,
+  Calculator,
+  ChevronsLeftRightEllipsis,
+  CircleX,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -112,8 +116,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     subItems: [
       { label: "FX Forward Booking", path: "/fxbooking", icon: <BookUp /> },
       { label: "FX Confirmation", path: "/fx-confirmation", icon: <CheckCircle /> },
+      { label: "FX Cancellation & Rollover", path: "/fx-wizard", icon: <CircleX /> },
     ],
   },
+  {label:"MTM Screens", icon: <Store />,
+    subItems: [
+      { label: "MTM Calculator", path: "/mtm-calculator", icon: <Calculator /> },
+      { label: "MTM Rates Input", path: "/mtm-rate-input", icon: <ChevronsLeftRightEllipsis /> },
+    ],
+  },
+  
+ 
   { label: "Reports", path: "/reports", icon: <Proportions /> },
   { label: "Settlement", path: "/exposure-selection", icon: <Handshake /> },
   // Logout nav item
