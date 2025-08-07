@@ -4,6 +4,8 @@ import AdditionalForwardDetail from "./additionalDetail";
 // import CashSettlementComponent from "./CashDetail";
 import CashSettlementTable from "./cashSettlement";
 import React, { useMemo, useState } from "react";
+import Button from "../ui/Button";
+import { useNavigate } from "react-router-dom";
 
 interface PaymentMethodProps {
   exposure_header_ids: any;
@@ -18,12 +20,23 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
   entity,
   total_open_amount,
 }) => {
+  const navigate = useNavigate();
   const [totalSettlementAmount, setTotalSettlementAmount] = useState<number>(0);
   const [totalAdditionalSettlementAmount, setTotalAdditionalSettlementAmount] =
     useState<number>(0);
 
   return (
     <div className="space-y-8">
+
+      <div className="flex justify-end mb-4">
+        <div>
+          <Button onClick={() => {
+          navigate("/fx-output");
+        }}>
+          Next
+        </Button>
+        </div>
+      </div>
       <div className="flex justify-end mb-4">
         <span className="font-bold text-lg">
           Total Open Amount:&nbsp;
