@@ -37,15 +37,21 @@ interface TableProps {
   };
   selectedSystemTransactionId: string | null;
   setSelectedSystemTransactionId: React.Dispatch<React.SetStateAction<string | null>>;
-
   setEntityOptions: React.Dispatch<React.SetStateAction<{ value: string; label: string }[]>>;
+  setCurrencyOptions?: React.Dispatch<React.SetStateAction<{ value: string; label: string }[]>>;
 }
 
 
 const nonDraggableColumns = ["expand", "select"];
 
 
-const AvailableForward: React.FC<TableProps> = ({ filters , setEntityOptions, selectedSystemTransactionId, setSelectedSystemTransactionId,}) => {
+const AvailableForward: React.FC<TableProps> = ({ 
+  filters, 
+  setEntityOptions, 
+  selectedSystemTransactionId, 
+  setSelectedSystemTransactionId,
+  setCurrencyOptions
+}) => {
   const [selectedRowIds, setSelectedRowIds] = useState<Record<string, boolean>>(
     {}
   );
@@ -97,20 +103,30 @@ const AvailableForward: React.FC<TableProps> = ({ filters , setEntityOptions, se
       const transformed = transformApiData(response.data);
       setData(transformed);
 
-      
+      // Extract unique banks for bank filter
       const uniqueBanks = Array.from(new Set(response.data.map((item: any) => item.Bank)));
       const bankOptions = uniqueBanks.map((bank: string) => ({
         value: bank,
         label: bank,
       }));
 
-     
+      // Extract unique currencies for currency filter
+      const uniqueCurrencies = Array.from(new Set(response.data.map((item: any) => item.currency)));
+      const currencyOptions = uniqueCurrencies.map((currency: string) => ({
+        value: currency,
+        label: currency,
+      }));
 
       setEntityOptions([{ value: "", label: "Select" }, ...bankOptions]);
+      
+      // Set currency options if the setter is provided
+      if (setCurrencyOptions) {
+        setCurrencyOptions([{ value: "", label: "Select" }, ...currencyOptions]);
+      }
     };
 
     fetchData();
-  }, [setEntityOptions]);
+  }, [setEntityOptions, setCurrencyOptions]);
 
 
 
@@ -129,16 +145,15 @@ const AvailableForward: React.FC<TableProps> = ({ filters , setEntityOptions, se
   const filteredData = useMemo(() => {
     let result = [...data];
 
-    // Currency filter
+    // Currency filter - exact match
     if (filters?.currency) {
       result = result.filter((item) => item.currency === filters.currency);
     }
 
-    // Bank filter (case insensitive)
+    // Bank filter - exact match (case insensitive)
     if (filters?.bank) {
-      const lowerBank = filters.bank.toLowerCase();
-      result = result.filter((item) =>
-        item.bank.toLowerCase().includes(lowerBank)
+      result = result.filter((item) => 
+        item.bank.toLowerCase() === filters.bank.toLowerCase()
       );
     }
 
@@ -163,8 +178,9 @@ const AvailableForward: React.FC<TableProps> = ({ filters , setEntityOptions, se
         console.error("Error processing maturity filter:", e);
       }
     }
+
     return result;
-  }, [data]);
+  }, [data, filters]);
 
   
 
