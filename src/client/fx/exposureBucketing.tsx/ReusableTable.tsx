@@ -5,6 +5,7 @@ import {
   flexRender,
   getExpandedRowModel,
   getSortedRowModel,
+  getPaginationRowModel,
   type ColumnDef,
   type Row,
   type HeaderContext,
@@ -19,6 +20,7 @@ import {
   CircleArrowDown,
 } from "lucide-react";
 import Button from "../../ui/Button";
+import Pagination from "../../ui/Pagination";
 import "../../styles/theme.css";
 import axios from "axios";
 import { useNotification } from "../../Notification/Notification.tsx";
@@ -430,22 +432,30 @@ function NyneOSTable<ExposureBucketing extends WithId>({
   };
 
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+  
   const table = useReactTable({
     data: filter ? filter : data,
     columns: finalColumns,
     onColumnOrderChange: setColumnOrder,
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getExpandedRowModel: expandedRowConfig ? getExpandedRowModel() : undefined,
     getRowCanExpand: expandedRowConfig ? () => true : undefined,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    onPaginationChange: setPagination,
     state: {
       columnOrder,
       columnVisibility,
       sorting,
       rowSelection,
+      pagination,
       expanded, // Add the expanded state to the table
     },
     enableRowSelection: true, // Enable row selection
@@ -675,6 +685,18 @@ function NyneOSTable<ExposureBucketing extends WithId>({
           </DndContext>
         </div>
       </div>
+
+      {/* Add Pagination Component */}
+      <Pagination
+        table={table}
+        totalItems={(filter || data).length}
+        currentPageItems={table.getRowModel().rows.length}
+        startIndex={pagination.pageIndex * pagination.pageSize + 1}
+        endIndex={Math.min(
+          (pagination.pageIndex + 1) * pagination.pageSize,
+          (filter || data).length
+        )}
+      />
     </>
   );
 }
