@@ -44,6 +44,9 @@ interface TableProps {
   setBuOptions: React.Dispatch<
     React.SetStateAction<{ value: string; label: string }[]>
   >;
+  setCurrencyOptions: React.Dispatch<
+    React.SetStateAction<{ value: string; label: string }[]>
+  >;
 }
 
 const nonDraggableColumns = ["expand", "select"];
@@ -55,6 +58,7 @@ const UnlinkedExposure: React.FC<TableProps> = ({
   selectedExposureHeaderId,
   onSelectExposureHeaderId,
   setBuOptions,
+  setCurrencyOptions,
 }) => {
   const [selectedRowIds, setSelectedRowIds] = useState<Record<string, boolean>>(
     {}
@@ -154,6 +158,7 @@ const UnlinkedExposure: React.FC<TableProps> = ({
       const transformed = transformApiData(response.data);
       setData((prev) => [...prev, ...transformed]);
 
+      // Extract unique business units
       const uniqueBUs = Array.from(
         new Set(response.data.map((item: any) => item.bu))
       );
@@ -162,11 +167,21 @@ const UnlinkedExposure: React.FC<TableProps> = ({
         label: bu,
       }));
 
+      // Extract unique currencies
+      const uniqueCurrencies = Array.from(
+        new Set(response.data.map((item: any) => item.currency))
+      );
+      const currencyOptions = uniqueCurrencies.map((currency: string) => ({
+        value: currency,
+        label: currency,
+      }));
+
       setBuOptions([{ value: "", label: "Select" }, ...buOptions]);
+      setCurrencyOptions([{ value: "", label: "Select" }, ...currencyOptions]);
     };
 
     fetchData();
-  }, []);
+  }, [setBuOptions, setCurrencyOptions]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
