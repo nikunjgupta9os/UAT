@@ -67,7 +67,7 @@ const CustomSelect: React.FC<CustomSelectProps> = (props) => {
         {label}
       </label>
       <Select
-        className="w-full text-sm rounded z-21"
+        className="w-full text-sm rounded z-39"
         classNamePrefix="react-select"
         options={options}
         value={selectedOption}
