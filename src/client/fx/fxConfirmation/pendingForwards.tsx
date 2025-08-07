@@ -96,6 +96,118 @@ const TransactionTable: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [editValues, setEditValues] = useState<Transaction>({} as Transaction);
 
+  // Helper function to get changed fields
+  const getChangedFields = (original: Transaction, edited: Transaction): Record<string, any> => {
+    const changes: Record<string, any> = {};
+    
+    // Map camelCase to snake_case for API
+    const fieldMapping: Record<string, string> = {
+      orderType: 'order_type',
+      transactionType: 'transaction_type',
+      modeOfDelivery: 'mode_of_delivery',
+      deliveryPeriod: 'delivery_period',
+      settlementDate: 'settlement_date',
+      maturityDate: 'maturity_date',
+      deliveryDate: 'delivery_date',
+      spotRate: 'spot_rate',
+      forwardPoints: 'forward_points',
+      bankMargin: 'bank_margin',
+      totalRate: 'total_rate',
+      inputValue: 'booking_amount',
+      valueType: 'value_type',
+      internalDealer: 'internal_dealer',
+      counterpartyDealer: 'counterparty_dealer',
+      bankTransactionId: 'bank_transaction_id',
+      swiftUniqueId: 'swift_unique_id',
+      bankConfirmationDate: 'bank_confirmation_date',
+      status: 'processing_status',
+      entityLevel0: 'entity_level_0',
+      entityLevel1: 'entity_level_1',
+      entityLevel2: 'entity_level_2',
+      entityLevel3: 'entity_level_3',
+      localCurrency: 'local_currency',
+      currencyPair: 'currency_pair',
+      baseCurrency: 'base_currency',
+      quoteCurrency: 'quote_currency',
+      actualValueBaseCurrency: 'actual_value_base_currency',
+      valueQuoteCurrency: 'value_quote_currency',
+      interveningRateQuoteToLocal: 'intervening_rate_quote_to_local',
+      valueLocalCurrency: 'value_local_currency',
+      counterparty: 'counterparty',
+      remarks: 'remarks',
+      narration: 'narration'
+    };
+
+    // Check for changed fields
+    Object.keys(edited).forEach(key => {
+      const originalValue = original[key as keyof Transaction];
+      const newValue = edited[key as keyof Transaction];
+      
+      if (originalValue !== newValue) {
+        const apiKey = fieldMapping[key] || key;
+        changes[apiKey] = newValue;
+      }
+    });
+
+    return changes;
+  };
+
+  // Handle forward edit operations
+  const handleForwardEditToggle = async (row: any) => {
+    if (isEditing) {
+      const changedFields = getChangedFields(row.original, editValues);
+      if (Object.keys(changedFields).length === 0) {
+        setIsEditing(false);
+        return;
+      }
+
+      try {
+        setIsSaving(true);
+        console.log("Sending update payload:", changedFields);
+
+        // Make PATCH request to update forward
+        const response = await axios.post(
+          `https://backend-slqi.onrender.com/api/forwards/${row.original.systemTransactionId}/update`,
+          changedFields,
+          {
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        console.log("Update response:", response.data);
+
+        if (response.data?.success || response.status === 200) {
+          // Update local data
+          setData((prev) =>
+            prev.map((item, idx) =>
+              idx === row.index
+                ? { ...item, ...editValues }
+                : item
+            )
+          );
+          
+          setIsEditing(false);
+          notify("Forward updated successfully!", "success");
+        } else {
+          throw new Error(response.data?.message || "Update failed");
+        }
+      } catch (error) {
+        console.error("Forward update error:", error);
+        notify("An error occurred while updating the forward.", "error");
+        // Don't exit edit mode on error
+        return;
+      } finally {
+        setIsSaving(false);
+        setEditValues({} as Transaction);
+      }
+    } else {
+      setEditValues({ ...row.original });
+      setIsEditing(true);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -670,26 +782,7 @@ const TransactionTable: React.FC = () => {
                             {/* Edit/Save Button */}
                             <div className="flex justify-end mb-4">
                               <button
-                                onClick={() => {
-                                  if (isEditing) {
-                                    setIsSaving(true);
-                                    setTimeout(() => {
-                                      setData((prev) =>
-                                        prev.map((item, idx) =>
-                                          idx === row.index
-                                            ? { ...item, ...editValues }
-                                            : item
-                                        )
-                                      );
-                                      setIsEditing(false);
-                                      setIsSaving(false);
-                                      setEditValues({} as Transaction);
-                                    }, 500);
-                                  } else {
-                                    setEditValues(row.original);
-                                    setIsEditing(true);
-                                  }
-                                }}
+                                onClick={() => handleForwardEditToggle(row)}
                                 className="bg-primary text-white px-4 py-1 rounded shadow hover:bg-primary-dark disabled:opacity-60"
                                 disabled={isSaving}
                               >
@@ -723,7 +816,7 @@ const TransactionTable: React.FC = () => {
                                       ? editValues[key] ?? row.original[key]
                                       : row.original[key],
                                     row.original[key],
-                                    isEditing && ["internalReferenceId", "orderType", "transactionType", "counterparty", "status"].includes(key)
+                                    isEditing && ["orderType", "transactionType", "counterparty", "status"].includes(key)
                                   )
                                 )}
                               </div>
