@@ -24,6 +24,7 @@ import {
 import ExpandedRow from "./RenderExpandedCell";
 import axios from "axios";
 import { useNotification } from "../../Notification/Notification";
+import Pagination from "../../ui/Pagination";
 const fieldLabels: Record<string, string> = {
   id: "ID",
   authenticationType: "Auth Type",
@@ -784,6 +785,18 @@ const Awaitinguser: React.FC = () => {
             </table>
           </div>
         </div>
+
+        {/* Pagination Component */}
+        <Pagination
+          table={table}
+          totalItems={filteredData.length}
+          currentPageItems={table.getRowModel().rows.length}
+          startIndex={table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}
+          endIndex={Math.min(
+            (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+            filteredData.length
+          )}
+        />
       </div>
     </>
   );
