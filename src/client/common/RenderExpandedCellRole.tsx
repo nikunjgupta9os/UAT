@@ -1,31 +1,28 @@
 import React from "react";
 import Button from "../ui/Button";
-import axios from "axios";
-import type { Row } from "@tanstack/react-table";
-import { useNotification } from "../Notification/Notification"; // Add this import
-
 
 type ExpandedRowProps = {
-  row: Row<Role>;
+  row: any;
   columnVisibility: Record<string, boolean>;
-  editStates: Record<string, Record<string, any>>;
+  editStates: Record<string, Partial<UserType>>;
   setEditStates: React.Dispatch<
-    React.SetStateAction<Record<string, Record<string, any>>>
+    React.SetStateAction<Record<string, Partial<UserType>>>
   >;
-  editingRows: Set<string>;
-  setEditingRows: React.Dispatch<React.SetStateAction<Set<string>>>;
+  editingRows?: Set<string>;
+  setEditingRows?: React.Dispatch<React.SetStateAction<Set<string>>>;
   fieldLabels: Record<string, string>;
   visibleColumnCount: number;
   editableKeys?: string[];
-  timeFields?: string[];
   detailsFields: string[];
   approvalFields: string[];
   showDetailsSection?: boolean;
   showApprovalSection?: boolean;
+  edit?: boolean; // Add this new prop
 };
 
 const ExpandedRow: React.FC<ExpandedRowProps> = ({
   row,
+  // columnVisibility,
   editStates,
   setEditStates,
   editingRows,
@@ -33,16 +30,15 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
   fieldLabels,
   visibleColumnCount,
   editableKeys = [],
-  timeFields = [],
   detailsFields,
   approvalFields,
   showDetailsSection = true,
   showApprovalSection = true,
+  edit = true, // Default to true to maintain backward compatibility
 }) => {
   const rowId = row.id;
-  const { notify } = useNotification(); // Add this hook
 
-  const isEditing = editingRows.has(rowId);
+  const isEditing = editingRows?.has(rowId) || false;
   const editValues = editStates[rowId] || {};
 
   const visibleDetailsKeys = detailsFields.filter(
@@ -53,8 +49,7 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
     (key) => key !== "select" && key !== "actions"
   );
 
-  const handleChange = (key: string, value: string | boolean | number) => {
-    console.log(`Changing ${key} to:`, value);
+  const handleChange = (key: keyof UserType, value: string | boolean) => {
     setEditStates((prev) => ({
       ...prev,
       [rowId]: {
@@ -64,151 +59,64 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
     }));
   };
 
-  // Helper function to format time for display
-  const formatTimeForDisplay = (timeValue: any): string => {
-    if (!timeValue) return "—";
-
-    // If it's already in HH:MM format, return as is
-    if (typeof timeValue === "string" && timeValue.match(/^\d{2}:\d{2}$/)) {
-      return timeValue;
-    }
-
-    // If it's a full datetime string, extract time
-    if (typeof timeValue === "string") {
-      try {
-        const date = new Date(timeValue);
-        if (!isNaN(date.getTime())) {
-          return date.toLocaleTimeString("en-US", {
-            hour12: false,
-            hour: "2-digit",
-            minute: "2-digit",
-          });
-        }
-      } catch (e) {
-        // If parsing fails, return original value
-        return timeValue;
-      }
-    }
-
-    return String(timeValue);
-  };
-
-  // Helper function to format time for input
-  const formatTimeForInput = (timeValue: any): string => {
-    if (!timeValue) return "";
-
-    // If it's already in HH:MM format, return as is
-    if (typeof timeValue === "string" && timeValue.match(/^\d{2}:\d{2}$/)) {
-      return timeValue;
-    }
-
-    // If it's a full datetime string, extract time
-    if (typeof timeValue === "string") {
-      try {
-        const date = new Date(timeValue);
-        if (!isNaN(date.getTime())) {
-          return date.toLocaleTimeString("en-US", {
-            hour12: false,
-            hour: "2-digit",
-            minute: "2-digit",
-          });
-        }
-      } catch (e) {
-        return "";
-      }
-    }
-
-    return "";
-  };
-
-  const getChangedFields = (
-    original: Role,
-    edited: Record<string, any>
-  ): Record<string, any> => {
-    const changes: Record<string, any> = {};
-    
-    console.log("Original data:", original);
-    console.log("Edited data:", edited);
-    
-    for (const key in edited) {
-      const originalValue = (original as any)[key];
-      const editedValue = edited[key];
-      
-      console.log(`Comparing ${key}: original="${originalValue}" vs edited="${editedValue}"`);
-      
-      if (editedValue !== originalValue) {
-        changes[key] = editedValue;
-        console.log(`Field ${key} changed from "${originalValue}" to "${editedValue}"`);
-      }
-    }
-    
-    console.log("Final changes:", changes);
-    return changes;
-  };
-
   const handleEditToggle = async () => {
     if (isEditing) {
-      console.log("isEditing:", isEditing);
-      const changedFields = getChangedFields(row.original, editValues);
-      console.log("Changed fields:", changedFields);
-      
-      if (Object.keys(changedFields).length === 0) {
-        // No changes made
-        setEditingRows((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(rowId);
-          return newSet;
-        });
-        return;
-      }
+      // Saving changes
+      const updatedFields = { ...editValues, status: "Awaiting-Approval" };
 
       try {
-        const res = await axios.post(
-          `https://backend-slqi.onrender.com/api/roles/${row.original.id}/update`,
-          changedFields
-        );
-        if (res.data.success) {
-          notify("Role updated successfully!", "success"); // Now this will work
-          console.log("Updated successfully:", res.data.role);
+        const response = await fetch(`https://backend-slqi.onrender.com/api/users/${row.original.id}/update`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updatedFields),
+        });
 
-          // Replace original with updated role
-          row.original = res.data.role;
-
-          // Exit editing mode
-          setEditingRows((prev) => {
+        const data = await response.json();
+        if (data.success) {
+          alert("User updated successfully!");
+          setEditStates((prev) => {
+            const updated = { ...prev };
+            delete updated[rowId];
+            return updated;
+          });
+          setEditingRows?.((prev) => {
             const newSet = new Set(prev);
             newSet.delete(rowId);
             return newSet;
           });
         } else {
-          notify("Update failed: " + res.data.message, "error"); // Add error notification
-          console.error("Update failed:", res.data.message);
+          alert("Update failed: " + data.message);
         }
-      } catch (error) {
-        notify("Error updating role. Please try again.", "error"); // Add error notification
-        console.error("Error updating role:", error);
+      } catch (err) {
+        alert("Update error: " + (err as Error).message);
       }
     } else {
+      // Entering edit mode
       setEditStates((prev) => ({
         ...prev,
         [rowId]: { ...row.original },
       }));
-      setEditingRows((prev) => new Set(prev).add(rowId));
+      setEditingRows?.((prev) => new Set(prev).add(rowId));
     }
   };
 
   const renderField = (key: string) => {
+    const typedKey = key as keyof UserType;
     const label = fieldLabels[key] ?? key;
     const isEditable = editableKeys.includes(key);
-    const isTimeField = timeFields.includes(key);
+    let value =
+      key === "role.name"
+        ? row.original.role?.name ?? "—"
+        : isEditing
+        ? editValues[typedKey]
+        : row.original[typedKey];
 
-    let value = isEditing 
-      ? editValues[key] 
-      : (row.original as any)[key];
-
-    // Format time fields for display
-    if (!isEditing && isTimeField) {
-      value = formatTimeForDisplay(value);
+    // Format date
+    if (!isEditing && typedKey === "createdDate") {
+      const date = new Date(value as string);
+      value = isNaN(date.getTime()) ? value : date.toLocaleDateString();
     }
 
     // Format boolean
@@ -217,33 +125,27 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
     }
 
     return (
-      <div key={key} className="flex flex-col space-y-1">
+      <div key={key} className="flex flex-col">
         <label className="font-bold text-secondary-text">{label}</label>
         {isEditing && isEditable ? (
-          isTimeField ? (
-            // Render time input for time fields
-            <input
-              type="time"
-              className="border rounded px-2 py-1 text-sm bg-secondary-color-lt border-border shadow-sm text-secondary-text"
-              value={formatTimeForInput(editValues[key]) || ""}
-              onChange={(e) => handleChange(key, e.target.value)}
-            />
-          ) : typeof (row.original as any)[key] === "boolean" ? (
-            // Render select for boolean fields
-            <select
-              className="border rounded px-2 py-1 text-sm bg-secondary-color-lt border-border shadow-sm text-secondary-text"
-              value={editValues[key] ? "true" : "false"}
-              onChange={(e) => handleChange(key, e.target.value === "true")}
-            >
-              <option value="true">Yes</option>
-              <option value="false">No</option>
-            </select>
+          typeof row.original[typedKey] === "boolean" ? (
+            <div>
+              <select
+                className="border rounded px-2 py-1 text-sm bg-secondary-color-lt border-border shadow-sm text-secondary-text"
+                value={(editValues[typedKey] ? "true" : "false") as string}
+                onChange={(e) =>
+                  handleChange(typedKey, e.target.value === "true")
+                }
+              >
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
           ) : (
-            // Render regular text input for other fields
             <input
               className="border rounded px-2 py-1 text-sm bg-secondary-color-lt border-border shadow-sm text-secondary-text"
               value={(value as string) || ""}
-              onChange={(e) => handleChange(key, e.target.value)}
+              onChange={(e) => handleChange(typedKey, e.target.value)}
             />
           )
         ) : (
@@ -261,11 +163,14 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
             <h4 className="text-lg font-semibold text-secondary-text">
               Additional Information
             </h4>
-            <div>
-              <Button onClick={handleEditToggle}>
-                {isEditing ? "Save" : "Edit"}
-              </Button>
-            </div>
+            {/* Conditionally render the edit button based on the edit prop */}
+            {edit && (
+              <div>
+                <Button onClick={handleEditToggle}>
+                  {isEditing ? "Save" : "Edit"}
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Details Section */}
@@ -274,7 +179,7 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
               <h5 className="text-md font-medium text-primary mb-3 border-b border-primary-md pb-2">
                 Details
               </h5>
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {visibleDetailsKeys.map(renderField)}
               </div>
             </div>
@@ -286,7 +191,7 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
               <h5 className="text-md font-medium text-primary mb-3 border-b border-primary-md pb-2">
                 Approval Information
               </h5>
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {visibleApprovalKeys.map(renderField)}
               </div>
             </div>
@@ -294,7 +199,7 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
 
           {/* Show message if no fields are hidden */}
           {visibleDetailsKeys.length === 0 && (
-            <div className="text-center text-primary py-4">
+            <div className="text-center text-gray-500 py-4">
               No additional information to display
             </div>
           )}
