@@ -1,43 +1,64 @@
 import React from "react";
 import Select from "react-select";
 
+
 type OptionType = {
   value: string;
   label: string;
 };
 
-interface CustomSelectProps {
+interface CustomSelectPropsBase {
   label: string;
   options: OptionType[];
-  selectedValue?: string | string[];
-  onChange: (value: string | string[]) => void;
   placeholder?: string;
   isDisabled?: boolean;
   isClearable?: boolean;
   isRequired?: boolean;
   isSearchable?: boolean;
   menuPlacement?: "auto" | "top" | "bottom";
-  isMulti?: boolean;
 }
 
-const CustomSelect: React.FC<CustomSelectProps> = ({
-  label,
-  options,
-  selectedValue,
-  onChange,
-  placeholder = "Select...",
-  isDisabled = false,
-  isClearable = true,
-  isSearchable = true,
-  isRequired = false,
-  menuPlacement = "auto",
-  isMulti = false,
-}) => {
+interface CustomSelectSingleProps extends CustomSelectPropsBase {
+  isMulti?: false;
+  selectedValue?: string;
+  onChange: (value: string) => void;
+}
+
+interface CustomSelectMultiProps extends CustomSelectPropsBase {
+  isMulti: true;
+  selectedValue?: string[];
+  onChange: (value: string[]) => void;
+}
+
+type CustomSelectProps = CustomSelectSingleProps | CustomSelectMultiProps;
+
+
+const CustomSelect: React.FC<CustomSelectProps> = (props) => {
+  const {
+    label,
+    options,
+    placeholder = "Select...",
+    isDisabled = false,
+    isClearable = true,
+    isSearchable = true,
+    isRequired = false,
+    menuPlacement = "auto",
+  } = props;
+
+  // isMulti, selectedValue, onChange are discriminated
+  const isMulti = (props as CustomSelectMultiProps).isMulti === true;
+
   let selectedOption: OptionType | OptionType[] | null = null;
-  if (isMulti && Array.isArray(selectedValue)) {
-    selectedOption = options.filter((opt) => selectedValue.includes(opt.value));
-  } else if (!isMulti && typeof selectedValue === 'string') {
-    selectedOption = options.find((opt) => opt.value === selectedValue) || null;
+  if (isMulti) {
+    const selectedValue = (props as CustomSelectMultiProps).selectedValue;
+    selectedOption = Array.isArray(selectedValue)
+      ? options.filter((opt) => selectedValue.includes(opt.value))
+      : [];
+  } else {
+    const selectedValue = (props as CustomSelectSingleProps).selectedValue;
+    selectedOption = typeof selectedValue === 'string'
+      ? options.find((opt) => opt.value === selectedValue) || null
+      : null;
   }
 
   return (
@@ -53,13 +74,15 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         isMulti={isMulti}
         onChange={(selectedOption) => {
           if (isMulti) {
+            const handler = (props as CustomSelectMultiProps).onChange;
             if (Array.isArray(selectedOption)) {
-              onChange(selectedOption.map((opt) => opt.value));
+              handler(selectedOption.map((opt) => opt.value));
             } else {
-              onChange([]);
+              handler([]);
             }
           } else {
-            onChange((selectedOption as OptionType)?.value || "");
+            const handler = (props as CustomSelectSingleProps).onChange;
+            handler((selectedOption as OptionType)?.value || "");
           }
         }}
         placeholder={placeholder}
