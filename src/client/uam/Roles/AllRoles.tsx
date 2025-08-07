@@ -95,7 +95,7 @@ const AllRoles: React.FC = () => {
     delete: true,
   });
 
-  const { notify } = useNotification();
+  const { notify, confirm } = useNotification();
   useEffect(() => {
     const fetchPermissions = async () => {
       try {
@@ -121,8 +121,9 @@ const AllRoles: React.FC = () => {
     fetchPermissions();
   }, []);
 
-  function handleDelete(roleId: number) {
-    if (!window.confirm("Are you sure you want to delete this role?")) return;
+  async function handleDelete(roleId: number) {
+    const confirmed = await confirm("Are you sure you want to delete this role?");
+    if (!confirmed) return;
 
     axios
       .post(`https://backend-slqi.onrender.com/roles/${roleId}/delete`)
