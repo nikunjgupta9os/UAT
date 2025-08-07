@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Button from "../../ui/Button";
 import axios from "axios";
+import { useNotification } from "../../Notification/Notification";
 
 type ExpandedRowProps = {
   row: any;
@@ -41,42 +42,14 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
   const editValues = editStates[rowId] || {};
 
   // Permission state
-  type TabVisibility = {
-    edit: boolean;
-  };
 
-  const roleName = localStorage.getItem("userRole");
-  const [Visibility, setVisibility] = useState<TabVisibility>({
-    edit: false, // Default to false
-  });
 
-  useEffect(() => {
-    const fetchPermissions = async () => {
-      try {
-        const response = await axios.post(
-          "https://backend-slqi.onrender.com/api/permissions/permissionjson",
-          { roleName }
-        );
+  // const roleName = localStorage.getItem("userRole");
+ 
+  // console.log("Role Name:", roleName);
+ 
 
-        const pages = response.data?.pages;
-        const userTabs = pages?.["user-management"]; // Adjust this path based on your API structure
-
-        if (userTabs) {
-          setVisibility({
-            edit: userTabs?.tabs?.allTab?.showEditButton || false,
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching permissions:", error);
-        // Keep edit as false if permission fetch fails
-        setVisibility({
-          edit: false,
-        });
-      }
-    };
-
-    fetchPermissions();
-  }, [roleName]);
+  const { notify } = useNotification();
 
   // Filter visible keys
   const visibleDetailsKeys = detailsFields.filter(
@@ -126,12 +99,12 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
         try {
           data = JSON.parse(text);
         } catch (e) {
-          alert("Update failed: Invalid JSON from server");
+          notify("Update failed: Invalid JSON from server", "error");
           return;
         }
 
         if (data.success) {
-          alert("User updated successfully!");
+          notify("User updated successfully!", "success");
           setEditStates((prev) => {
             const updated = { ...prev };
             delete updated[rowId];
@@ -143,10 +116,10 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
             return newSet;
           });
         } else {
-          alert("Update failed: " + (data.message || "Unknown error"));
+          notify("Update failed: " + (data.message || "Unknown error"), "error");
         }
       } catch (err) {
-        alert("Update error: " + (err as Error).message);
+        notify("Update error: " + (err as Error).message, "error");
       }
     } else {
       // Entering edit mode
@@ -220,7 +193,7 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
               Additional Information
             </h4>
             {/* Show edit button only if both edit prop and Visibility.edit are true */}
-            {edit && Visibility.edit && (
+            {edit && (
               <div>
                 <Button onClick={handleEditToggle}>
                   {isEditing ? "Save" : "Edit"}
