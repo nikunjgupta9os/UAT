@@ -949,7 +949,6 @@ const AllExposureRequest: React.FC = () => {
           "approval_status",
           "created_at",
         ]}
-
         expandedRowConfig={expandedRowConfig}
         onUpdate={handleUpdate}
         className="mb-8"
