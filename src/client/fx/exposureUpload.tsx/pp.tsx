@@ -921,6 +921,7 @@ const AllExposureRequest: React.FC = () => {
       <NyneOSTable<ExposureRequest>
         data={data}
         filter={filteredData}
+        edit={true}
         columns={columns}
         defaultColumnVisibility={defaultVisibility}
         draggableColumns={[
@@ -948,6 +949,7 @@ const AllExposureRequest: React.FC = () => {
           "approval_status",
           "created_at",
         ]}
+
         expandedRowConfig={expandedRowConfig}
         onUpdate={handleUpdate}
         className="mb-8"
