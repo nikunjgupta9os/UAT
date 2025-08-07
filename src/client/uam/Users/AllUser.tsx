@@ -76,7 +76,7 @@ const AllUser: React.FC = () => {
 
   type TabVisibility = {
     // add:boolean,
-    // edit:boolean,
+    edit:boolean,
     delete: boolean;
     // approve:boolean,
     // reject:boolean,
@@ -87,6 +87,7 @@ const AllUser: React.FC = () => {
   const [Visibility, setVisibility] = useState<TabVisibility>({
     view: true,
     delete: true,
+    edit: true,
   });
   useEffect(() => {
     const fetchPermissions = async () => {
@@ -103,6 +104,7 @@ const AllUser: React.FC = () => {
           setVisibility({
             view: userTabs?.tabs?.allTab?.hasAccess || false,
             delete: userTabs?.tabs?.allTab?.showDeleteButton || false,
+            edit: userTabs?.tabs?.allTab?.showEditButton || false,
           });
         }
       } catch (error) {
@@ -394,7 +396,7 @@ const AllUser: React.FC = () => {
         cell: (info) => {
           const rawStatus = info.getValue();
 
-           console.log("Status Cell:", rawStatus);
+          //  console.log("Status Cell:", rawStatus);
 
           if (!rawStatus || typeof rawStatus !== "string") {
             return (
@@ -553,8 +555,9 @@ const AllUser: React.FC = () => {
     actions: true,
   };
 
-  const [columnVisibility, setColumnVisibility] = useState(defaultVisibility);
 
+  const [columnVisibility, setColumnVisibility] = useState(defaultVisibility);
+  
   const table = useReactTable({
     data: filteredData,
     columns,
@@ -854,10 +857,11 @@ const AllUser: React.FC = () => {
                         </td>
                       ))}
                     </tr>
+                    
                     {expandedRows.has(row.id) && (
                       <ExpandedRow
                         row={row}
-                        edit={true}
+                        edit={Visibility.edit}
                         columnVisibility={columnVisibility}
                         editStates={editStates}
                         setEditStates={setEditStates}
