@@ -48,7 +48,7 @@ const AssignPermission: React.FC = () => {
         </div>
       </div>
 
-      {selectedRole && <UpperTable roleName={selectedRole} />}
+      {selectedRole && <UpperTable roleName={selectedRole}/>}
     </div>
   );
 };
