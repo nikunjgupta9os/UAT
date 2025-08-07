@@ -10,11 +10,13 @@ import type { ColumnDef } from "@tanstack/react-table";
 import Layout from "../common/Layout";
 import CustomSelect from "../common/SearchSelect";
 import Button from "../ui/Button";
+import Pagination from "../ui/Pagination";
 import { useNavigate } from "react-router-dom";
 
 import {
   flexRender,
   getCoreRowModel,
+  getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 
@@ -244,6 +246,16 @@ const ExposureSelection = () => {
   const [selectedRowIds, setSelectedRowIds] = useState<Record<string, boolean>>(
     {}
   );
+
+  const [filters, setFilters] = useState({
+    businessUnit: "",
+    currency: "",
+    type: "",
+    bank: "",
+    maturityMonths: "",
+    settlementDate: "",
+  });
+
   //   const roleName = localStorage.getItem("userRole");
   //     const [Visibility, setVisibility] = useState<TabVisibility>({
   //       view: true,
@@ -258,8 +270,50 @@ const ExposureSelection = () => {
     return ["All", ...Array.from(options)];
   }, [data]);
 
+  const currencySelectOptions = useMemo(() => {
+    const options = new Set<string>();
+    data.forEach((item) => {
+      if (item.currency) options.add(item.currency);
+    });
+    return ["All", ...Array.from(options)];
+  }, [data]);
+
+  const entitySelectOptions = useMemo(() => {
+    const options = new Set<string>();
+    data.forEach((item) => {
+      if (item.entity) options.add(item.entity);
+    });
+    return ["All", ...Array.from(options)];
+  }, [data]);
+
+  const bankOptions = useMemo(() => {
+    const options = new Set<string>();
+    data.forEach((item) => {
+      // Assuming bank data comes from entity or company_code field
+      if (item.company_code) options.add(item.company_code);
+    });
+    return ["All", ...Array.from(options)];
+  }, [data]);
+
   const filteredData = useMemo(() => {
     let result = [...data];
+
+    if (searchTerm.trim()) {
+      const lowerSearch = searchTerm.toLowerCase();
+      result = result.filter((item) => {
+        return Object.values(item)
+          .filter(Boolean)
+          .some((val) => String(val).toLowerCase().includes(lowerSearch));
+      });
+    }
+
+    if (statusFilter !== "All") {
+      result = result.filter(
+        (item) =>
+          item.approval_status &&
+          item.approval_status.toLowerCase() === statusFilter.toLowerCase()
+      );
+    }
 
     // Apply columnFilters (from CustomSelects)
     columnFilters.forEach((filter) => {
@@ -273,41 +327,26 @@ const ExposureSelection = () => {
       }
     });
 
-    // Apply searchTerm
-    if (searchTerm.trim()) {
-      const lowerSearch = searchTerm.toLowerCase();
-      result = result.filter((item) =>
-        Object.values(item)
-          .filter(Boolean)
-          .some((val) => String(val).toLowerCase().includes(lowerSearch))
+    // Apply filters from the filters state (e.g., settlementDate, bank)
+    if (filters.settlementDate) {
+      result = result.filter(
+        (item) =>
+          item.value_date &&
+          new Date(item.value_date).toISOString().slice(0, 10) === filters.settlementDate
+      );
+    }
+    if (filters.bank) {
+      result = result.filter(
+        (item) =>
+          (item.company_code || "")
+            .toString()
+            .toLowerCase()
+            .includes(filters.bank.toLowerCase())
       );
     }
 
-    // Apply statusFilter
-    if (statusFilter !== "All") {
-      result = result.filter((item) => item.status === statusFilter);
-    }
-
-    // Apply filters from the filters state (e.g., settlementDate, bank)
-    // if (filters.settlementDate) {
-    //   result = result.filter(
-    //     (item) =>
-    //       item.value_date &&
-    //       new Date(item.value_date).toISOString().slice(0, 10) === filters.settlementDate
-    //   );
-    // }
-    // if (filters.bank) {
-    //   result = result.filter(
-    //     (item) =>
-    //       (item.bank || "")
-    //         .toString()
-    //         .toLowerCase()
-    //         .includes(filters.bank.toLowerCase())
-    //   );
-    // }
-
     return result;
-  }, [data, searchTerm, statusFilter, columnFilters]);
+  }, [data, searchTerm, statusFilter, columnFilters, filters.settlementDate, filters.bank]);
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
@@ -866,6 +905,12 @@ const ExposureSelection = () => {
     onColumnOrderChange: setColumnOrder,
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: 10,
+      },
+    },
     state: {
       columnOrder,
       rowSelection: selectedRowIds,
@@ -874,13 +919,6 @@ const ExposureSelection = () => {
   });
 
   type OptionType = { label: string; value: string };
-  const [filters, setFilters] = useState({
-    businessUnit: "",
-    currency: "",
-    type: "",
-    bank: "",
-    maturityMonths: "",
-  });
 
   //   const entityOptions: OptionType[] = [
   //     { label: "Bank A", value: "bankA" },
@@ -938,6 +976,16 @@ const ExposureSelection = () => {
       },
     });
   };
+
+  // Calculate pagination values
+  const pagination = table.getState().pagination;
+  const totalItems = filteredData.length;
+  const startIndex = pagination.pageIndex * pagination.pageSize + 1;
+  const endIndex = Math.min(
+    (pagination.pageIndex + 1) * pagination.pageSize,
+    totalItems
+  );
+  const currentPageItems = table.getRowModel().rows.length;
 
   return (
     <Layout title="Exposure Selection">
@@ -1037,8 +1085,9 @@ const ExposureSelection = () => {
             </label>
             <input
               type="date"
-              className="max-h-[36px] border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              //   value={filters.settlementDate || ""}
+              className="max-h-[36px] border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-100 cursor-not-allowed"
+              value={new Date().toISOString().split('T')[0]}
+              disabled={true}
               onChange={(e: React.ChangeEvent<HTMLInputElement>): void =>
                 handleFilterChange("settlementDate", e.target.value)
               }
@@ -1054,7 +1103,7 @@ const ExposureSelection = () => {
             }
             placeholder="Select bank"
             isClearable={false}
-            isDisabled={false}
+            isDisabled={true}
           />
         </div>
 
@@ -1066,7 +1115,9 @@ const ExposureSelection = () => {
             <Button>Rollover</Button>
           </div>
           <div className="w-15rem">
-            <Button>Cancellation</Button>
+            <Button onClick={() => navigate("/fx-wizard")}>
+              Cancellation
+            </Button>
           </div>
         </div>
 
@@ -1089,7 +1140,7 @@ const ExposureSelection = () => {
                       return (
                         <th
                           key={header.id}
-                          className="px-6 py-4 text-left text-xs font-semibold text-header-color uppercase tracking-wider border-b border-border sticky top-0 bg-secondary-color z-10"
+                          className="px-6 py-4 text-left text-xs font-semibold text-header-color uppercase tracking-wider border-b border-border sticky top-0 bg-secondary-color"
                           style={{ width: header.getSize() }}
                         >
                           {isDraggable ? (
@@ -1231,6 +1282,15 @@ const ExposureSelection = () => {
             </table>
           </DndContext>
         </div>
+
+        {/* Add Pagination Component */}
+        <Pagination
+          table={table}
+          totalItems={totalItems}
+          currentPageItems={currentPageItems}
+          startIndex={startIndex}
+          endIndex={endIndex}
+        />
       </div>
     </Layout>
   );
