@@ -9,7 +9,6 @@ import {
   FileText,
   X,
 } from "lucide-react";
-// import Layout from "../../common/Layout";
 import axios from "axios";
 import { useNotification } from "../../Notification/Notification.tsx";
 import {
@@ -21,9 +20,8 @@ import {
   templates,
   formatFileSize,
 } from "./function.ts";
-
+import * as XLSX from 'xlsx';
 import PreviewTable from "./PreviewTable.tsx";
-// import { set } from "date-fns";
 
 interface UploadedFile {
   id: string;
@@ -68,11 +66,22 @@ const UploadFile: React.FC = () => {
   const [showPreview, setShowPreview] = React.useState(false);
   const [previewHeaders, setPreviewHeaders] = React.useState<string[]>([]);
   const [dragActive, setDragActive] = React.useState(false);
-  const [previewStates, setPreviewStates] = React.useState<Record<string, {
-    data: string[][];
-    headers: string[];
-    show: boolean;
-  }>>({});
+  const [previewStates, setPreviewStates] = React.useState<
+    Record<
+      string,
+      {
+        data: string[][];
+        headers: string[];
+        show: boolean;
+        validationErrors?: Array<{
+          description: string;
+          row?: number;
+          column?: number;
+          currentValue?: string;
+        }>;
+      }
+    >
+  >({});
 
   const handleDrag = (event: React.DragEvent) => {
     event.preventDefault();
@@ -124,11 +133,13 @@ const UploadFile: React.FC = () => {
   };
 
   const handleRemoveRow = (index: number) => {
-    setPreviewStates(prev => {
+    setPreviewStates((prev) => {
       const updated = { ...prev };
-      Object.keys(updated).forEach(fileId => {
+      Object.keys(updated).forEach((fileId) => {
         if (updated[fileId].show) {
-          updated[fileId].data = updated[fileId].data.filter((_, i) => i !== index);
+          updated[fileId].data = updated[fileId].data.filter(
+            (_, i) => i !== index
+          );
           // Validate after removal
           const validationErrors = validatePreviewData(
             updated[fileId].data,
@@ -145,12 +156,56 @@ const UploadFile: React.FC = () => {
     });
   };
 
+  const parseCSV = (text: string): string[][] => {
+    const lines = text.split("\n").filter((line) => line.trim());
+    return lines.map((line) => {
+      const result: string[] = [];
+      let current = "";
+      let inQuotes = false;
+
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === "," && !inQuotes) {
+          result.push(current.trim().replace(/^"|"$/g, ""));
+          current = "";
+        } else {
+          current += char;
+        }
+      }
+      result.push(current.trim().replace(/^"|"$/g, ""));
+      return result;
+    });
+  };
+
+  const parseExcel = (arrayBuffer: ArrayBuffer): string[][] => {
+    try {
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      
+      const data: any[][] = XLSX.utils.sheet_to_json(worksheet, { 
+        header: 1,
+        defval: '',
+        raw: false
+      });
+      
+      return data
+        .filter(row => row.some(cell => cell !== '' && cell !== null && cell !== undefined))
+        .map(row => row.map(cell => String(cell || '').trim()));
+    } catch (error) {
+      console.error('Error parsing Excel file:', error);
+      throw new Error('Failed to parse Excel file');
+    }
+  };
+
   const handleUpdateRow = (
     rowIndex: number,
     updatedData: Record<string, any>,
     fileId: string
   ) => {
-    setPreviewStates(prev => {
+    setPreviewStates((prev) => {
       const updated = { ...prev };
       if (updated[fileId]) {
         const newData = [...updated[fileId].data];
@@ -162,6 +217,21 @@ const UploadFile: React.FC = () => {
             }
           });
           updated[fileId].data = newData;
+
+          // Re-validate after update
+          const templateType = getTemplateTypeFromSelected(selectedType);
+          const validationErrors = validatePreviewData(
+            newData,
+            updated[fileId].headers,
+            templateType
+          );
+          
+          updated[fileId].validationErrors = validationErrors;
+
+          // Update file status if issues are resolved
+          if (validationErrors.length === 0) {
+            handleIssuesResolved(fileId);
+          }
         }
       }
       return updated;
@@ -233,11 +303,10 @@ const UploadFile: React.FC = () => {
 
     setFiles((prev) => [...prev, ...newFiles]);
     notify(`Processing ${fileList.length} file(s)...`, "info");
+
     const processFile = async (file: File, fileData: UploadedFile) => {
       try {
-        // Map selectedType to template type for validation
         const templateType = getTemplateTypeFromSelected(selectedType);
-
         const validation = await validateFileContent(file, templateType);
 
         if (!validation || !validation.status) {
@@ -309,62 +378,100 @@ const UploadFile: React.FC = () => {
     setFiles((prev) => prev.filter((file) => file.id !== id));
 
   const handlePreviewFile = (uploadedFile: UploadedFile) => {
+    // Check if preview is already showing for this file
+    if (previewStates[uploadedFile.id]?.show) {
+      // Close the preview
+      setPreviewStates((prev) => ({
+        ...prev,
+        [uploadedFile.id]: {
+          ...prev[uploadedFile.id],
+          show: false,
+        },
+      }));
+      return;
+    }
+
     if (!uploadedFile.file) {
       console.error("No file found for preview");
       return;
     }
+
+    const fileName = uploadedFile.file.name.toLowerCase();
+    const isExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
+
     const reader = new FileReader();
+    
     reader.onload = (e) => {
       try {
-        const text = e.target?.result as string;
-        if (!text) return;
-        const lines = text.split("\n").filter((line) => line.trim());
-        if (lines.length === 0) return;
-        const parseCSVLine = (line: string): string[] => {
-          const result: string[] = [];
-          let current = "";
-          let inQuotes = false;
-          for (let i = 0; i < line.length; i++) {
-            const char = line[i];
-            if (char === '"') {
-              inQuotes = !inQuotes;
-            } else if (char === "," && !inQuotes) {
-              result.push(current.trim().replace(/^"|"$/g, ""));
-              current = "";
-            } else {
-              current += char;
-            }
-          }
-          result.push(current.trim().replace(/^"|"$/g, ""));
-          return result;
-        };
-        const rows = lines.map(parseCSVLine);
+        const fileData = e.target?.result;
+        if (!fileData) return;
+
+        let rows: string[][];
+
+        if (isExcel) {
+          // Handle Excel files
+          rows = parseExcel(fileData as ArrayBuffer);
+        } else {
+          // Handle CSV files - Fix this part
+          const text = fileData as string;
+          rows = parseCSV(text); // parseCSV already handles the full text and returns string[][]
+        }
+
+        if (rows.length === 0) return;
+
         const [headerRow, ...dataRows] = rows;
-        setPreviewStates(prev => ({
+        
+        // Validate the preview data
+        const templateType = getTemplateTypeFromSelected(selectedType);
+        const validationErrors = validatePreviewData(
+          dataRows.slice(0, 50), // Limit to first 50 rows for preview
+          headerRow || [],
+          templateType
+        );
+
+        setPreviewStates((prev) => ({
           ...prev,
           [uploadedFile.id]: {
             headers: headerRow || [],
-            data: dataRows.slice(0, 50),
+            data: dataRows.slice(0, 50), // Limit to first 50 rows for performance
             show: true,
-          }
+            validationErrors: validationErrors
+          },
         }));
+
+        // Show validation status
+        if (validationErrors.length > 0) {
+          notify(`Preview loaded with ${validationErrors.length} validation issues`, "warning");
+        } else {
+          notify("Preview loaded successfully", "success");
+        }
+
       } catch (error) {
         console.error("Error parsing file for preview:", error);
+        notify("Error parsing file for preview. Please check file format.", "error");
       }
     };
+
     reader.onerror = () => {
       console.error("Error reading file for preview");
+      notify("Error reading file for preview", "error");
     };
-    reader.readAsText(uploadedFile.file);
+
+    // Read file based on type
+    if (isExcel) {
+      reader.readAsArrayBuffer(uploadedFile.file);
+    } else {
+      reader.readAsText(uploadedFile.file);
+    }
   };
 
   const convertToCSVBlob = (headers: string[], rows: string[][]): Blob => {
     const csvContent = [headers, ...rows]
       .map((row) =>
-        row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(",")
+        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
       )
       .join("\n");
-    return new Blob([csvContent], { type: "text/csv" });
+    return new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   };
 
   const handleSetManually = async () => {
@@ -373,29 +480,85 @@ const UploadFile: React.FC = () => {
       return;
     }
 
-    // For each file, use edited preview if available
+    // Check if there are any files with validation errors
+    const filesWithErrors = files.filter(file => 
+      file.validationErrors && file.validationErrors.length > 0
+    );
+
+    if (filesWithErrors.length > 0) {
+      notify("Please resolve all validation errors before submitting.", "error");
+      return;
+    }
+
+    notify("Uploading files...", "info");
+
+    let successCount = 0;
+    let errorCount = 0;
+
     for (const file of files) {
-      let blob: Blob | File | undefined;
-      let fileName: string;
-      if ((file as any).previewEdited && (file as any).previewHeaders && (file as any).previewData) {
-        blob = convertToCSVBlob((file as any).previewHeaders, (file as any).previewData);
-        fileName = `${file.name.replace(/\.csv$/, '')}_modified.csv`;
-      } else if (file.file) {
-        blob = file.file;
-        fileName = file.name;
-      } else {
-        continue;
-      }
-      const formData = new FormData();
-      formData.append(
-        selectedType === "PO"
-          ? "input_purchase_orders"
-          : selectedType === "LC"
-          ? "input_letters_of_credit"
-          : "input_sales_orders",
-        new File([blob], fileName, { type: "text/csv" })
-      );
       try {
+        let blob: Blob | File | undefined;
+        let fileName: string;
+
+        // Check if file is Excel format
+        const isExcelFile = file.name.toLowerCase().endsWith('.xlsx') || 
+                           file.name.toLowerCase().endsWith('.xls');
+
+        // Use edited preview data if available
+        if (
+          (file as any).previewEdited &&
+          previewStates[file.id]?.headers &&
+          previewStates[file.id]?.data
+        ) {
+          // Convert preview data to CSV
+          blob = convertToCSVBlob(
+            previewStates[file.id].headers,
+            previewStates[file.id].data
+          );
+          fileName = `${file.name.replace(/\.(csv|xlsx|xls)$/i, "")}_modified.csv`;
+        } else if (isExcelFile && file.file) {
+          // Convert Excel file to CSV for upload
+          try {
+            const arrayBuffer = await file.file.arrayBuffer();
+            const excelData = parseExcel(arrayBuffer);
+            
+            if (excelData.length === 0) {
+              throw new Error("Excel file appears to be empty");
+            }
+
+            const [headers, ...rows] = excelData;
+            blob = convertToCSVBlob(headers, rows);
+            fileName = `${file.name.replace(/\.(xlsx|xls)$/i, "")}_converted.csv`;
+            
+            notify(`Converting ${file.name} to CSV format...`, "info");
+          } catch (excelError) {
+            errorCount++;
+            console.error(`Error converting Excel file ${file.name}:`, excelError);
+            notify(`✗ Failed to convert Excel file ${file.name}: ${excelError instanceof Error ? excelError.message : 'Unknown error'}`, "error");
+            continue;
+          }
+        } else if (file.file) {
+          // Use original file (CSV)
+          blob = file.file;
+          fileName = file.name;
+        } else {
+          errorCount++;
+          notify(`✗ No file data found for ${file.name}`, "error");
+          continue;
+        }
+
+        const formData = new FormData();
+        formData.append(
+          selectedType === "PO"
+            ? "input_purchase_orders"
+            : selectedType === "LC"
+            ? "input_letters_of_credit"
+            : "input_sales_orders",
+          new File([blob], fileName, { type: "text/csv" }) // Always set type as CSV
+        );
+
+        notify(`Uploading ${fileName}...`, "info");
+
         const res = await axios.post(
           "https://backend-slqi.onrender.com/api/exposureUpload/batch-upload",
           formData,
@@ -403,48 +566,80 @@ const UploadFile: React.FC = () => {
             headers: {
               "Content-Type": "multipart/form-data",
             },
+            timeout: 30000, // 30 second timeout
           }
         );
-        if (res.data.results[0]?.success) {
-          notify(`Data for ${file.name} has been successfully sent to the server`, "success");
-           setFiles([]);
-        } else if (res.data.results && Array.isArray(res.data.results)) {
-          const errorMessages = res.data.results
-            .filter((r) => !r.success)
-            .map((r) => {
-              if (r.error && r.error.includes('duplicate key value violates unique constraint')) {
-                const match = r.error.match(/constraint "(.+?)"/);
-                const constraint = match ? match[1] : "unknown constraint";
-                return `Duplicate data found in file '${r.filename}'. Constraint violated: ${constraint}`;
-              }
-              return `Error in file '${r.filename}': ${r.error}`;
-            })
-            .join("\n");
-          notify(errorMessages, "error");
+
+        if (res.data.results && res.data.results[0]?.success) {
+          successCount++;
+          notify(`✓ ${file.name} uploaded successfully`, "success");
+        } else if (res.data.results && res.data.results[0]) {
+          errorCount++;
+          const errorMsg = res.data.results[0]?.error || "Unknown error";
+          
+          // Handle specific error types
+          if (errorMsg.includes("duplicate key")) {
+            notify(`✗ Upload failed for ${file.name}: Duplicate data found`, "error");
+          } else if (errorMsg.includes("validation")) {
+            notify(`✗ Upload failed for ${file.name}: Data validation error`, "error");
+          } else {
+            notify(`✗ Upload failed for ${file.name}: ${errorMsg}`, "error");
+          }
         } else {
-          notify(`Upload failed for ${file.name}: ` + res.data.results[0]?.error, "error");
+          errorCount++;
+          notify(`✗ Upload failed for ${file.name}: Invalid response from server`, "error");
         }
+
       } catch (err) {
-        console.error(err);
-        notify(`Server error occurred during upload for ${file.name}`, "error");
+        errorCount++;
+        console.error(`Error uploading ${file.name}:`, err);
+        
+        if (axios.isAxiosError(err)) {
+          if (err.code === 'ECONNABORTED') {
+            notify(`✗ Upload timeout for ${file.name}. Please try again.`, "error");
+          } else if (err.response?.status === 413) {
+            notify(`✗ File ${file.name} is too large`, "error");
+          } else if (err.response?.status >= 500) {
+            notify(`✗ Server error occurred during upload for ${file.name}`, "error");
+          } else {
+            notify(`✗ Network error occurred during upload for ${file.name}`, "error");
+          }
+        } else {
+          notify(`✗ Unexpected error occurred during upload for ${file.name}`, "error");
+        }
       }
+    }
+
+    // Final summary
+    if (successCount > 0 && errorCount === 0) {
+      notify(`🎉 All ${successCount} file(s) uploaded successfully!`, "success");
+      setFiles([]);
+      setPreviewStates({});
+    } else if (successCount > 0) {
+      notify(`⚠️ ${successCount} file(s) uploaded successfully, ${errorCount} failed`, "warning");
+    } else if (errorCount > 0) {
+      notify(`❌ All ${errorCount} file(s) failed to upload`, "error");
     }
   };
 
   const handleSavePreview = (fileId: string) => {
-    // Save the edited preview data to the file state
-    setFiles(prevFiles => prevFiles.map(file => {
-      if (file.id === fileId && previewStates[fileId]) {
-        return {
-          ...file,
-          previewHeaders: previewStates[fileId].headers,
-          previewData: previewStates[fileId].data,
-          previewEdited: true,
-        };
-      }
-      return file;
-    }));
-    notify(`Edits for ${files.find(f => f.id === fileId)?.name || 'file'} saved.`, "success");
+    setFiles((prevFiles) =>
+      prevFiles.map((file) => {
+        if (file.id === fileId && previewStates[fileId]) {
+          return {
+            ...file,
+            previewHeaders: previewStates[fileId].headers,
+            previewData: previewStates[fileId].data,
+            previewEdited: true,
+          };
+        }
+        return file;
+      })
+    );
+    notify(
+      `Edits for ${files.find((f) => f.id === fileId)?.name || "file"} saved.`,
+      "success"
+    );
   };
 
   return (
@@ -638,7 +833,7 @@ const UploadFile: React.FC = () => {
                           <AlertCircle className="w-5 h-5 text-red-500" />
                         )}
                         {file.status === "processing" && (
-                          <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full" />
+                          <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
                         )}
                         {file.status === "pending" && (
                           <FileText className="w-5 h-5 text-gray-400" />
@@ -680,13 +875,18 @@ const UploadFile: React.FC = () => {
                               <div className="flex items-center space-x-1 mb-1">
                                 <AlertCircle className="w-3 h-3" />
                                 <span className="font-medium">
-                                  Validation Issues:
+                                  Validation Issues ({file.validationErrors.length}):
                                 </span>
                               </div>
-                              <ul className="list-disc list-inside space-y-1 ml-4">
-                                {file.validationErrors.map((error, index) => (
+                              <ul className="list-disc list-inside space-y-1 ml-4 max-h-20 overflow-y-auto">
+                                {file.validationErrors.slice(0, 3).map((error, index) => (
                                   <li key={index}>{error.description}</li>
                                 ))}
+                                {file.validationErrors.length > 3 && (
+                                  <li className="text-gray-500">
+                                    ...and {file.validationErrors.length - 3} more issues
+                                  </li>
+                                )}
                               </ul>
                             </div>
                           )}
@@ -703,16 +903,20 @@ const UploadFile: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      {(file.status === "success" || file.status === "error") && file.file && (
-                        <button
-                          onClick={() => handlePreviewFile(file)}
-                          className="p-1 text-blue-600 hover:text-blue-800"
-                          title="Preview Data"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                      )}
-                      {/* Save button for previewed file */}
+                      {(file.status === "success" || file.status === "error") &&
+                        file.file && (
+                          <button
+                            onClick={() => handlePreviewFile(file)}
+                            className={`p-1 transition-colors ${
+                              previewStates[file.id]?.show 
+                                ? "text-blue-800 bg-blue-100 hover:bg-blue-200" 
+                                : "text-blue-600 hover:text-blue-800"
+                            }`}
+                            title={previewStates[file.id]?.show ? "Close Preview" : "Preview Data"}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        )}
                       {previewStates[file.id]?.show && (
                         <button
                           onClick={() => handleSavePreview(file.id)}
@@ -725,7 +929,7 @@ const UploadFile: React.FC = () => {
                       <button
                         onClick={() => {
                           removeFile(file.id);
-                          setPreviewStates(prev => {
+                          setPreviewStates((prev) => {
                             const updated = { ...prev };
                             delete updated[file.id];
                             return updated;
@@ -738,15 +942,27 @@ const UploadFile: React.FC = () => {
                       </button>
                     </div>
                   </div>
+                  
                   {/* Preview for this file */}
-                  {previewStates[file.id]?.show && previewStates[file.id]?.data.length > 0 && (
-                    <PreviewTable
-                      headers={previewStates[file.id].headers}
-                      rows={previewStates[file.id].data}
-                      onRemoveRow={handleRemoveRow}
-                      onUpdateRow={(rowIndex, updatedData) => handleUpdateRow(rowIndex, updatedData, file.id)}
-                    />
-                  )}
+                  {previewStates[file.id]?.show &&
+                    previewStates[file.id]?.data.length > 0 && (
+                      <div className="mt-4">
+                        {previewStates[file.id]?.validationErrors && 
+                         previewStates[file.id].validationErrors.length > 0 && (
+                          <div className="mb-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-600">
+                            Preview validation issues: {previewStates[file.id].validationErrors.length} found
+                          </div>
+                        )}
+                        <PreviewTable
+                          headers={previewStates[file.id].headers}
+                          rows={previewStates[file.id].data}
+                          onRemoveRow={handleRemoveRow}
+                          onUpdateRow={(rowIndex, updatedData) =>
+                            handleUpdateRow(rowIndex, updatedData, file.id)
+                          }
+                        />
+                      </div>
+                    )}
                 </div>
               ))}
             </div>
@@ -758,7 +974,13 @@ const UploadFile: React.FC = () => {
             headers={previewHeaders}
             rows={previewData}
             onRemoveRow={handleRemoveRow}
-            onUpdateRow={(rowIndex, updatedData) => handleUpdateRow(rowIndex, updatedData, /* fileId not available here */ "preview")}
+            onUpdateRow={(rowIndex, updatedData) =>
+              handleUpdateRow(
+                rowIndex,
+                updatedData,
+                /* fileId not available here */ "preview"
+              )
+            }
           />
         )}
 
