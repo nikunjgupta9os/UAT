@@ -152,7 +152,7 @@ const HierarchicalTree = () => {
   });
   const [loading, setLoading] = useState(true); // 👈 Loading state
 
-  const { notify } = useNotification();
+  const { notify, confirm } = useNotification();
   const [treeData, setTreeData] = useState<TreeNodeType | null>();
   const lineColors = [
     "border-l-blue-600",
@@ -986,7 +986,8 @@ const HierarchicalTree = () => {
   };
 
   const handleDelete = async (node: TreeNodeType) => {
-    if (!window.confirm(`Delete ${node.name} and all its children?`)) return;
+    const confirmed = await confirm(`Delete ${node.name} and all its children?`);
+    if (!confirmed) return;
 
     try {
       const response = await fetch(
