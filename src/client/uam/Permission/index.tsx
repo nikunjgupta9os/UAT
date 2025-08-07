@@ -6,7 +6,7 @@ import axios from "axios";
 import Layout from "../../common/Layout";
 import AssignPermission from "./AssignPermissions";
 import AwaitingPermission from "./AwaitingPermission";
-
+import AllPermission from "./AllPermission";
 const useTabNavigation = (initialTab: string = "all") => {
   const [activeTab, setActiveTab] = useState(initialTab);
 
@@ -77,7 +77,12 @@ const Permission = () => {
     },
     {
       id: "Awaiting",
-      label: "All Users",
+      label: "Pending Permissions",
+      visibility: Visibility.allTab,
+    },
+    {
+      id: "AllPermission",
+      label: "All Permissions",
       visibility: Visibility.allTab,
     },
   ];
@@ -106,6 +111,8 @@ const Permission = () => {
         return <AssignPermission />;
       case "Awaiting":
         return <AwaitingPermission />;
+      case "AllPermission":
+        return <AllPermission />;
       default:
         return <AssignPermission />;
     }
