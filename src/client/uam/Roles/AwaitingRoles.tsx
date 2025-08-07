@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronUp, Download } from "lucide-react";
-import PaginationFooter from "../../ui/PaginationFooter";
+import Pagination from "../../ui/Pagination";
 import LoadingSpinner from '../../ui/LoadingSpinner';
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
@@ -550,13 +550,28 @@ const AwaitingApproval: React.FC = () => {
     columns,
     onColumnOrderChange: setColumnOrder,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    getPaginationRowModel: getPaginationRowModel(), // Keep this
     onColumnVisibilityChange: setColumnVisibility,
+    initialState: {
+      pagination: {
+        pageSize: 10, // Add default page size
+      },
+    },
     state: {
       columnOrder,
       columnVisibility,
     },
+    enableRowSelection: true, // Add this for row selection
   });
+  const pagination = table.getState().pagination;
+  const totalItems = filteredData.length;
+  const startIndex = pagination.pageIndex * pagination.pageSize + 1;
+  const endIndex = Math.min(
+    (pagination.pageIndex + 1) * pagination.pageSize,
+    totalItems
+  );
+  const currentPageItems = table.getRowModel().rows.length;
+
   if (loading) return <LoadingSpinner />;
 
   return (
@@ -737,10 +752,10 @@ const AwaitingApproval: React.FC = () => {
                           </svg>
                         </div>
                         <p className="text-lg font-medium text-gray-900 mb-1">
-                          No roles found
+                          No users found
                         </p>
                         <p className="text-sm text-gray-500">
-                          There are no roles to display at the moment.
+                          There are no users to display at the moment.
                         </p>
                       </div>
                     </td>
@@ -773,6 +788,7 @@ const AwaitingApproval: React.FC = () => {
                       {expandedRows.has(row.id) && (
                         <ExpandedRow
                           row={row}
+                          edit={false}
                           columnVisibility={columnVisibility}
                           editStates={editStates}
                           setEditStates={setEditStates}
@@ -782,7 +798,7 @@ const AwaitingApproval: React.FC = () => {
                           visibleColumnCount={
                             table.getVisibleLeafColumns().length
                           }
-                          editableKeys={["address", "mobile"]}
+                          // editableKeys={["address", "mobile"]}
                           detailsFields={[
                             // "Role ID",
                             "name",
@@ -804,9 +820,16 @@ const AwaitingApproval: React.FC = () => {
                 )}
               </tbody>
             </table>
-            <PaginationFooter table={table} />
+            {/* <PaginationFooter table={table} /> */}
           </div>
         </div>
+        <Pagination
+          table={table}
+          totalItems={totalItems}
+          currentPageItems={currentPageItems}
+          startIndex={startIndex}
+          endIndex={endIndex}
+        />
       </div>
     </>
   );
