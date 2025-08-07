@@ -74,6 +74,7 @@ function ExpandedRow<T extends EditableRowData>({
 }: ExpandedRowProps<T>) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValues, setEditValues] = useState<Partial<T>>({});
+  const { notify } = useNotification();
 
   const handleChange = (key: keyof T, value: any) => {
     setEditValues((prev) => ({
@@ -99,18 +100,58 @@ function ExpandedRow<T extends EditableRowData>({
         setIsEditing(false);
         return;
       }
+      
+      try {
+        // Prepare the payload with changed fields and requested_by
+        const payload = {
+          ...changedFields,
+          requested_by: localStorage.getItem("userEmail") || "user@email.com"
+        };
+        console.log("Sending update payload:", payload);
+
+        // Make API call to update the exposure
+        const response = await axios.post(
+          `https://backend-slqi.onrender.com/api/exposureUpload/${row.original.exposure_header_id}/edit`,
+          payload,
+          {
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        console.log("Update response:", response.data);
+
+        if (response.data.success || response.status === 200) {
+          // Update the original row data
+          Object.assign(row.original, changedFields);
+          setIsEditing(false);
+          
+          // Show success notification
+          notify("Changes saved successfully", "success");
+        } else {
+          throw new Error(response.data.message || "Update failed");
+        }
+      } catch (error) {
+        console.error("Error updating exposure:", error);
+        
+        // Show error notification
+        notify("Failed to save changes. Please try again.", "error");
+        
+        // Don't exit edit mode on error
+        return;
+      }
+      
+      // Legacy fallback for onUpdate prop
       if (onUpdate) {
         const success = await onUpdate(
           row.original.exposure_header_id,
           changedFields
-        ); // Changed from id to exposure_header_id
+        );
         if (success) {
-          // Update the original row data
           Object.assign(row.original, changedFields);
           setIsEditing(false);
         }
-      } else {
-        setIsEditing(false);
       }
     } else {
       setEditValues({ ...row.original });
