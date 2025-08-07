@@ -3,7 +3,7 @@ import {
   ChevronUp,
   Download,
 } from "lucide-react";
-import PaginationFooter from "../../ui/PaginationFooter";
+import Pagination from "../../ui/Pagination";
 import { exportToExcel } from "../../ui/exportToExcel";
 // import Button from "../../ui/Button";
 import LoadingSpinner from "../../ui/LoadingSpinner";
@@ -683,9 +683,20 @@ const ApprovedUser: React.FC = () => {
                 )}
               </tbody>
             </table>
-            <PaginationFooter table={table} />
           </div>
         </div>
+
+        {/* Pagination Component */}
+        <Pagination
+          table={table}
+          totalItems={filteredData.length}
+          currentPageItems={table.getRowModel().rows.length}
+          startIndex={table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}
+          endIndex={Math.min(
+            (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+            filteredData.length
+          )}
+        />
       </div>
     </>
   );
