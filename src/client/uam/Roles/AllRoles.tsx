@@ -749,7 +749,7 @@ const AllRoles: React.FC = () => {
                           No Roles found
                         </p>
                         <p className="text-sm text-primary">
-                          There are no users to display at the moment.
+                          There are no role to display at the moment.
                         </p>
                       </div>
                     </td>
