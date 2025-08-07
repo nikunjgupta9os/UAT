@@ -1,4 +1,3 @@
-
 import React from "react";
 import Select from "react-select";
 
@@ -10,14 +9,15 @@ type OptionType = {
 interface CustomSelectProps {
   label: string;
   options: OptionType[];
-  selectedValue?: string;
-  onChange: (value: string) => void;
+  selectedValue?: string | string[];
+  onChange: (value: string | string[]) => void;
   placeholder?: string;
   isDisabled?: boolean;
   isClearable?: boolean;
   isRequired?: boolean;
   isSearchable?: boolean;
   menuPlacement?: "auto" | "top" | "bottom";
+  isMulti?: boolean;
 }
 
 const CustomSelect: React.FC<CustomSelectProps> = ({
@@ -31,9 +31,14 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
   isSearchable = true,
   isRequired = false,
   menuPlacement = "auto",
+  isMulti = false,
 }) => {
-  // Find the selected option or return null if not found (which will show placeholder)
-  const selectedOption = selectedValue ? options.find((opt) => opt.value === selectedValue) : null;
+  let selectedOption: OptionType | OptionType[] | null = null;
+  if (isMulti && Array.isArray(selectedValue)) {
+    selectedOption = options.filter((opt) => selectedValue.includes(opt.value));
+  } else if (!isMulti && typeof selectedValue === 'string') {
+    selectedOption = options.find((opt) => opt.value === selectedValue) || null;
+  }
 
   return (
     <div className="w-full">
@@ -41,13 +46,22 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         {label}
       </label>
       <Select
-        className="w-full text-sm rounded z-39"
+        className="w-full text-sm rounded z-21"
         classNamePrefix="react-select"
         options={options}
         value={selectedOption}
-        onChange={(selectedOption) =>
-          onChange(selectedOption?.value || "")
-        }
+        isMulti={isMulti}
+        onChange={(selectedOption) => {
+          if (isMulti) {
+            if (Array.isArray(selectedOption)) {
+              onChange(selectedOption.map((opt) => opt.value));
+            } else {
+              onChange([]);
+            }
+          } else {
+            onChange((selectedOption as OptionType)?.value || "");
+          }
+        }}
         placeholder={placeholder}
         isDisabled={isDisabled}
         isClearable={isClearable}
