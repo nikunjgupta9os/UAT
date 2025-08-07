@@ -13,6 +13,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Draggable } from "../../common/Draggable";
 import { Droppable } from "../../common/Droppable";
 import Button from "../../ui/Button";
+import Pagination from "../../ui/Pagination";
 import { exportToExcel } from "../../ui/exportToExcel";
 
 // Types
@@ -28,8 +29,9 @@ const TableContent: React.FC<{
   data: PermissionData[];
   searchTerm: string;
   showSelected: boolean;
+  isPending?: boolean;
   onSearchChange: (term: string) => void;
-}> = ({ data, searchTerm, showSelected, onSearchChange }) => {
+}> = ({ data, searchTerm, showSelected, isPending = false, onSearchChange }) => {
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
   // Track selected rows
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
@@ -68,9 +70,44 @@ const TableContent: React.FC<{
   }, []);
 
   const filteredData = useMemo(() => {
-    if (!searchTerm || !searchTerm.trim()) return data;
+    let statusFilteredData;
+    
+    if (isPending) {
+      // If isPending is true, show only non-approved items
+      statusFilteredData = data.filter((item) => 
+        item.status && item.status.toLowerCase() !== 'approved'
+      );
+    } else {
+      // If isPending is false, show everything but prioritize pending over approved for duplicate roleNames
+      const roleNameMap = new Map<string, PermissionData>();
+      
+      // First pass: collect all items, giving priority to non-approved items
+      data.forEach((item) => {
+        const roleName = item.roleName;
+        const currentItem = roleNameMap.get(roleName);
+        
+        if (!currentItem) {
+          // If no item exists for this roleName, add it
+          roleNameMap.set(roleName, item);
+        } else {
+          // If item exists, prioritize non-approved over approved
+          const currentIsApproved = currentItem.status?.toLowerCase() === 'approved';
+          const newIsApproved = item.status?.toLowerCase() === 'approved';
+          
+          if (currentIsApproved && !newIsApproved) {
+            // Replace approved with non-approved
+            roleNameMap.set(roleName, item);
+          }
+        }
+      });
+      
+      statusFilteredData = Array.from(roleNameMap.values());
+    }
+    
+    // Then apply search filter if search term exists
+    if (!searchTerm || !searchTerm.trim()) return statusFilteredData;
     const lowerSearch = searchTerm.toLowerCase().trim();
-    return data.filter((user) =>
+    return statusFilteredData.filter((user) =>
       Object.values(user)
         .flatMap((value) =>
           typeof value === "object" && value !== null
@@ -80,7 +117,7 @@ const TableContent: React.FC<{
         .filter(Boolean)
         .some((field) => String(field).toLowerCase().includes(lowerSearch))
     );
-  }, [searchTerm, data]);
+  }, [searchTerm, data, isPending]);
 
   const columns = useMemo<ColumnDef<PermissionData>[]>(() => {
     const baseColumns: ColumnDef<PermissionData>[] = [
@@ -105,11 +142,11 @@ const TableContent: React.FC<{
         accessorKey: "status",
         header: "Status",
         cell: (info) => {
+          // Show actual status from the data
           const status = info.getValue() as string;
           const statusColors: Record<string, string> = {
             approved: "bg-green-100 text-green-800",
             rejected: "bg-red-100 text-red-800",
-
             "awaiting-approval": "bg-yellow-100 text-yellow-800",
             inactive: "bg-gray-200 text-gray-700",
           };
@@ -175,6 +212,11 @@ const TableContent: React.FC<{
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
+    initialState: {
+      pagination: {
+        pageSize: 10, // Set default page size
+      },
+    },
     state: {
       columnOrder,
       columnVisibility,
@@ -340,13 +382,15 @@ const TableContent: React.FC<{
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex items-center justify-end">
-        <div className="flex items-center gap-2 min-w-[12rem]">
-          <Button onClick={handleApprove}>Approve</Button>
-          <Button onClick={handleReject}>Reject</Button>
+      {/* Action Buttons - Only show when isPending is true */}
+      {isPending && (
+        <div className="flex items-center justify-end">
+          <div className="flex items-center gap-2 min-w-[12rem]">
+            <Button onClick={handleApprove}>Approve</Button>
+            <Button onClick={handleReject}>Reject</Button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Table with DndContext properly positioned */}
       <div className="w-full overflow-x-auto">
@@ -441,6 +485,23 @@ const TableContent: React.FC<{
           </DndContext>
         </div>
       </div>
+
+      {/* Pagination Controls */}
+      <Pagination
+        table={table}
+        totalItems={table.getFilteredRowModel().rows.length}
+        currentPageItems={table.getRowModel().rows.length}
+        startIndex={
+          table.getState().pagination.pageIndex *
+            table.getState().pagination.pageSize +
+          1
+        }
+        endIndex={Math.min(
+          (table.getState().pagination.pageIndex + 1) *
+            table.getState().pagination.pageSize,
+          table.getFilteredRowModel().rows.length
+        )}
+      />
     </div>
   );
 };
