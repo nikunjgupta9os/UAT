@@ -40,6 +40,7 @@ const AwaitingPermission: React.FC = () => {
         searchTerm={searchTerm}
         showSelected={showSelected}
         onSearchChange={setSearchTerm}
+        isPending={true} // Set to true to show pending permissions
       />
     </Suspense>
   );
