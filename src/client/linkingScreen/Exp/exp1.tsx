@@ -2,11 +2,12 @@ import { useState, useMemo, useEffect } from "react";
 import CustomSelect from "../../common/SearchSelect";
 import Layout from "../../common/Layout";
 import Button from "../../ui/Button";
+import Pagination from "../../ui/Pagination";
 import axios from "axios";
 import {
   flexRender,
   getCoreRowModel,
-  // getPaginationRowModel,
+  getPaginationRowModel,
   useReactTable,
   type ColumnDef,
 } from "@tanstack/react-table";
@@ -81,6 +82,11 @@ const LinkingScreen = () => {
     type: "",
     bank: "",
     maturityMonths: "",
+  });
+
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
   });
 
   useEffect(() => {
@@ -226,9 +232,12 @@ const LinkingScreen = () => {
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     onColumnOrderChange: setColumnOrder,
+    onPaginationChange: setPagination,
     state: {
       columnOrder,
+      pagination,
     },
   });
 
@@ -479,6 +488,18 @@ const LinkingScreen = () => {
               </table>
             </DndContext>
           </div>
+
+          {/* Add Pagination Component */}
+          <Pagination
+            table={table}
+            totalItems={data.length}
+            currentPageItems={table.getRowModel().rows.length}
+            startIndex={pagination.pageIndex * pagination.pageSize + 1}
+            endIndex={Math.min(
+              (pagination.pageIndex + 1) * pagination.pageSize,
+              data.length
+            )}
+          />
         </div>
       </div>
     </Layout>
