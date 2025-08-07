@@ -5,6 +5,7 @@ import {
   flexRender,
   getCoreRowModel,
   getExpandedRowModel,
+  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
@@ -21,6 +22,7 @@ import React, { useEffect, useState } from "react";
 import { Draggable } from "../../../client/common/Draggable";
 import { Droppable } from "../../../client/common/Droppable";
 import Button from "../../../client/ui/Button";
+import Pagination from "../../../client/ui/Pagination";
 import "../../styles/theme.css";
 
 // 👇 Ensure every row has at least an `id`
@@ -210,6 +212,10 @@ function NyneOSTable<HedgingProposal extends WithId>({
     defaultColumnVisibility
   );
   const [sorting, setSorting] = useState<[]>([]);
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
 
   const enhancedColumns: ColumnDef<HedgingProposal>[] = columns.map((col) => {
     const columnId = col.id;
@@ -304,14 +310,17 @@ function NyneOSTable<HedgingProposal extends WithId>({
     onColumnOrderChange: setColumnOrder,
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getExpandedRowModel: expandedRowConfig ? getExpandedRowModel() : undefined,
     getRowCanExpand: expandedRowConfig ? () => true : undefined,
     onColumnVisibilityChange: setColumnVisibility,
+    onPaginationChange: setPagination,
     state: {
       columnOrder,
       columnVisibility,
       sorting,
+      pagination,
     },
   });
 
@@ -429,6 +438,18 @@ function NyneOSTable<HedgingProposal extends WithId>({
           </DndContext>
         </div>
       </div>
+
+      {/* Add Pagination Component */}
+      <Pagination
+        table={table}
+        totalItems={(filter || data).length}
+        currentPageItems={table.getRowModel().rows.length}
+        startIndex={pagination.pageIndex * pagination.pageSize + 1}
+        endIndex={Math.min(
+          (pagination.pageIndex + 1) * pagination.pageSize,
+          (filter || data).length
+        )}
+      />
     </>
   );
 }
