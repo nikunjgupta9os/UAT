@@ -449,7 +449,7 @@ const ApprovedUser: React.FC = () => {
 
   return (
     <>
-      <div className="space-y-6">
+      <div className="space-y-4">
         <div className="mt-4 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {/* <input
             type="text"
@@ -462,16 +462,16 @@ const ApprovedUser: React.FC = () => {
           <div className="mt-10 flex items-center justify-end gap-4">
             <button
               type="button"
-              className="flex items-center justify-center border border-border rounded-lg px-2 h-10 text-sm transition"
-              title="Download All Roles"
+              className="group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
+                title="Download All Roles"
               onClick={() => exportToExcel(filteredData, "All_Roles")}
             >
-              <Download className="flex item-center justify-center text-primary" />
+              <Download className="flex item-center justify-center text-primary group-hover:text-white" />
             </button>
             <button
               type="button"
-              className="flex items-center justify-center text-primary border border-border rounded-lg w-10 h-10 transition"
-              title="Refresh"
+              className="group text-primary flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
+                title="Refresh"
               onClick={() => window.location.reload()}
             >
               <svg
@@ -497,7 +497,7 @@ const ApprovedUser: React.FC = () => {
               <input
                 type="text"
                 placeholder="Search..."
-                className="w-full text-secondary-text bg-secondary-color px-3 py-2 border border-border rounded-lg shadow-sm focus:outline-none"
+                className="w-full text-secondary-text bg-secondary-color px-3 py-2 border border-border rounded-lg shadow-sm focus:outline-none hover:border hover:border-primary"
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               <button
