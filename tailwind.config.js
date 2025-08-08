@@ -14,6 +14,7 @@ module.exports = {
         'border-secondary': 'var(--secondary-border-color)',
         primary: 'var(--primary-color)',
         'primary-lt': 'var(--primary-color-lt)',
+        'primary-fade': 'var(--primary-color-fade)',
         'primary-md': 'var(--primary-color-md)',
         'primary-lg': 'var(--primary-color-lg)',
         'primary-xl': 'var(--primary-color-xl)',
