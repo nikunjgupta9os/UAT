@@ -79,8 +79,9 @@ const parseExcel = (arrayBuffer: ArrayBuffer): string[][] => {
       "value_local_currency",
       "internal_dealer",
       "counterparty_dealer",
-
-      //   "status",
+      "bank_transaction_id",
+      "swift_unique_id",
+      "bank_confirmation_date",
     ],
     [
       "TX123",
@@ -91,7 +92,7 @@ const parseExcel = (arrayBuffer: ArrayBuffer): string[][] => {
       "SubDept1",
       "INR",
       "Buy",
-      "FX Spot",
+      "FX SPOT",
       "Bank A",
       "Online",
       "1D",
@@ -102,8 +103,8 @@ const parseExcel = (arrayBuffer: ArrayBuffer): string[][] => {
       "USD/INR",
       "USD",
       "INR",
-      "1000000",
       "Contracted",
+      "1000000",
       "83.50",
       "0.25",
       "0.10",
@@ -113,6 +114,9 @@ const parseExcel = (arrayBuffer: ArrayBuffer): string[][] => {
       "83850000",
       "Dealer1",
       "Dealer2",
+      "BANK123456",
+      "SWIFT789012",
+      "2024-01-01",
     ],
   ];
 };
@@ -136,7 +140,6 @@ const expectedHeaders = [
   "currency_pair",
   "base_currency",
   "quote_currency",
-  //   "input_value",
   "value_type",
   "actual_value_base_currency",
   "spot_rate",
@@ -182,15 +185,15 @@ const validateColumns = (
     });
   }
 
-  // Check for extra headers
-  const extraHeaders = headers.filter(
-    (h) => !expectedHeaders.map(eh => eh.toLowerCase()).includes(h.toLowerCase())
-  );
-  if (extraHeaders.length > 0) {
-    ifValidationErrors.push({
-      description: `Unexpected headers found: ${extraHeaders.join(", ")}`
-    });
-  }
+  // // Check for extra headers
+  // const extraHeaders = headers.filter(
+  //   (h) => !expectedHeaders.map(eh => eh.toLowerCase()).includes(h.toLowerCase())
+  // );
+  // if (extraHeaders.length > 0) {
+  //   ifValidationErrors.push({
+  //     description: `Unexpected headers found: ${extraHeaders.join(", ")}`
+  //   });
+  // }
 };
 
 const validateRow = (
@@ -247,7 +250,7 @@ const validateRow = (
       "value_quote_currency",
       "intervening_rate_quote_to_local",
       "value_local_currency",
-      "actual_value_base_currency"
+      // "actual_value_base_currency"
     ];
     
     numericFields.forEach((field) => {
@@ -262,77 +265,77 @@ const validateRow = (
     });
 
     // Date validations
-    const dateFields = [
-      "add_date",
-      "settlement_date", 
-      "maturity_date",
-      "delivery_date",
-      "bank_confirmation_date",
-    ];
+    // const dateFields = [
+    //   "add_date",
+    //   "settlement_date", 
+    //   "maturity_date",
+    //   "delivery_date",
+    //   "bank_confirmation_date",
+    // ];
     
-    dateFields.forEach((field) => {
-      if (rowObj[field] && rowObj[field] !== "") {
-        const date = new Date(rowObj[field]);
-        if (isNaN(date.getTime())) {
-          ifValidationErrors.push({
-            description: `Row ${index + 2}: '${field}' must be a valid date (YYYY-MM-DD format)`,
-            row: index + 2,
-            column: headers.indexOf(field) + 1,
-            currentValue: rowObj[field]
-          });
-        }
-      }
-    });
+    // dateFields.forEach((field) => {
+    //   if (rowObj[field] && rowObj[field] !== "") {
+    //     const date = new Date(rowObj[field]);
+    //     if (isNaN(date.getTime())) {
+    //       ifValidationErrors.push({
+    //         description: `Row ${index + 2}: '${field}' must be a valid date (YYYY-MM-DD format)`,
+    //         row: index + 2,
+    //         column: headers.indexOf(field) + 1,
+    //         currentValue: rowObj[field]
+    //       });
+    //     }
+    //   }
+    // });
 
     // Validate order type
-    const validOrderTypes = ["buy", "sell"];
-    if (rowObj["order_type"] && 
-        !validOrderTypes.includes(rowObj["order_type"].toLowerCase())) {
-      ifValidationErrors.push({
-        description: `Row ${index + 2}: 'order_type' must be 'Buy' or 'Sell'`,
-        row: index + 2,
-        column: headers.indexOf("order_type") + 1,
-        currentValue: rowObj["order_type"]
-      });
-    }
+    // const validOrderTypes = ["buy", "sell"];
+    // if (rowObj["order_type"] && 
+    //     !validOrderTypes.includes(rowObj["order_type"].toLowerCase())) {
+    //   ifValidationErrors.push({
+    //     description: `Row ${index + 2}: 'order_type' must be 'Buy' or 'Sell'`,
+    //     row: index + 2,
+    //     column: headers.indexOf("order_type") + 1,
+    //     currentValue: rowObj["order_type"]
+    //   });
+    // }
 
     // Validate transaction type
-    const validTransactionTypes = ["fx spot", "fx forward", "fx swap", "fx option"];
-    if (rowObj["transaction_type"] && 
-        !validTransactionTypes.includes(rowObj["transaction_type"].toLowerCase())) {
-      ifValidationErrors.push({
-        description: `Row ${index + 2}: 'transaction_type' must be one of: ${validTransactionTypes.join(", ").toUpperCase()}`,
-        row: index + 2,
-        column: headers.indexOf("transaction_type") + 1,
-        currentValue: rowObj["transaction_type"]
-      });
-    }
+    // const validTransactionTypes = ["fx spot", "fx forward", "fx swap", "fx option"];
+    // if (rowObj["transaction_type"] && 
+    //     !validTransactionTypes.includes(rowObj["transaction_type"].toLowerCase())) {
+    //   ifValidationErrors.push({
+    //     description: `Row ${index + 2}: 'transaction_type' must be one of: ${validTransactionTypes.join(", ").toUpperCase()}`,
+    //     row: index + 2,
+    //     column: headers.indexOf("transaction_type") + 1,
+    //     currentValue: rowObj["transaction_type"]
+    //   });
+    // }
 
-    // Validate currency pair format (should be like USD/INR)
-    if (rowObj["currency_pair"] && rowObj["currency_pair"] !== "") {
-      const currencyPairPattern = /^[A-Z]{3}\/[A-Z]{3}$/;
-      if (!currencyPairPattern.test(rowObj["currency_pair"])) {
-        ifValidationErrors.push({
-          description: `Row ${index + 2}: 'currency_pair' must be in format 'XXX/YYY' (e.g., USD/INR)`,
-          row: index + 2,
-          column: headers.indexOf("currency_pair") + 1,
-          currentValue: rowObj["currency_pair"]
-        });
-      }
-    }
+    // // Validate currency pair format (should be like USD/INR)
+    // if (rowObj["currency_pair"] && rowObj["currency_pair"] !== "") {
+    //   const currencyPairPattern = /^[A-Z]{3}\/[A-Z]{3}$/;
+    //   if (!currencyPairPattern.test(rowObj["currency_pair"])) {
+    //     ifValidationErrors.push({
+    //       description: `Row ${index + 2}: 'currency_pair' must be in format 'XXX/YYY' (e.g., USD/INR)`,
+    //       row: index + 2,
+    //       column: headers.indexOf("currency_pair") + 1,
+    //       currentValue: rowObj["currency_pair"]
+    //     });
+    //   }
+    // }
 
-    // Validate currency codes (should be 3 characters)
-    const currencyFields = ["local_currency", "base_currency", "quote_currency"];
-    currencyFields.forEach((field) => {
-      if (rowObj[field] && rowObj[field].length !== 3) {
-        ifValidationErrors.push({
-          description: `Row ${index + 2}: '${field}' must be a 3-character currency code (e.g., USD, EUR, INR)`,
-          row: index + 2,
-          column: headers.indexOf(field) + 1,
-          currentValue: rowObj[field]
-        });
-      }
-    });
+    // // Validate currency codes (should be 3 characters)
+    // const currencyFields = ["local_currency", "base_currency", "quote_currency"];
+    // currencyFields.forEach((field) => {
+    //   if (rowObj[field] && rowObj[field].length !== 3) {
+    //     ifValidationErrors.push({
+    //       description: `Row ${index + 2}: '${field}' must be a 3-character currency code (e.g., USD, EUR, INR)`,
+    //       row: index + 2,
+    //       column: headers.indexOf(field) + 1,
+    //       currentValue: rowObj[field]
+    //     });
+    //   }
+    // });
 
     // Check for empty cells in required fields
     if (row.some((cell, cellIndex) => {
@@ -619,38 +622,38 @@ export const handleDownload = (template: any) => {
   // Create sample data row for FX Confirmation template
   const sampleRow = [
     "TX123",
-    "INT123", 
-    "Corp",
-    "DivA",
-    "DeptB",
-    "SubDept1",
-    "INR",
-    "Buy",
-    "FX Spot",
-    "Bank A",
-    "Online",
-    "1D",
-    "2024-01-01",
-    "2024-01-02",
-    "2024-01-10",
-    "2024-01-03",
-    "USD/INR",
-    "USD",
-    "INR",
-    "Contracted",
-    "1000000",
-    "83.50",
-    "0.25",
-    "0.10",
-    "83.85",
-    "1000000",
-    "1",
-    "83850000",
-    "Dealer1",
-    "Dealer2",
-    "BANK123456",
-    "SWIFT789012",
-    "2024-01-01"
+      "INT123",
+      "Corp",
+      "DivA",
+      "DeptB",
+      "SubDept1",
+      "INR",
+      "Buy",
+      "FX SPOT",
+      "Bank A",
+      "Online",
+      "1D",
+      "2024-01-01",
+      "2024-01-02",
+      "2024-01-10",
+      "2024-01-03",
+      "USD/INR",
+      "USD",
+      "INR",
+      "Contracted",
+      "1000000",
+      "83.50",
+      "0.25",
+      "0.10",
+      "83.85",
+      "1000000",
+      "1",
+      "83850000",
+      "Dealer1",
+      "Dealer2",
+      "BANK123456",
+      "SWIFT789012",
+      "2024-01-01",
   ];
 
   const csvContent = headers + "\n" + sampleRow.join(",");
