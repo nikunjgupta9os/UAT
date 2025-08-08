@@ -76,7 +76,7 @@ const TransactionTable: React.FC = () => {
 
   const [columnOrder, setColumnOrder] = useState<string[]>([
     "select",
-    
+
     "systemTransactionId",
     "internalReferenceId",
     "orderType",
@@ -97,52 +97,55 @@ const TransactionTable: React.FC = () => {
   const [editValues, setEditValues] = useState<Transaction>({} as Transaction);
 
   // Helper function to get changed fields
-  const getChangedFields = (original: Transaction, edited: Transaction): Record<string, any> => {
+  const getChangedFields = (
+    original: Transaction,
+    edited: Transaction
+  ): Record<string, any> => {
     const changes: Record<string, any> = {};
-    
+
     // Map camelCase to snake_case for API
     const fieldMapping: Record<string, string> = {
-      orderType: 'order_type',
-      transactionType: 'transaction_type',
-      modeOfDelivery: 'mode_of_delivery',
-      deliveryPeriod: 'delivery_period',
-      settlementDate: 'settlement_date',
-      maturityDate: 'maturity_date',
-      deliveryDate: 'delivery_date',
-      spotRate: 'spot_rate',
-      forwardPoints: 'forward_points',
-      bankMargin: 'bank_margin',
-      totalRate: 'total_rate',
-      inputValue: 'booking_amount',
-      valueType: 'value_type',
-      internalDealer: 'internal_dealer',
-      counterpartyDealer: 'counterparty_dealer',
-      bankTransactionId: 'bank_transaction_id',
-      swiftUniqueId: 'swift_unique_id',
-      bankConfirmationDate: 'bank_confirmation_date',
-      status: 'processing_status',
-      entityLevel0: 'entity_level_0',
-      entityLevel1: 'entity_level_1',
-      entityLevel2: 'entity_level_2',
-      entityLevel3: 'entity_level_3',
-      localCurrency: 'local_currency',
-      currencyPair: 'currency_pair',
-      baseCurrency: 'base_currency',
-      quoteCurrency: 'quote_currency',
-      actualValueBaseCurrency: 'actual_value_base_currency',
-      valueQuoteCurrency: 'value_quote_currency',
-      interveningRateQuoteToLocal: 'intervening_rate_quote_to_local',
-      valueLocalCurrency: 'value_local_currency',
-      counterparty: 'counterparty',
-      remarks: 'remarks',
-      narration: 'narration'
+      orderType: "order_type",
+      transactionType: "transaction_type",
+      modeOfDelivery: "mode_of_delivery",
+      deliveryPeriod: "delivery_period",
+      settlementDate: "settlement_date",
+      maturityDate: "maturity_date",
+      deliveryDate: "delivery_date",
+      spotRate: "spot_rate",
+      forwardPoints: "forward_points",
+      bankMargin: "bank_margin",
+      totalRate: "total_rate",
+      inputValue: "booking_amount",
+      valueType: "value_type",
+      internalDealer: "internal_dealer",
+      counterpartyDealer: "counterparty_dealer",
+      bankTransactionId: "bank_transaction_id",
+      swiftUniqueId: "swift_unique_id",
+      bankConfirmationDate: "bank_confirmation_date",
+      status: "processing_status",
+      entityLevel0: "entity_level_0",
+      entityLevel1: "entity_level_1",
+      entityLevel2: "entity_level_2",
+      entityLevel3: "entity_level_3",
+      localCurrency: "local_currency",
+      currencyPair: "currency_pair",
+      baseCurrency: "base_currency",
+      quoteCurrency: "quote_currency",
+      actualValueBaseCurrency: "actual_value_base_currency",
+      valueQuoteCurrency: "value_quote_currency",
+      interveningRateQuoteToLocal: "intervening_rate_quote_to_local",
+      valueLocalCurrency: "value_local_currency",
+      counterparty: "counterparty",
+      remarks: "remarks",
+      narration: "narration",
     };
 
     // Check for changed fields
-    Object.keys(edited).forEach(key => {
+    Object.keys(edited).forEach((key) => {
       const originalValue = original[key as keyof Transaction];
       const newValue = edited[key as keyof Transaction];
-      
+
       if (originalValue !== newValue) {
         const apiKey = fieldMapping[key] || key;
         changes[apiKey] = newValue;
@@ -171,8 +174,8 @@ const TransactionTable: React.FC = () => {
           changedFields,
           {
             headers: {
-              'Content-Type': 'application/json'
-            }
+              "Content-Type": "application/json",
+            },
           }
         );
 
@@ -182,12 +185,10 @@ const TransactionTable: React.FC = () => {
           // Update local data
           setData((prev) =>
             prev.map((item, idx) =>
-              idx === row.index
-                ? { ...item, ...editValues }
-                : item
+              idx === row.index ? { ...item, ...editValues } : item
             )
           );
-          
+
           setIsEditing(false);
           notify("Forward updated successfully!", "success");
         } else {
@@ -205,6 +206,69 @@ const TransactionTable: React.FC = () => {
     } else {
       setEditValues({ ...row.original });
       setIsEditing(true);
+    }
+  };
+
+  // Handle forward delete operations
+  const handleForwardDelete = async () => {
+    const selectedSystemTransactionIds = table
+      .getSelectedRowModel()
+      .rows.map((row) => row.original.systemTransactionId);
+
+    if (selectedSystemTransactionIds.length === 0) {
+      notify("Please select at least one transaction to delete.", "warning");
+      return;
+    }
+
+    const confirmation = await confirm(
+      `Are you sure you want to delete ${selectedSystemTransactionIds.length} selected transaction(s)?`
+    );
+    if (!confirmation) return;
+
+    try {
+      // Prepare delete payload with array of selected system IDs
+      const deletePayload = {
+        system_transaction_ids: selectedSystemTransactionIds, // Array of selected IDs
+      };
+
+      console.log("Sending delete payload:", deletePayload);
+
+      // Make API call to delete/update the exposures
+      const response = await axios.post(
+        `https://backend-slqi.onrender.com/api/forwards/bulk-delete`,
+        deletePayload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log(response.data);
+
+      console.log("Delete response:", response.data);
+
+      if (response.data?.success || response.status === 200) {
+        // Remove the transactions from local data
+        setData((prev) =>
+          prev.filter(
+            (item) =>
+              !selectedSystemTransactionIds.includes(item.systemTransactionId)
+          )
+        );
+
+        // Clear selection
+        setSelectedRowIds({});
+
+        notify(
+          `Successfully deleted ${selectedSystemTransactionIds.length} transaction(s)!`,
+          "success"
+        );
+      } else {
+        throw new Error(response.data?.message || "Delete failed");
+      }
+    } catch (error) {
+      console.error("Delete error:", error);
+      notify("An error occurred while deleting the transactions.", "error");
     }
   };
 
@@ -401,9 +465,12 @@ const TransactionTable: React.FC = () => {
       {
         accessorKey: "action",
         header: "Action",
-        cell: () => (
+        cell: ({ row }) => (
           <div className="flex items-center justify-center gap-1">
-            <button className="flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded text-red-600 hover:bg-blue-100">
+            <button
+              onClick={() => handleForwardDelete()}
+              className="flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded text-red-600 hover:bg-red-100 transition-colors"
+            >
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
@@ -413,14 +480,18 @@ const TransactionTable: React.FC = () => {
         accessorKey: "systemTransactionId",
         header: "System TX ID",
         cell: ({ getValue }) => (
-          <span className="font-medium text-gray-900">{getValue() as string}</span>
+          <span className="font-medium text-gray-900">
+            {getValue() as string}
+          </span>
         ),
       },
       {
         accessorKey: "internalReferenceId",
         header: "Internal Ref ID",
         cell: ({ getValue }) => (
-          <span className="font-medium text-gray-900">{getValue() as string}</span>
+          <span className="font-medium text-gray-900">
+            {getValue() as string}
+          </span>
         ),
       },
       {
@@ -441,27 +512,37 @@ const TransactionTable: React.FC = () => {
       {
         accessorKey: "transactionType",
         header: "TX Type",
-        cell: ({ getValue }) => <span className="font-medium text-gray-900">{getValue() as string}</span>,
+        cell: ({ getValue }) => (
+          <span className="font-medium text-gray-900">
+            {getValue() as string}
+          </span>
+        ),
       },
       {
         accessorKey: "currencyPair",
         header: "Currency Pair",
         cell: ({ getValue }) => (
-          <span className="font-medium text-gray-900">{getValue() as string}</span>
+          <span className="font-medium text-gray-900">
+            {getValue() as string}
+          </span>
         ),
       },
       {
         accessorKey: "inputValue",
         header: "Input Value",
         cell: ({ getValue }) => (
-          <span className="font-medium text-gray-900">{(getValue() as number).toLocaleString()}</span>
+          <span className="font-medium text-gray-900">
+            {(getValue() as number).toLocaleString()}
+          </span>
         ),
       },
       {
         accessorKey: "spotRate",
         header: "Spot Rate",
         cell: ({ getValue }) => (
-          <span className="font-medium text-gray-900">{(getValue() as number).toFixed(4)}</span>
+          <span className="font-medium text-gray-900">
+            {(getValue() as number).toFixed(4)}
+          </span>
         ),
       },
       {
@@ -476,7 +557,11 @@ const TransactionTable: React.FC = () => {
       {
         accessorKey: "settlementDate",
         header: "Settlement Date",
-        cell: ({ getValue }) => <span className="font-medium text-gray-900">{getValue() as string}</span>,
+        cell: ({ getValue }) => (
+          <span className="font-medium text-gray-900">
+            {getValue() as string}
+          </span>
+        ),
       },
       {
         accessorKey: "status",
@@ -515,12 +600,20 @@ const TransactionTable: React.FC = () => {
       {
         accessorKey: "counterparty",
         header: "Counterparty",
-        cell: ({ getValue }) => <span className="font-medium text-gray-900">{getValue() as string}</span>,
+        cell: ({ getValue }) => (
+          <span className="font-medium text-gray-900">
+            {getValue() as string}
+          </span>
+        ),
       },
       {
         accessorKey: "internalDealer",
         header: "Internal Dealer",
-        cell: ({ getValue }) => <span className="font-medium text-gray-900">{getValue() as string}</span>,
+        cell: ({ getValue }) => (
+          <span className="font-medium text-gray-900">
+            {getValue() as string}
+          </span>
+        ),
       },
     ],
     [expandedRowId]
@@ -539,7 +632,7 @@ const TransactionTable: React.FC = () => {
     totalRate: true,
     settlementDate: true,
     status: true,
-    counterparty:true,
+    counterparty: true,
     internalDealer: false,
     expand: true,
   };
@@ -616,53 +709,6 @@ const TransactionTable: React.FC = () => {
     }
   };
 
-  //  const handleStatusUpdate = async (status: "Approved" | "Rejected") => {
-  //   const selectedSystemTransactionIds = data
-  //     .filter((row) => selectedRowIds[row.systemTransactionId])
-  //     .map((row) => row.systemTransactionId);
-  //   console.log("Selected IDs:", selectedSystemTransactionIds);
-  //   if (selectedSystemTransactionIds.length === 0) {
-  //     alert("Please select at least one transaction to update.");
-  //     return;
-  //   }
-
-  //   const confirmation = window.confirm(
-  //     `Are you sure you want to ${status.toLowerCase()} the selected transaction(s)?`
-  //   );
-
-  //   if (!confirmation) return;
-  //   console.log("Updating status for:", selectedSystemTransactionIds);
-  //   try {
-  //     const response = await axios.post(
-  //       "https://backend-slqi.onrender.com/api/forwards/forward-bookings/bulk-update-processing-status",
-  //       {
-  //         system_transaction_ids: selectedSystemTransactionIds,
-  //         processing_status: status, // ✅ Corrected key
-  //       }
-  //     );
-
-  //     if (response.data?.success) {
-  //       alert(`Successfully ${status.toLowerCase()} transactions.`);
-
-  //       setData((prevData) =>
-  //         prevData.map((row) =>
-  //           selectedSystemTransactionIds.includes(row.systemTransactionId)
-  //             ? { ...row, status }
-  //             : row
-  //         )
-  //       );
-
-  //       setSelectedRowIds({});
-  //     } else {
-  //       alert("Status update failed. Please try again.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Status update error:", error);
-  //     alert("An error occurred while updating status.");
-  //   }
-  // };
-
-  // Calculate pagination values
   const pagination = table.getState().pagination;
   const totalItems = data.length;
   const startIndex = pagination.pageIndex * pagination.pageSize + 1;
@@ -710,7 +756,7 @@ const TransactionTable: React.FC = () => {
                     return (
                       <th
                         key={header.id}
-                          className="px-6 py-4 text-left text-sm font-semibold text-header-color uppercase tracking-wider borCder-b border-border"
+                        className="px-6 py-4 text-left text-sm font-semibold text-header-color uppercase tracking-wider borCder-b border-border"
                         style={{ width: header.getSize() }}
                       >
                         {isDraggable ? (
@@ -816,7 +862,13 @@ const TransactionTable: React.FC = () => {
                                       ? editValues[key] ?? row.original[key]
                                       : row.original[key],
                                     row.original[key],
-                                    isEditing && ["orderType", "transactionType", "counterparty", "status"].includes(key)
+                                    isEditing &&
+                                      [
+                                        "orderType",
+                                        "transactionType",
+                                        "counterparty",
+                                        "status",
+                                      ].includes(key)
                                   )
                                 )}
                               </div>
@@ -871,7 +923,13 @@ const TransactionTable: React.FC = () => {
                                       ? editValues[key] ?? row.original[key]
                                       : row.original[key],
                                     row.original[key],
-                                    isEditing && ["spotRate", "forwardPoints", "bankMargin", "totalRate"].includes(key)
+                                    isEditing &&
+                                      [
+                                        "spotRate",
+                                        "forwardPoints",
+                                        "bankMargin",
+                                        "totalRate",
+                                      ].includes(key)
                                   )
                                 )}
                               </div>
@@ -898,7 +956,8 @@ const TransactionTable: React.FC = () => {
                                       ? editValues[key] ?? row.original[key]
                                       : row.original[key],
                                     row.original[key],
-                                    isEditing && ["inputValue", "valueType"].includes(key)
+                                    isEditing &&
+                                      ["inputValue", "valueType"].includes(key)
                                   )
                                 )}
                               </div>
@@ -926,7 +985,14 @@ const TransactionTable: React.FC = () => {
                                       ? editValues[key] ?? row.original[key]
                                       : row.original[key],
                                     row.original[key],
-                                    isEditing && ["settlementDate", "maturityDate", "deliveryDate", "modeOfDelivery", "deliveryPeriod"].includes(key)
+                                    isEditing &&
+                                      [
+                                        "settlementDate",
+                                        "maturityDate",
+                                        "deliveryDate",
+                                        "modeOfDelivery",
+                                        "deliveryPeriod",
+                                      ].includes(key)
                                   )
                                 )}
                               </div>
