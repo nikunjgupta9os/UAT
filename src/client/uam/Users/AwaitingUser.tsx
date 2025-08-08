@@ -59,52 +59,50 @@ const Awaitinguser: React.FC = () => {
   const [data, setData] = useState<UserType[]>([]);
   const [loading, setLoading] = useState(true);
 
-  type TabVisibility={
-        // add:boolean,
-        // edit:boolean,
-        // delete:boolean,
-        approve:boolean, 
-        reject:boolean,
-        view:boolean,
-        // upload:boolean,
-      }
-      const roleName = localStorage.getItem("userRole");
-      const [Visibility, setVisibility] = useState<TabVisibility>({
-        approve: true,
-        reject: true,
-        view: true,
-        // delete: true,    
-    
-      });
-      useEffect(() => {
-        const fetchPermissions = async () => {
-          try {
-            const response = await axios.post(
-              "https://backend-slqi.onrender.com/api/permissions/permissionJSON",
-              { roleName }
-            );
-    
-            const pages = response.data?.pages;
-            const userTabs = pages?.["user-creation"];
-    
-            if (userTabs) {
-              setVisibility({
-                approve: userTabs?.tabs?.allTab?.showApproveButton,
-                reject: userTabs?.tabs?.allTab?.showRejectButton ,
-                view: userTabs?.tabs?.allTab?.hasAccess ,
-                // delete: userTabs?.allTab?.showDeletebutton || false,     
-              });
-            }
-          } catch (error) {
-             console.error("Error fetching permissions:", error);
-          }
-        };
-    
-        fetchPermissions();
-      }, []);
+  type TabVisibility = {
+    // add:boolean,
+    // edit:boolean,
+    // delete:boolean,
+    approve: boolean;
+    reject: boolean;
+    view: boolean;
+    // upload:boolean,
+  };
+  const roleName = localStorage.getItem("userRole");
+  const [Visibility, setVisibility] = useState<TabVisibility>({
+    approve: true,
+    reject: true,
+    view: true,
+    // delete: true,
+  });
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      try {
+        const response = await axios.post(
+          "https://backend-slqi.onrender.com/api/permissions/permissionJSON",
+          { roleName }
+        );
 
-  
-      const { notify } = useNotification();
+        const pages = response.data?.pages;
+        const userTabs = pages?.["user-creation"];
+
+        if (userTabs) {
+          setVisibility({
+            approve: userTabs?.tabs?.allTab?.showApproveButton,
+            reject: userTabs?.tabs?.allTab?.showRejectButton,
+            view: userTabs?.tabs?.allTab?.hasAccess,
+            // delete: userTabs?.allTab?.showDeletebutton || false,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching permissions:", error);
+      }
+    };
+
+    fetchPermissions();
+  }, []);
+
+  const { notify } = useNotification();
   useEffect(() => {
     axios
       .get("https://backend-slqi.onrender.com/api/users/awaitingdata")
@@ -117,7 +115,7 @@ const Awaitinguser: React.FC = () => {
               authenticationType: user.authentication_type,
               employeeName: user.employee_name,
               username: user.username_or_employee_id,
-            email: user.email,
+              email: user.email,
               mobile: user.mobile,
               role: { name: user.role_name || "—" }, // fallback for missing role
               address: user.address,
@@ -132,18 +130,17 @@ const Awaitinguser: React.FC = () => {
         } else {
           setLoading(false);
 
-           console.error("Failed to load users:", response.data.error);
+          console.error("Failed to load users:", response.data.error);
         }
       })
       .catch((error) => {
         setLoading(false);
 
-         console.error("Error fetching users:", error);
+        console.error("Error fetching users:", error);
       });
   }, []);
 
-  const toggleRowExpansion = useCallback(
-    (rowId: string) => {
+  const toggleRowExpansion = useCallback((rowId: string) => {
     setExpandedRows((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(rowId)) {
@@ -153,8 +150,7 @@ const Awaitinguser: React.FC = () => {
       }
       return newSet;
     });
-  },[]
-  )
+  }, []);
 
   const filteredData = useMemo(() => {
     if (!searchTerm.trim()) return data;
@@ -179,7 +175,8 @@ const Awaitinguser: React.FC = () => {
     const selectedUserIds = table
       .getSelectedRowModel()
       .rows.map((row) => row.original.id);
-    if (selectedUserIds.length === 0) return notify ("No users selected", "warning"); 
+    if (selectedUserIds.length === 0)
+      return notify("No users selected", "warning");
 
     axios
       .post("https://backend-slqi.onrender.com/api/users/bulk-reject", {
@@ -210,7 +207,8 @@ const Awaitinguser: React.FC = () => {
     const selectedUserIds = table
       .getSelectedRowModel()
       .rows.map((row) => row.original.id);
-    if (selectedUserIds.length === 0) return notify("No users selected", "warning");
+    if (selectedUserIds.length === 0)
+      return notify("No users selected", "warning");
 
     axios
       .post("https://backend-slqi.onrender.com/api/users/bulk-approve", {
@@ -280,7 +278,9 @@ const Awaitinguser: React.FC = () => {
         accessorKey: "authenticationType",
         header: "Auth Type",
         cell: (info) => (
-          <span className="text-secondary-text">{info.getValue() as string}</span>
+          <span className="text-secondary-text">
+            {info.getValue() as string}
+          </span>
         ),
       },
       {
@@ -296,21 +296,27 @@ const Awaitinguser: React.FC = () => {
         accessorKey: "username",
         header: "Username",
         cell: (info) => (
-          <span className="text-secondary-text">{info.getValue() as string}</span>
+          <span className="text-secondary-text">
+            {info.getValue() as string}
+          </span>
         ),
       },
       {
         accessorKey: "email",
         header: "Email",
         cell: (info) => (
-          <span className="text-secondary-text">{info.getValue() as string}</span>
+          <span className="text-secondary-text">
+            {info.getValue() as string}
+          </span>
         ),
       },
       {
         accessorKey: "mobile",
         header: "Mobile",
         cell: (info) => (
-          <span className="text-secondary-text">{info.getValue() as string}</span>
+          <span className="text-secondary-text">
+            {info.getValue() as string}
+          </span>
         ),
       },
       // {
@@ -326,14 +332,18 @@ const Awaitinguser: React.FC = () => {
         accessorKey: "address",
         header: "Address",
         cell: (info) => (
-          <span className="text-secondary-text">{info.getValue() as string}</span>
+          <span className="text-secondary-text">
+            {info.getValue() as string}
+          </span>
         ),
       },
       {
         accessorKey: "businessUnitName",
         header: "Business Unit",
         cell: (info) => (
-          <span className="text-secondary-text">{info.getValue() as string}</span>
+          <span className="text-secondary-text">
+            {info.getValue() as string}
+          </span>
         ),
       },
       // {
@@ -354,7 +364,9 @@ const Awaitinguser: React.FC = () => {
         accessorKey: "createdBy",
         header: "Created By",
         cell: (info) => (
-          <span className="text-secondary-text">{info.getValue() as string}</span>
+          <span className="text-secondary-text">
+            {info.getValue() as string}
+          </span>
         ),
       },
       {
@@ -492,9 +504,6 @@ const Awaitinguser: React.FC = () => {
       },
     ];
 
-    
-    
-
     return baseColumns;
   }, [expandedRows, toggleRowExpansion, data]);
 
@@ -534,38 +543,38 @@ const Awaitinguser: React.FC = () => {
   });
   if (loading) return <LoadingSpinner />;
 
-
-
   return (
     <>
       <div className="space-y-6">
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          <div></div>
+        <div className="mt-14 flex flex-col md:flex-row justify-between items-center gap-4">
+          {/* Left side: Approve / Reject */}
+          <div className="flex items-center gap-2 min-w-[12rem]">
+            {filteredData.length > 0 && Visibility.approve && (
+              <Button onClick={handleBulkUserApprove}>Approve</Button>
+            )}
+            {filteredData.length > 0 && Visibility.reject && (
+              <Button onClick={handleBulkUserReject}>Reject</Button>
+            )}
+          </div>
 
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div className="mt-10 flex items-center justify-end gap-4">
+          {/* Right side: Download, Refresh, Search */}
+          <div className="flex items-center gap-4 w-full md:w-auto">
             <button
               type="button"
-              className="flex items-center justify-center border border-border rounded-lg px-2 h-10 text-sm transition"
-              title="Download All Roles"
+              className="text-primary group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
+            title="Download All Roles"
               onClick={() => exportToExcel(filteredData, "All_Roles")}
             >
-              <Download className="flex item-center justify-center text-primary" />
+              <Download className="flex items-center justify-center text-primary group-hover:text-white" />
             </button>
             <button
               type="button"
-              className="flex items-center justify-center text-primary border border-border rounded-lg w-10 h-10  transition"
+              className="text-primary group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
               title="Refresh"
               onClick={() => window.location.reload()}
             >
               <svg
                 width="20"
-                className="accent-primary"
                 height="20"
                 fill="none"
                 stroke="currentColor"
@@ -573,6 +582,7 @@ const Awaitinguser: React.FC = () => {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 viewBox="0 0 24 24"
+                className="accent-primary"
               >
                 <path d="M23 4v6h-6" />
                 <path d="M1 20v-6h6" />
@@ -580,13 +590,13 @@ const Awaitinguser: React.FC = () => {
               </svg>
             </button>
             <form
-              className="relative flex items-center"
+              className="relative flex items-center w-full md:w-64"
               onSubmit={(e) => e.preventDefault()}
             >
               <input
                 type="text"
                 placeholder="Search"
-                className="pl-4 pr-10 text-secondary-text py-2 bg-secondary-color-lt border border-border rounded-lg focus:outline-none min-w-full"
+                className="pl-4 pr-10 py-2 text-secondary-text bg-secondary-color-lt border border-border rounded-lg focus:outline-none w-full hover:border hover:border-primary"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -613,17 +623,6 @@ const Awaitinguser: React.FC = () => {
               </button>
             </form>
           </div>
-        </div>
-
-        <div className="flex items-center justify-end">
-        <div className="flex items-center gap-2 min-w-[12rem]">
-          {filteredData.length > 0 && Visibility.approve && (
-            <Button onClick={handleBulkUserApprove}>Approve</Button>
-          )}
-          {filteredData.length > 0 && Visibility.reject && (
-            <Button onClick={handleBulkUserReject}>Reject</Button>
-          )}
-        </div>
         </div>
 
         <div className="w-full overflow-x-auto">
@@ -725,10 +724,10 @@ const Awaitinguser: React.FC = () => {
                       <tr
                         className={
                           expandedRows.has(row.id) && row.index === 0
-                              ? "bg-primary-md"
-                          : row.index % 2 === 0
-                          ? "bg-primary-md"
-                          : "bg-secondary-color-lt"
+                            ? "bg-primary-md"
+                            : row.index % 2 === 0
+                            ? "bg-primary-md"
+                            : "bg-secondary-color-lt"
                         }
                       >
                         {row.getVisibleCells().map((cell) => (
@@ -792,9 +791,14 @@ const Awaitinguser: React.FC = () => {
           table={table}
           totalItems={filteredData.length}
           currentPageItems={table.getRowModel().rows.length}
-          startIndex={table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}
+          startIndex={
+            table.getState().pagination.pageIndex *
+              table.getState().pagination.pageSize +
+            1
+          }
           endIndex={Math.min(
-            (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+            (table.getState().pagination.pageIndex + 1) *
+              table.getState().pagination.pageSize,
             filteredData.length
           )}
         />
