@@ -60,11 +60,12 @@ const AdditionalForwardDetail: React.FC<HedgingDetailsProps> = ({
             const spot = Number(item["Spot"] ?? 0);
             const fwd = Number(item["Fwd"] ?? 0);
             const margin = Number(item["Margin"] ?? 0);
-            const settlementAmount = 0;
+            const outstandingAmount = Number(item["Outstanding Amount"] ?? 0);
+            const settlementAmount = outstandingAmount; // Initialize with outstanding amount
             const edRate = 0;
             return {
               forwardRef: item["Forward Ref"] ?? "",
-              outstandingAmount: Number(item["Outstanding Amount"] ?? 0),
+              outstandingAmount,
               spot,
               fwd,
               margin,
