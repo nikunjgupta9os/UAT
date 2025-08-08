@@ -215,18 +215,18 @@ const RateTable: React.FC<ExtendedRateTableProps> = ({
   });
 
   return (
-    <div className="bg-green-50 p-6 rounded-lg">
-      <h3 className="text-lg font-semibold text-green-700 mb-4">MTM Rate Entry Grid</h3>
-      
+    <div className="bg-secondary-color-lt p-6 rounded-lg">
+      <h3 className="text-lg font-semibold text-primary-lt mb-4">MTM Rate Entry Grid</h3>
+
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
             {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id} className="bg-green-200">
+              <tr key={headerGroup.id} className="bg-primary-md">
                 {headerGroup.headers.map(header => (
                   <th
                     key={header.id}
-                    className="px-4 py-3 text-left text-sm font-semibold text-green-800 border border-green-300"
+                    className="px-4 py-3 text-left text-sm font-semibold text-header-color border border-border"
                   >
                     {header.isPlaceholder
                       ? null
@@ -239,27 +239,27 @@ const RateTable: React.FC<ExtendedRateTableProps> = ({
               </tr>
             ))}
           </thead>
-          
+
           <tbody>
             {table.getRowModel().rows.map(row => (
-              <tr key={row.id} className="hover:bg-green-50 transition-colors">
+              <tr key={row.id} className="hover:bg-primary-xl transition-colors">
                 {row.getVisibleCells().map(cell => (
                   <td
                     key={cell.id}
-                    className="px-4 py-3 border border-green-200 align-top"
+                    className="px-4 py-3 border border-border align-top"
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
               </tr>
             ))}
-            
+
             {/* Show empty state if no data */}
             {table.getRowModel().rows.length === 1 && data[0]?.isNew && (
               <tr>
-                <td 
-                  colSpan={6} 
-                  className="px-4 py-8 text-center text-gray-500 border border-green-200"
+                <td
+                  colSpan={6}
+                  className="px-4 py-8 text-center text-gray-500 border border-border"
                 >
                   No rate data available. Add your first rate using the form above.
                 </td>
@@ -267,39 +267,6 @@ const RateTable: React.FC<ExtendedRateTableProps> = ({
             )}
           </tbody>
         </table>
-      </div>
-      
-      <div className="mt-6 flex flex-wrap gap-3">
-        <button 
-          onClick={onAddRow}
-          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 font-medium"
-        >
-          + Add New Rate Row
-        </button>
-        <button 
-          onClick={onSaveAllRates}
-          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 font-medium"
-        >
-          Save All Rates
-        </button>
-        <button 
-          onClick={onClearForm}
-          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 font-medium"
-        >
-          Clear Form
-        </button>
-        <button 
-          onClick={onImportRates}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 font-medium"
-        >
-          Import Rates
-        </button>
-        <button 
-          onClick={onViewHistory}
-          className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 font-medium"
-        >
-          View History
-        </button>
       </div>
     </div>
   );
