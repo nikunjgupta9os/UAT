@@ -41,7 +41,6 @@ const FxUploader: React.FC = () => {
   const { notify } = useNotification();
 
   const handleFileInput = (event: React.ChangeEvent<HTMLInputElement>) => {
-    
     if (event.target.files && event.target.files.length > 0) {
       handleFiles(event.target.files);
     } else {
@@ -149,15 +148,15 @@ const FxUploader: React.FC = () => {
         };
         const rows = lines.map(parseCSVLine);
         const [headerRow, ...dataRows] = rows;
-        
+
         // Store in preview states for the new system
-        setPreviewStates(prev => ({
+        setPreviewStates((prev) => ({
           ...prev,
           [uploadedFile.id]: {
             data: dataRows.slice(0, 50),
             headers: headerRow || [],
-            show: true
-          }
+            show: true,
+          },
         }));
       } catch (error) {
         console.error("Error parsing file for preview:", error);
@@ -243,117 +242,156 @@ const FxUploader: React.FC = () => {
     return new Blob([csvContent], { type: "text/csv" });
   };
 
-const handleSetManually = async () => {
-  const validFiles = files.filter(
-    (file) =>
-      file.status === "success" &&
-      (!file.validationErrors || file.validationErrors.length === 0)
-  );
-
-  if (validFiles.length === 0) {
-    notify("No valid files to upload.", "warning");
-    return;
-  }
-
-  try {
-    for (const file of validFiles) {
-      let blob: Blob | File | undefined;
-      let fileName: string;
-      
-      // Check if file has edited preview data
-      if ((file as any).previewEdited && (file as any).previewHeaders && (file as any).previewData) {
-        blob = convertToCSVBlob((file as any).previewHeaders, (file as any).previewData);
-        fileName = `${file.name.replace(/\.csv$/, '')}_modified.csv`;
-      } else if (file.file) {
-        blob = file.file;
-        fileName = file.name;
-      } else {
-        continue;
-      }
-
-      const formData = new FormData();
-      formData.append(
-        "files",
-        new File([blob], fileName, { type: "text/csv" })
-      );
-
-      // Add this line to skip duplicates
-      formData.append("skipDuplicates", "true");
-
-      const response = await axios.post(
-        "https://backend-slqi.onrender.com/api/forwards/forward-bookings/upload-multi",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      // Check if the overall upload was successful
-      if (response.data.success && response.data.results) {
-        const results = response.data.results;
-        
-        let allSucceeded = true;
-
-        // Check for errors in each file's result
-        results.forEach((result) => {
-          if (result.errors?.length > 0 || result.invalidRows?.length > 0) {
-            allSucceeded = false;
-            const errorMessage =
-              result.errors?.join(", ") ||
-              `Invalid rows: ${result.invalidRows?.join(", ")}`;
-            notify(
-              `Upload partially failed for ${result.filename}: ${errorMessage}`,
-              "error"
-            );
-          } else {
-            notify(`Upload successful for ${result.filename} (${result.inserted || 0} records)`, "success");
-          }
-        });
-
-        if (allSucceeded) {
-          // Clear preview states and files
-          setPreviewStates({});
-          setFiles([]);
-        }
-      } else {
-        // Handle case when overall upload failed
-        notify("Upload failed: " + (response.data.message || "Unknown error"), "error");
-        setFiles((prev) =>
-          prev.map((f) =>
-            f.id === file.id
-              ? { ...f, status: "error", error: response.data.message || "Upload failed" }
-              : f
-          )
-        );
-      }
-    }
-  } catch (error) {
-    console.error("Error uploading files:", error);
-    setFiles((prev) =>
-      prev.map((f) => ({
-        ...f,
-        status: "error",
-        error: "Upload failed",
-      }))
+  const handleSetManually = async () => {
+    const validFiles = files.filter(
+      (file) =>
+        file.status === "success" &&
+        (!file.validationErrors || file.validationErrors.length === 0)
     );
-    notify("Error uploading files. Please try again.", "error");
-  }
-};    const handleSavePreview = (fileId: string) => {
-    // Save the edited preview data to the file state
-    setFiles(prevFiles => prevFiles.map(file => {
-      if (file.id === fileId && previewStates[fileId]) {
-        return {
-          ...file,
-          previewHeaders: previewStates[fileId].headers,
-          previewData: previewStates[fileId].data,
-          previewEdited: true,
-        };
+
+    if (validFiles.length === 0) {
+      notify("No valid files to upload.", "warning");
+      return;
+    }
+
+    try {
+      for (const file of validFiles) {
+        let blob: Blob | File | undefined;
+        let fileName: string;
+
+        // Check if file has edited preview data
+        if (
+          (file as any).previewEdited &&
+          (file as any).previewHeaders &&
+          (file as any).previewData
+        ) {
+          blob = convertToCSVBlob(
+            (file as any).previewHeaders,
+            (file as any).previewData
+          );
+          fileName = `${file.name.replace(/\.csv$/, "")}_modified.csv`;
+        } else if (file.file) {
+          blob = file.file;
+          fileName = file.name;
+        } else {
+          continue;
+        }
+
+        const formData = new FormData();
+        formData.append(
+          "files",
+          new File([blob], fileName, { type: "text/csv" })
+        );
+
+        // Add this line to skip duplicates
+        formData.append("skipDuplicates", "true");
+
+        const response = await axios.post(
+          "https://backend-slqi.onrender.com/api/forwards/forward-bookings/upload-multi",
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+
+        // Check if the overall upload was successful
+        if (response.data.success && response.data.results) {
+          const results = response.data.results;
+
+          let allSucceeded = true;
+          console.log("Upload results:", results);
+
+          // Check for errors in each file's result
+          results.forEach((result) => {
+            if (result.errors?.length > 0 || result.invalidRows?.length > 0) {
+              allSucceeded = false;
+              const errorMessages = result.errors
+                ?.map((e) => e.error)
+                .join(", ");
+
+              // Get invalid entities if any
+              const invalidEntities = result.invalidRows
+                ?.map((row) => row.entity)
+                .join(", ");
+              const errorMessage =
+                errorMessages || `Invalid Entity: ${invalidEntities}`;
+
+              // const errorMessage =
+
+              //   result.errors.error?.join(", ")
+              //    ||`Invalid Entity: ${result.invalidRows.entity?.join(", ")}`;
+              //   console.log(errorMessage);
+              notify(
+                `Upload partially failed for ${result.filename}: ${errorMessage}`,
+                "error"
+              );
+            } else {
+              notify(
+                `Upload successful for ${result.filename} (${
+                  result.inserted || 0
+                } records)`,
+                "success"
+              );
+            }
+          });
+
+          if (allSucceeded) {
+            // Clear preview states and files
+            setPreviewStates({});
+            setFiles([]);
+          }
+        } else {
+          // Handle case when overall upload failed
+          notify(
+            "Upload failed: " + (response.data.message || "Unknown error"),
+            "error"
+          );
+          setFiles((prev) =>
+            prev.map((f) =>
+              f.id === file.id
+                ? {
+                    ...f,
+                    status: "error",
+                    error: response.data.message || "Upload failed",
+                  }
+                : f
+            )
+          );
+        }
       }
-      return file;
-    }));
-    notify(`Edits for ${files.find(f => f.id === fileId)?.name || 'file'} saved.`, "success");
+    } catch (error) {
+      console.error("Error uploading files:", error);
+      setFiles((prev) =>
+        prev.map((f) => ({
+          ...f,
+          status: "error",
+          error: "Upload failed",
+        }))
+      );
+      notify("Error uploading files. Please try again.", "error");
+    }
+  };
+  const handleSavePreview = (fileId: string) => {
+    // Save the edited preview data to the file state
+    setFiles((prevFiles) =>
+      prevFiles.map((file) => {
+        if (file.id === fileId && previewStates[fileId]) {
+          return {
+            ...file,
+            previewHeaders: previewStates[fileId].headers,
+            previewData: previewStates[fileId].data,
+            previewEdited: true,
+          };
+        }
+        return file;
+      })
+    );
+    notify(
+      `Edits for ${files.find((f) => f.id === fileId)?.name || "file"} saved.`,
+      "success"
+    );
   };
 
   const clearAllFiles = () => setFiles([]);
@@ -600,55 +638,57 @@ const handleSetManually = async () => {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                      {(file.status === "success" || file.status === "error") &&
-                        file.file && (
+                        {(file.status === "success" ||
+                          file.status === "error") &&
+                          file.file && (
+                            <button
+                              onClick={() => handlePreviewFile(file)}
+                              className="p-1 text-blue-600 hover:text-blue-800"
+                              title="Preview Data"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          )}
+                        {/* Save button for previewed file */}
+                        {previewStates[file.id]?.show && (
                           <button
-                            onClick={() => handlePreviewFile(file)}
-                            className="p-1 text-blue-600 hover:text-blue-800"
-                            title="Preview Data"
+                            onClick={() => handleSavePreview(file.id)}
+                            className="p-1 text-green-600 hover:text-green-800"
+                            title="Save Edits"
                           >
-                            <Eye className="w-4 h-4" />
+                            <Check className="w-4 h-4" />
                           </button>
                         )}
-                      {/* Save button for previewed file */}
-                      {previewStates[file.id]?.show && (
                         <button
-                          onClick={() => handleSavePreview(file.id)}
-                          className="p-1 text-green-600 hover:text-green-800"
-                          title="Save Edits"
+                          onClick={() => {
+                            removeFile(file.id);
+                            setPreviewStates((prev) => {
+                              const updated = { ...prev };
+                              delete updated[file.id];
+                              return updated;
+                            });
+                          }}
+                          className="p-1 text-red-600 hover:text-red-800"
+                          title="Remove File"
                         >
-                          <Check className="w-4 h-4" />
+                          <X className="w-4 h-4" />
                         </button>
+                      </div>
+                    </div>
+                    {/* Preview for this file */}
+                    {previewStates[file.id]?.show &&
+                      previewStates[file.id]?.data.length > 0 && (
+                        <div className="mt-4">
+                          <PreviewTable
+                            headers={previewStates[file.id].headers}
+                            rows={previewStates[file.id].data}
+                            onRemoveRow={handleRemoveRow}
+                            onUpdateRow={(rowIndex, updatedData) =>
+                              handleUpdateRow(rowIndex, updatedData, file.id)
+                            }
+                          />
+                        </div>
                       )}
-                      <button
-                        onClick={() => {
-                          removeFile(file.id);
-                          setPreviewStates((prev) => {
-                            const updated = { ...prev };
-                            delete updated[file.id];
-                            return updated;
-                          });
-                        }}
-                        className="p-1 text-red-600 hover:text-red-800"
-                        title="Remove File"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                  {/* Preview for this file */}
-                  {previewStates[file.id]?.show && previewStates[file.id]?.data.length > 0 && (
-                    <div className="mt-4">
-                      <PreviewTable
-                        headers={previewStates[file.id].headers}
-                        rows={previewStates[file.id].data}
-                        onRemoveRow={handleRemoveRow}
-                        onUpdateRow={(rowIndex, updatedData) => 
-                          handleUpdateRow(rowIndex, updatedData, file.id)
-                        }
-                      />
-                    </div>
-                  )}
                   </div>
                 ))}
               </div>
