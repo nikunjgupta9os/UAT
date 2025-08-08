@@ -79,7 +79,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
     <div className="relative inline-block">
       <input
         type="text"
-        className="w-min-24 h-10 px-3 pr-8 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400"
+        className="w-30 h-10 px-3 pr-8 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400"
         value={inputValue}
         onChange={handleChange}
         onBlur={handleBlur}
