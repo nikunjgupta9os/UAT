@@ -5,6 +5,8 @@ import { ThemeProvider } from "./client/contexts/ThemeContext";
 import ForgotPassword from "./client/common/ForgotPassword";
 import PreloaderAnimation from "./client/common/Preloader";
 import NotificationProvider from "./client/Notification/Notification.tsx";
+import MTMCalculator from './client/MTMCalculator/MTMCalculator';
+import MTMRateInput from './client/MTMRateInput/MTMRateInput';
 
 // Lazy load components
 const Users = lazy(() => import("./client/uam/Users"));
@@ -56,6 +58,13 @@ const PaymentRollover = lazy(() => import("./client/Settlement/index.tsx"));
 const ExposureSelection = lazy(
   () => import("./client/Settlement/ExposureSelection.tsx")
 );
+
+// const MTMCalculator = lazy(
+//   () => import("./client/MTMCalculator/MTMCalculator.tsx")
+// );
+// const MTMRateInput = lazy(
+//   () => import("./client/MTMRateInput/MTMRateInput.tsx")
+// );
 // Loading component
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -85,7 +94,8 @@ function App() {
               <Route path="/fx-cancellation" element={<FxCancellation />} />
               <Route path="/fx-wizard" element={<FxWizard />} />
               <Route path="/fx-output" element={<OutputTabs />} />
-
+              <Route path="/mtm-calculator" element={<MTMCalculator />} />
+              <Route path="/mtm-rate-input" element={<MTMRateInput />} />
               {/* <Route path="/mtm-uploader" element={<MTMUploader />} /> */}
               <Route path="/reports" element={<Reports />} />
               <Route path="/ops-dashboard" element={<OPSDashboard />} />
