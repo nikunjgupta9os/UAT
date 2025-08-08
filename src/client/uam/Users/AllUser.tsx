@@ -76,7 +76,7 @@ const AllUser: React.FC = () => {
 
   type TabVisibility = {
     // add:boolean,
-    edit:boolean,
+    edit: boolean;
     delete: boolean;
     // approve:boolean,
     // reject:boolean,
@@ -108,7 +108,7 @@ const AllUser: React.FC = () => {
           });
         }
       } catch (error) {
-         console.error("Error fetching permissions:", error);
+        console.error("Error fetching permissions:", error);
       }
     };
 
@@ -139,12 +139,12 @@ const AllUser: React.FC = () => {
           );
           setData(transformedUsers);
         } else {
-           console.error("Failed to load users:", response.data.error);
+          console.error("Failed to load users:", response.data.error);
           setLoading(false);
         }
       })
       .catch((error) => {
-         console.error("Error fetching users:", error);
+        console.error("Error fetching users:", error);
         setLoading(false);
       });
   }, []);
@@ -178,12 +178,12 @@ const AllUser: React.FC = () => {
           setOriginalData(transformedUsers); // Store original data
         } else {
           setLoading(false);
-           console.error("Failed to load users:", response.data.error);
+          console.error("Failed to load users:", response.data.error);
         }
       })
       .catch((error) => {
         setLoading(false);
-         console.error("Error fetching users:", error);
+        console.error("Error fetching users:", error);
       });
   }, []);
 
@@ -208,7 +208,9 @@ const AllUser: React.FC = () => {
   };
 
   const handleDelete = async (userId: number) => {
-    const confirmed = await confirm("Are you sure you want to delete this user?");
+    const confirmed = await confirm(
+      "Are you sure you want to delete this user?"
+    );
     if (!confirmed) return;
 
     axios
@@ -222,7 +224,7 @@ const AllUser: React.FC = () => {
         setData((prevUsers) => prevUsers.filter((user) => user.id !== userId));
       })
       .catch((error) => {
-         console.error("Delete error:", error);
+        console.error("Delete error:", error);
         const message =
           error.response?.data?.message ||
           error.response?.data?.error ||
@@ -289,7 +291,7 @@ const AllUser: React.FC = () => {
           </div>
         ),
       },
-      
+
       {
         accessorKey: "srNo",
         header: "Sr No",
@@ -533,7 +535,7 @@ const AllUser: React.FC = () => {
 
     // if (showSelected) {
     //   baseColumns.unshift({
-        
+
     // }
 
     return baseColumns;
@@ -556,9 +558,8 @@ const AllUser: React.FC = () => {
     actions: true,
   };
 
-
   const [columnVisibility, setColumnVisibility] = useState(defaultVisibility);
-  
+
   const table = useReactTable({
     data: filteredData,
     columns,
@@ -590,11 +591,12 @@ const AllUser: React.FC = () => {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="space-y-6">
-      {/* Filters and Search Row */}
+    <div className="space-y-4">
+      {/* Filters Section - Row 1 */}
       <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Status Filter */}
-        <div className="flex flex-col space-y-2">
+        
+        <div className="flex flex-col">
           <label className="text-sm font-medium text-secondary-text">
             Status
           </label>
@@ -612,7 +614,7 @@ const AllUser: React.FC = () => {
         </div>
 
         {/* Date Range Filter */}
-        <div className="flex flex-col space-y-2 relative">
+        <div className="flex flex-col relative">
           <label className="text-sm font-medium text-secondary-text">
             Created Date
           </label>
@@ -638,7 +640,7 @@ const AllUser: React.FC = () => {
                   setDateRange([
                     {
                       ...item.selection,
-                       key: "selection", // <-- Add this line
+                      key: "selection",
                       startDate: item.selection.startDate,
                       endDate: item.selection.endDate,
                     },
@@ -668,24 +670,26 @@ const AllUser: React.FC = () => {
             </div>
           )}
         </div>
+      </div>
 
-        {/* Empty column for spacing */}
-        <div></div>
-
-        {/* Search and Action Buttons */}
-        <div className="flex items-center justify-end gap-4">
+      {/* Search and Action Buttons - Row 2 */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4">
+        <div className="col-span-1 md:col-span-4 flex items-center justify-end gap-4">
+          {/* Download Button */}
           <button
             type="button"
-            className="flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition"
-            title="Download All Roles"
+            className="group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
+                title="Download All Roles"
             onClick={() => exportToExcel(filteredData, "All_Roles")}
           >
-            <Download className="flex item-center justify-center text-primary" />
+            <Download className="flex items-center justify-center text-primary group-hover:text-white" />
           </button>
+
+          {/* Refresh Button */}
           <button
             type="button"
-            className="flex items-center text-primary justify-center border border-primary rounded-lg w-10 h-10  transition"
-            title="Refresh"
+            className="text-primary group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
+                title="Refresh"
             onClick={() => window.location.reload()}
           >
             <svg
@@ -704,6 +708,8 @@ const AllUser: React.FC = () => {
               <path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10M1 14l5.36 5.36A9 9 0 0 0 20.49 15" />
             </svg>
           </button>
+
+          {/* Search Form */}
           <form
             className="relative flex items-center"
             onSubmit={(e) => e.preventDefault()}
@@ -711,7 +717,7 @@ const AllUser: React.FC = () => {
             <input
               type="text"
               placeholder="Search"
-              className="w-full text-secondary-text bg-secondary-color px-3 py-2 border border-border rounded-lg shadow-sm focus:outline-none"
+              className="w-full text-secondary-text bg-secondary-color px-3 py-2 border border-border rounded-lg shadow-sm focus:outline-none hover:border hover:border-primary "
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -858,7 +864,7 @@ const AllUser: React.FC = () => {
                         </td>
                       ))}
                     </tr>
-                    
+
                     {expandedRows.has(row.id) && (
                       <ExpandedRow
                         row={row}
@@ -898,13 +904,15 @@ const AllUser: React.FC = () => {
           </table>
         </div>
         {/* Add Pagination Component */}
-        <Pagination
-          table={table}
-          totalItems={totalItems}
-          currentPageItems={currentPageItems}
-          startIndex={startIndex}
-          endIndex={endIndex}
-        />
+        <div className="mt-4">
+          <Pagination
+            table={table}
+            totalItems={totalItems}
+            currentPageItems={currentPageItems}
+            startIndex={startIndex}
+            endIndex={endIndex}
+          />
+        </div>
       </div>
     </div>
   );
