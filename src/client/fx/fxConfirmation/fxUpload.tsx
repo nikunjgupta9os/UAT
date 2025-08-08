@@ -727,3 +727,4 @@ const FxUploader: React.FC = () => {
 };
 
 export default FxUploader;
+
