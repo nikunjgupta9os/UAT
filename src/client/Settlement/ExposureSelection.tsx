@@ -11,6 +11,7 @@ import Layout from "../common/Layout";
 import CustomSelect from "../common/SearchSelect";
 import Button from "../ui/Button";
 import { useNavigate } from "react-router-dom";
+import { useNotification } from "../Notification/Notification";
 
 import {
   flexRender,
@@ -173,6 +174,7 @@ const nonDraggableColumns = ["expand", "select"];
 //   };
 
 const ExposureSelection = () => {
+  const { notify } = useNotification();
   const [renderVars, setRenderVars] = useState<IfPayload["renderVars"] | null>(
     null
   );
@@ -927,7 +929,29 @@ const ExposureSelection = () => {
     const selectedEntity =
       columnFilters.find((f) => f.id === "entity")?.value || "";
 
-    // 3. Get total open amount of selected rows
+    // 3. Validation checks
+    const validationErrors: string[] = [];
+
+    if (selectedExposureIDs.length === 0) {
+      validationErrors.push("Please select at least one exposure");
+    }
+
+    if (!selectedEntity) {
+      validationErrors.push("Please select an entity");
+    }
+
+    if (!selectedCurrency) {
+      validationErrors.push("Please select a currency");
+    }
+
+    // 4. Show validation errors if any
+    if (validationErrors.length > 0) {
+      const errorMessage = validationErrors.join("\n");
+      notify(`❌ Missing required fields:\n${errorMessage}`, "warning");
+      return;
+    }
+
+    // 5. Get total open amount of selected rows
     const totalOpenAmount = table
       .getSelectedRowModel()
       .rows.reduce(
@@ -935,7 +959,7 @@ const ExposureSelection = () => {
         0
       );
 
-    // 4. Navigate with state, passing exposure_header_ids as an array
+    // 6. Navigate with state, passing exposure_header_ids as an array
     navigate("/settlement", {
       state: {
         exposure_header_ids: selectedExposureIDs, // <-- This is an array
