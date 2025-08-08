@@ -5,7 +5,7 @@ import React from 'react';
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   children: React.ReactNode;
   categories?:'Large' | 'Medium';
-  color?: 'Green' | 'Red' | 'Blue';
+  color?: 'Green' | 'Red' | 'Blue' | 'Fade';
 };
 
 const Button: React.FC<ButtonProps> = ({ children,categories='Large',color='Green', ...props }) => {
@@ -14,6 +14,7 @@ const Button: React.FC<ButtonProps> = ({ children,categories='Large',color='Gree
         Green : 'bg-primary hover:bg-primary-hover',
         Red : 'bg-primary hover:bg-primary-hover',
         Blue : 'bg-blue-500 hover:bg-blue-700',
+        Fade : 'bg-primary-fade hover:bg-primary-lt',
     } [color] ?? 'bg-green-500 hover:bg-green-700'
 
     const BaseCategory = {
