@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
+import Layout from "../common/Layout";
+import CustomSelect from "../common/SearchSelect";
+import Button from "../ui/Button";
 import RateTable from "./RateTable";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import type { Bank, CurrencyPair, Tenor, RateRow, FilterState } from "./Data.d";
@@ -325,7 +328,6 @@ const MTMRateInput: React.FC = () => {
 
   // Filter data based on selected currency pair
   const availableCurrencyPairs = getAvailableCurrencyPairs();
-  
   const filteredRateData = filters.selectedCurrencyPair 
     ? rateData.filter(row => {
         if (row.isNew) return true;
@@ -338,73 +340,54 @@ const MTMRateInput: React.FC = () => {
     return <LoadingSpinner />;
   }
 
+  // For CustomSelect options
+  const bankOptions = banks.map((bank) => ({ value: bank.id, label: bank.name }));
+  const currencyPairOptions = availableCurrencyPairs.map((pair) => ({ value: pair.id, label: pair.pair }));
+
   return (
-    <div className="container mx-auto px-4 py-6">
-      {error && (
-        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
-          <button 
-            onClick={() => setError(null)}
-            className="ml-2 text-red-500 hover:text-red-700"
-          >
-            ×
-          </button>
-        </div>
-      )}
-
-      <div className="bg-green-50 p-6 rounded-lg mb-6">
-        <h3 className="text-lg font-semibold text-green-700 mb-4">Header Filters</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-green-700 mb-2">
-              Bank Name:
-            </label>
-            <select
-              value={filters.selectedBank}
-              onChange={(e) => handleFilterChange('selectedBank', e.target.value)}
-              className="w-full px-3 py-2 border border-green-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+    <Layout title="MTM Rate Input">
+      <div className="space-y-4">
+        {error && (
+          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            {error}
+            <button 
+              onClick={() => setError(null)}
+              className="ml-2 text-red-500 hover:text-red-700"
             >
-              <option value="">Select Bank</option>
-              {banks.map((bank) => (
-                <option key={bank.id} value={bank.id}>
-                  {bank.name}
-                </option>
-              ))}
-            </select>
+              ×
+            </button>
           </div>
+        )}
 
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-green-700 mb-2">
-              Rate Date:
-            </label>
+            <label className="block text-sm font-medium text-green-700 mb-2">Rate Date:</label>
             <input
               type="date"
               value={filters.selectedDate}
               onChange={(e) => handleFilterChange('selectedDate', e.target.value)}
-              className="w-full px-3 py-2 border border-green-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              className="w-full h-[37px] px-2 pr-3 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 appearance-none"
             />
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-green-700 mb-2">
-              Currency Pair (Filter):
-            </label>
-            <select
-              value={filters.selectedCurrencyPair}
-              onChange={(e) => handleFilterChange('selectedCurrencyPair', e.target.value)}
-              disabled={!filters.selectedBank}
-              className="w-full px-3 py-2 border border-green-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-            >
-              <option value="">
-                {filters.selectedBank ? 'All Currency Pairs' : 'Select Bank First'}
-              </option>
-              {availableCurrencyPairs.map((pair) => (
-                <option key={pair.id} value={pair.id}>
-                  {pair.pair}
-                </option>
-              ))}
-            </select>
+          <CustomSelect
+            label="Bank Name"
+            options={bankOptions}
+            selectedValue={filters.selectedBank}
+            onChange={(val) => handleFilterChange('selectedBank', val)}
+            placeholder="Select Bank"
+            isClearable={false}
+          />
+          <CustomSelect
+            label="Currency Pair (Filter)"
+            options={currencyPairOptions}
+            selectedValue={filters.selectedCurrencyPair}
+            onChange={(val) => handleFilterChange('selectedCurrencyPair', val)}
+            placeholder={filters.selectedBank ? 'All Currency Pairs' : 'Select Bank First'}
+            isClearable={false}
+            isDisabled={!filters.selectedBank}
+          />
+          <div className="flex items-end">
+            <Button onClick={handleClearForm}>Clear Form</Button>
           </div>
         </div>
 
@@ -425,6 +408,15 @@ const MTMRateInput: React.FC = () => {
           </div>
         )}
 
+        <div className="flex items-center justify-end gap-2">
+          <div className="w-15rem">
+            <Button onClick={handleSaveAllRates}>Save All Rates</Button>
+          </div>
+          <div className="w-15rem">
+            <Button onClick={handleAddRow}>Add New Rate</Button>
+          </div>
+        </div>
+
         <RateTable
           data={filteredRateData}
           currencyPairs={availableCurrencyPairs}
@@ -439,7 +431,7 @@ const MTMRateInput: React.FC = () => {
           onViewHistory={() => console.log('View history functionality to be implemented')}
         />
       </div>
-    </div>
+    </Layout>
   );
 };
 
