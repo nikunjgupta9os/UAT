@@ -583,7 +583,7 @@ const FxBookingForm: React.FC = () => {
     setSubmitError(null);
     setSubmitSuccess(false);
   };
-  console.log("allTransactions", allTransactions);
+  // console.log("allTransactions", allTransactions);
 
   return (
     <React.Fragment>
