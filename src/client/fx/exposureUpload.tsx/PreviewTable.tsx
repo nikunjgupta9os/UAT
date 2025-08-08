@@ -2,7 +2,7 @@
 import React from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { X } from "lucide-react";
-import NyneOSTable from "../../common/ReuseableTable1.tsx"; // Adjust import path as needed
+import NyneOSTable from "./ReuseableTable1.tsx"; // Adjust import path as needed
 
 interface PreviewTableProps {
   headers: string[];
