@@ -47,9 +47,10 @@ export const templates = [
 ];
 
 const parseExcel = (arrayBuffer: ArrayBuffer): string[][] => {
-  // Simulated Excel parsing for FX Confirmation Template
+  // Simulated Excel parsing for FX Forward Template
   return [
     [
+      // "system_transaction_id",
       "internal_reference_id",
       "entity_level_0",
       "entity_level_1",
@@ -68,6 +69,7 @@ const parseExcel = (arrayBuffer: ArrayBuffer): string[][] => {
       "currency_pair",
       "base_currency",
       "quote_currency",
+      "booking_amount",
       "value_type",
       "actual_value_base_currency",
       "spot_rate",
@@ -79,42 +81,47 @@ const parseExcel = (arrayBuffer: ArrayBuffer): string[][] => {
       "value_local_currency",
       "internal_dealer",
       "counterparty_dealer",
+      "actual_value_base_currency.1",
     ],
     [
-      "TX123",
-      "Corp",
-      "DivA",
-      "DeptB",
-      "SubDept1",
-      "INR",
-      "Buy",
-      "FX Spot",
-      "Bank A",
-      "Online",
-      "1D",
-      "2024-01-01",
-      "2024-01-02",
-      "2024-01-10",
-      "2024-01-03",
-      "USD/INR",
-      "USD",
-      "INR",
-      "Contracted",
-      "1000000",
-      "83.50",
-      "0.25",
-      "0.10",
-      "83.85",
-      "1000000",
-      "1",
-      "83850000",
-      "Dealer1",
-      "Dealer2",
+      // "SYS123456",           // system_transaction_id
+      "TX123",               // internal_reference_id
+      "INT123",              // entity_level_0
+      "Corp",                // entity_level_1
+      "DivA",                // entity_level_2
+      "DeptB",               // entity_level_3
+      "INR",                 // local_currency
+      "Buy",                 // order_type
+      "FX Forward",          // transaction_type
+      "Bank A",              // counterparty
+      "Online",              // mode_of_delivery
+      "1D",                  // delivery_period
+      "2024-01-01",          // add_date
+      "2024-01-02",          // settlement_date
+      "2024-01-10",          // maturity_date
+      "2024-01-03",          // delivery_date
+      "USD/INR",             // currency_pair
+      "USD",                 // base_currency
+      "INR",                 // quote_currency
+      "1000000",             // booking_amount
+      "Contracted",          // value_type
+      "1000000",             // actual_value_base_currency
+      "83.50",               // spot_rate
+      "0.25",                // forward_points
+      "0.10",                // bank_margin
+      "83.85",               // total_rate
+      "83850000",            // value_quote_currency
+      "1",                   // intervening_rate_quote_to_local
+      "83850000",            // value_local_currency
+      "Dealer1",             // internal_dealer
+      "Dealer2",             // counterparty_dealer
+      "1000000",             // actual_value_base_currency.1
     ],
   ];
 };
 
 const expectedHeaders = [
+  // "system_transaction_id",
   "internal_reference_id",
   "entity_level_0",
   "entity_level_1",
@@ -133,6 +140,7 @@ const expectedHeaders = [
   "currency_pair",
   "base_currency",
   "quote_currency",
+  "booking_amount",
   "value_type",
   "actual_value_base_currency",
   "spot_rate",
@@ -144,6 +152,7 @@ const expectedHeaders = [
   "value_local_currency",
   "internal_dealer",
   "counterparty_dealer",
+  "actual_value_base_currency.1",
 ];
 
 interface ifValidationError {
@@ -210,6 +219,7 @@ const validateRow = (
 
     // Check required fields
     const requiredFields = [
+      // "system_transaction_id",
       "internal_reference_id",
       "local_currency",
       "currency_pair",
@@ -230,6 +240,8 @@ const validateRow = (
 
     // Validate numeric fields
     const numericFields = [
+      "booking_amount",
+      "actual_value_base_currency",
       "spot_rate",
       "forward_points",
       "bank_margin",
@@ -237,7 +249,7 @@ const validateRow = (
       "value_quote_currency",
       "intervening_rate_quote_to_local",
       "value_local_currency",
-      "actual_value_base_currency"
+      "actual_value_base_currency.1"
     ];
     
     numericFields.forEach((field) => {
@@ -531,6 +543,7 @@ export const validatePreviewData = (
 
       // Basic required field checks
       const requiredFields = [
+        // "system_transaction_id",
         "internal_reference_id",
         "local_currency", 
         "currency_pair",
@@ -543,6 +556,8 @@ export const validatePreviewData = (
 
       // Numeric field validation
       const numericFields = [
+        "booking_amount",
+        "actual_value_base_currency",
         "spot_rate",
         "forward_points", 
         "bank_margin",
@@ -550,7 +565,7 @@ export const validatePreviewData = (
         "value_quote_currency",
         "intervening_rate_quote_to_local",
         "value_local_currency",
-        "actual_value_base_currency"
+        "actual_value_base_currency.1"
       ];
       
       if (numericFields.includes(header) && value && isNaN(Number(value))) {
@@ -606,37 +621,40 @@ export const handleDownload = (template: any) => {
   // Create headers row
   const headers = expectedHeaders.join(",");
   
-  // Create sample data row for FX Confirmation template
+  // Create sample data row for FX Forward template
   const sampleRow = [
-    "TX123",
-    "Corp",
-    "DivA", 
-    "DeptB",
-    "SubDept1",
-    "INR",
-    "Buy",
-    "FX Spot",
-    "Bank A",
-    "Online",
-    "1D",
-    "2024-01-01",
-    "2024-01-02",
-    "2024-01-10",
-    "2024-01-03",
-    "USD/INR",
-    "USD",
-    "INR",
-    "Contracted",
-    "1000000",
-    "83.50",
-    "0.25",
-    "0.10",
-    "83.85",
-    "1000000",
-    "1",
-    "83850000",
-    "Dealer1",
-    "Dealer2",
+    // "SYS123456",           // system_transaction_id
+    "TX123",               // internal_reference_id
+    "INT123",              // entity_level_0
+    "Corp",                // entity_level_1
+    "DivA",                // entity_level_2
+    "DeptB",               // entity_level_3
+    "INR",                 // local_currency
+    "Buy",                 // order_type
+    "FX Forward",          // transaction_type
+    "Bank A",              // counterparty
+    "Online",              // mode_of_delivery
+    "1D",                  // delivery_period
+    "2024-01-01",          // add_date
+    "2024-01-02",          // settlement_date
+    "2024-01-10",          // maturity_date
+    "2024-01-03",          // delivery_date
+    "USD/INR",             // currency_pair
+    "USD",                 // base_currency
+    "INR",                 // quote_currency
+    "1000000",             // booking_amount
+    "Contracted",          // value_type
+    "1000000",             // actual_value_base_currency
+    "83.50",               // spot_rate
+    "0.25",                // forward_points
+    "0.10",                // bank_margin
+    "83.85",               // total_rate
+    "83850000",            // value_quote_currency
+    "1",                   // intervening_rate_quote_to_local
+    "83850000",            // value_local_currency
+    "Dealer1",             // internal_dealer
+    "Dealer2",             // counterparty_dealer
+    "1000000",             // actual_value_base_currency.1
   ];
 
   const csvContent = headers + "\n" + sampleRow.join(",");
@@ -645,7 +663,7 @@ export const handleDownload = (template: any) => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.setAttribute("download", template?.name ? `${template.name}.csv` : "FX_Confirmation_Template.csv");
+  link.setAttribute("download", template?.name ? `${template.name}.csv` : "FX_Forward_Template.csv");
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
