@@ -95,6 +95,28 @@ const TransactionTable: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editValues, setEditValues] = useState<Transaction>({} as Transaction);
+  const [statusFilter, setStatusFilter] = useState("All");
+
+  // Generate available status options from data
+  const statusOptions = useMemo(() => {
+    const options = new Set<string>();
+    data.forEach((transaction) => {
+      if (transaction.status) options.add(transaction.status);
+    });
+    return ["All", ...Array.from(options)];
+  }, [data]);
+
+  // Filter data based on status filter
+  const filteredData = useMemo(() => {
+    if (statusFilter === "All") {
+      return data;
+    }
+    return data.filter(
+      (transaction) =>
+        transaction.status &&
+        transaction.status.toLowerCase() === statusFilter.toLowerCase()
+    );
+  }, [data, statusFilter]);
 
   // Helper function to get changed fields
   const getChangedFields = (
@@ -166,7 +188,7 @@ const TransactionTable: React.FC = () => {
 
       try {
         setIsSaving(true);
-        console.log("Sending update payload:", changedFields);
+        // console.log("Sending update payload:", changedFields);
 
         // Make PATCH request to update forward
         const response = await axios.post(
@@ -179,7 +201,7 @@ const TransactionTable: React.FC = () => {
           }
         );
 
-        console.log("Update response:", response.data);
+        // console.log("Update response:", response.data);
 
         if (response.data?.success || response.status === 200) {
           // Update local data
@@ -195,7 +217,7 @@ const TransactionTable: React.FC = () => {
           throw new Error(response.data?.message || "Update failed");
         }
       } catch (error) {
-        console.error("Forward update error:", error);
+        // console.error("Forward update error:", error);
         notify("An error occurred while updating the forward.", "error");
         // Don't exit edit mode on error
         return;
@@ -231,7 +253,7 @@ const TransactionTable: React.FC = () => {
         system_transaction_ids: selectedSystemTransactionIds, // Array of selected IDs
       };
 
-      console.log("Sending delete payload:", deletePayload);
+      // console.log("Sending delete payload:", deletePayload);
 
       // Make API call to delete/update the exposures
       const response = await axios.post(
@@ -243,9 +265,9 @@ const TransactionTable: React.FC = () => {
           },
         }
       );
-      console.log(response.data);
+      // console.log(response.data);
 
-      console.log("Delete response:", response.data);
+      // console.log("Delete response:", response.data);
 
       if (response.data?.success || response.status === 200) {
         // Remove the transactions from local data
@@ -267,7 +289,7 @@ const TransactionTable: React.FC = () => {
         throw new Error(response.data?.message || "Delete failed");
       }
     } catch (error) {
-      console.error("Delete error:", error);
+      // console.error("Delete error:", error);
       notify("An error occurred while deleting the transactions.", "error");
     }
   };
@@ -326,7 +348,7 @@ const TransactionTable: React.FC = () => {
 
         setData(transformedData);
       } catch (error) {
-        console.error("Failed to fetch transactions:", error);
+        // console.error("Failed to fetch transactions:", error);
       }
     };
 
@@ -642,7 +664,7 @@ const TransactionTable: React.FC = () => {
   >(defaultColumnVisibility);
 
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     enableRowSelection: true,
     onRowSelectionChange: setSelectedRowIds,
@@ -667,7 +689,7 @@ const TransactionTable: React.FC = () => {
       .getSelectedRowModel()
       .rows.map((row) => row.original.systemTransactionId);
 
-    console.log("Selected IDs:", selectedSystemTransactionIds);
+    // console.log("Selected IDs:", selectedSystemTransactionIds);
 
     if (selectedSystemTransactionIds.length === 0) {
       notify("Please select at least one transaction to update.", "warning");
@@ -698,19 +720,20 @@ const TransactionTable: React.FC = () => {
               : row
           )
         );
+        console.log("Status update response:", response.data);
 
         setSelectedRowIds({});
       } else {
         notify("Status update failed. Please try again.", "error");
       }
     } catch (error) {
-      console.error("Status update error:", error);
+      // console.error("Status update error:", error);
       notify("An error occurred while updating status.", "error");
     }
   };
 
   const pagination = table.getState().pagination;
-  const totalItems = data.length;
+  const totalItems = filteredData.length;
   const startIndex = pagination.pageIndex * pagination.pageSize + 1;
   const endIndex = Math.min(
     (pagination.pageIndex + 1) * pagination.pageSize,
@@ -730,7 +753,27 @@ const TransactionTable: React.FC = () => {
 
   return (
     <div className="w-full space-y-4 pt-6">
-      <div className="flex items-center justify-end">
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Status Filter */}
+        <div className="flex flex-col space-y-2">
+          <label className="text-sm font-medium text-gray-700">Status</label>
+          <select
+            className="border border-border rounded-md px-3 py-2 focus:outline-none bg-secondary-color-lt text-secondary-text"
+              value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            {statusOptions.map((status) => (
+              <option key={status} value={status}>
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div></div>
+        <div></div>
+
+        <div className="flex items-center justify-end">
         <div className="flex items-center gap-2 min-w-[12rem]">
           <Button onClick={() => handleStatusUpdate("Approved")}>
             Approve
@@ -738,6 +781,7 @@ const TransactionTable: React.FC = () => {
           <Button onClick={() => handleStatusUpdate("Rejected")}>Reject</Button>
         </div>
       </div>
+    </div>
 
       <div className="shadow-lg border border-border">
         <DndContext
