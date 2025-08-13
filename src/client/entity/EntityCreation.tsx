@@ -21,14 +21,14 @@ const InputGroup = ({
   placeholder,
 }: any) => (
   <div>
-    <label>
+    <label className="text-secondary-text">
       {label}
       {required && <span className="text-red-500"> *</span>}
     </label>
     <input
       type={type}
       {...register(name, { required })}
-      className="w-full p-2 border rounded"
+      className="w-full p-2 border border-border bg-secondary-color-lt text-secondary-text outline-none rounded"
       placeholder={placeholder || `Enter ${label.toLowerCase()}`}
     />
   </div>
@@ -43,7 +43,7 @@ const DropdownGroup = ({
   onChange,
 }: any) => (
   <div>
-    <label>
+    <label className="text-secondary-text">
       {label}
       {required && <span className="text-red-500"> *</span>}
     </label>
@@ -53,7 +53,7 @@ const DropdownGroup = ({
         register(name).onChange?.(e);
         onChange?.(e);
       }}
-      className="w-full p-2 border rounded"
+      className="w-full p-2 border border-border bg-secondary-color-lt text-secondary-text outline-none rounded"
     >
       <option value="" disabled hidden>
         Select {label}
@@ -191,13 +191,13 @@ const EntityCreation: React.FC = () => {
   return (
     <Layout
       title="Entity Creation"
-      showButton
-      buttonText="Back"
+        // showButton
+        // buttonText="Back"
       onButtonClick={PageChange}
     >
       <div className="flex justify-center">
-        <div className="p-6 rounded-xl border border-gray-300 bg-white shadow-md space-y-6 w-full max-w-[1500px]">
-          <h2 className="text-xl font-semibold">Entity User Form</h2>
+        <div className="p-6 rounded-xl border bg-secondary-color-lt border-border shadow-md space-y-6 w-full max-w-[1500px]">
+          <h2 className="text-xl font-semibold text-secondary-text-dark">Entity User Form</h2>
           <form
             onSubmit={handleSubmit(onSubmit)}
             className="grid grid-cols-3 gap-x-6 gap-y-4"
