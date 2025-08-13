@@ -3,11 +3,12 @@ import { Draggable } from "../../common/Draggable";
 import { Droppable } from "../../common/Droppable";
 import { DndContext, type DragEndEvent } from "@dnd-kit/core";
 import { restrictToFirstScrollableAncestor } from "@dnd-kit/modifiers";
-import { Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { Trash2, ChevronDown, ChevronUp, Download } from "lucide-react";
 import axios from "axios";
 import Pagination from "../../ui/Pagination";
 import Button from "../../ui/Button";
 import { useNotification } from "../../Notification/Notification";
+import * as XLSX from "xlsx";
 import {
   flexRender,
   getCoreRowModel,
@@ -67,16 +68,12 @@ const nonDraggableColumns = ["expand", "action", "select"];
 
 const TransactionTable: React.FC = () => {
   const { notify, confirm } = useNotification();
-  const [selectedRowIds, setSelectedRowIds] = useState<Record<string, boolean>>(
-    {}
-  );
+  const [selectedRowIds, setSelectedRowIds] = useState<Record<string, boolean>>({});
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
-  // const [data, setData] = useState<Transaction[]>(mockTransactionData);
   const [data, setData] = useState<Transaction[]>([]);
-
+  const [searchTerm, setSearchTerm] = useState("");
   const [columnOrder, setColumnOrder] = useState<string[]>([
     "select",
-
     "systemTransactionId",
     "internalReferenceId",
     "orderType",
@@ -106,17 +103,150 @@ const TransactionTable: React.FC = () => {
     return ["All", ...Array.from(options)];
   }, [data]);
 
-  // Filter data based on status filter
+  // Filter data based on status filter and search term
   const filteredData = useMemo(() => {
-    if (statusFilter === "All") {
-      return data;
+    let result = [...data];
+
+    if (searchTerm.trim()) {
+      const lowerSearch = searchTerm.toLowerCase();
+      result = result.filter((item) => {
+        return Object.values(item)
+          .filter(Boolean)
+          .some((val) => String(val).toLowerCase().includes(lowerSearch));
+      });
     }
-    return data.filter(
-      (transaction) =>
-        transaction.status &&
-        transaction.status.toLowerCase() === statusFilter.toLowerCase()
-    );
-  }, [data, statusFilter]);
+
+    if (statusFilter !== "All") {
+      result = result.filter(
+        (item) =>
+          item.status &&
+          item.status.toLowerCase() === statusFilter.toLowerCase()
+      );
+    }
+
+    return result;
+  }, [data, searchTerm, statusFilter]);
+
+  // Export to Excel functionality
+  const exportToExcel = (dataToExport: Transaction[], filename: string) => {
+    try {
+      // Prepare data for export with readable column names
+      const exportData = dataToExport.map((item) => ({
+        "System Transaction ID": item.systemTransactionId,
+        "Internal Reference ID": item.internalReferenceId,
+        "Entity Level 0": item.entityLevel0,
+        "Entity Level 1": item.entityLevel1,
+        "Entity Level 2": item.entityLevel2,
+        "Entity Level 3": item.entityLevel3,
+        "Local Currency": item.localCurrency,
+        "Order Type": item.orderType,
+        "Transaction Type": item.transactionType,
+        "Counterparty": item.counterparty,
+        "Mode of Delivery": item.modeOfDelivery,
+        "Delivery Period": item.deliveryPeriod,
+        "Add Date": item.addDate,
+        "Settlement Date": item.settlementDate,
+        "Maturity Date": item.maturityDate,
+        "Delivery Date": item.deliveryDate,
+        "Currency Pair": item.currencyPair,
+        "Base Currency": item.baseCurrency,
+        "Quote Currency": item.quoteCurrency,
+        "Input Value": item.inputValue,
+        "Value Type": item.valueType,
+        "Actual Value Base Currency": item.actualValueBaseCurrency,
+        "Spot Rate": item.spotRate,
+        "Forward Points": item.forwardPoints,
+        "Bank Margin": item.bankMargin,
+        "Total Rate": item.totalRate,
+        "Value Quote Currency": item.valueQuoteCurrency,
+        "Intervening Rate Quote to Local": item.interveningRateQuoteToLocal,
+        "Value Local Currency": item.valueLocalCurrency,
+        "Internal Dealer": item.internalDealer,
+        "Counterparty Dealer": item.counterpartyDealer,
+        "Remarks": item.remarks,
+        "Narration": item.narration,
+        "Transaction Timestamp": item.transactionTimestamp,
+        "Bank Transaction ID": item.bankTransactionId,
+        "Swift Unique ID": item.swiftUniqueId,
+        "Bank Confirmation Date": item.bankConfirmationDate,
+        "Status": item.status,
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Forwards");
+
+      // Auto-size columns
+      const maxWidth = 50;
+      const wscols = Object.keys(exportData[0] || {}).map(() => ({ width: maxWidth }));
+      worksheet["!cols"] = wscols;
+
+      XLSX.writeFile(workbook, `${filename}.xlsx`);
+      notify("Data exported successfully!", "success");
+    } catch (error) {
+      console.error("Export error:", error);
+      notify("Failed to export data. Please try again.", "error");
+    }
+  };
+
+  // Refresh functionality
+  const handleRefresh = async () => {
+    try {
+      notify("Refreshing data...", "info");
+      const response = await axios.get(
+        "https://backend-slqi.onrender.com/api/forwards/forward-bookings/forwardDetails"
+      );
+      const apiData = response.data?.data ?? [];
+
+      // Transform data (same as in useEffect)
+      const transformedData: Transaction[] = apiData.map((item: any) => ({
+        systemTransactionId: item.system_transaction_id,
+        internalReferenceId: item.internal_reference_id,
+        entityLevel0: item.entity_level_0,
+        entityLevel1: item.entity_level_1,
+        entityLevel2: item.entity_level_2,
+        entityLevel3: item.entity_level_3,
+        localCurrency: item.local_currency,
+        orderType: item.order_type,
+        transactionType: item.transaction_type,
+        counterparty: item.counterparty,
+        modeOfDelivery: item.mode_of_delivery,
+        deliveryPeriod: item.delivery_period,
+        addDate: item.add_date,
+        settlementDate: formatDateForApi(item.settlement_date),
+        maturityDate: formatDateForApi(item.maturity_date),
+        deliveryDate: formatDateForApi(item.delivery_date),
+        currencyPair: item.currency_pair,
+        baseCurrency: item.base_currency,
+        quoteCurrency: item.quote_currency,
+        inputValue: parseFloat(item.booking_amount),
+        valueType: item.value_type,
+        actualValueBaseCurrency: parseFloat(item.actual_value_base_currency),
+        spotRate: parseFloat(item.spot_rate),
+        forwardPoints: parseFloat(item.forward_points),
+        bankMargin: parseFloat(item.bank_margin),
+        totalRate: parseFloat(item.total_rate),
+        valueQuoteCurrency: parseFloat(item.value_quote_currency),
+        interveningRateQuoteToLocal: parseFloat(item.intervening_rate_quote_to_local),
+        valueLocalCurrency: parseFloat(item.value_local_currency),
+        internalDealer: item.internal_dealer,
+        counterpartyDealer: item.counterparty_dealer,
+        remarks: item.remarks,
+        narration: item.narration,
+        transactionTimestamp: new Date(item.transaction_timestamp),
+        bankTransactionId: item.bank_transaction_id || "",
+        swiftUniqueId: item.swift_unique_id || "",
+        bankConfirmationDate: item.bank_confirmation_date || "",
+        status: item.processing_status,
+      }));
+
+      setData(transformedData);
+      notify("Data refreshed successfully!", "success");
+    } catch (error) {
+      console.error("Failed to refresh data:", error);
+      notify("Failed to refresh data. Please try again.", "error");
+    }
+  };
 
   // Helper function to get changed fields
   const getChangedFields = (
@@ -754,12 +884,12 @@ const TransactionTable: React.FC = () => {
   return (
     <div className="w-full space-y-4 pt-6">
       <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Status Filter */}
+        {/* Status Filter */}
         <div className="flex flex-col space-y-2">
           <label className="text-sm font-medium text-gray-700">Status</label>
           <select
             className="border border-border rounded-md px-3 py-2 focus:outline-none bg-secondary-color-lt text-secondary-text"
-              value={statusFilter}
+            value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
             {statusOptions.map((status) => (
@@ -773,15 +903,94 @@ const TransactionTable: React.FC = () => {
         <div></div>
         <div></div>
 
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-end gap-4">
+          <button
+            type="button"
+            className="flex items-center justify-center border border-border rounded-lg px-2 h-10 text-sm transition hover:bg-primary-xl"
+            title="Download All Forwards"
+            onClick={() => exportToExcel(filteredData, "Pending_Forwards")}
+          >
+            <Download className="flex item-center justify-center text-primary" />
+          </button>
+          <button
+            type="button"
+            className="flex items-center justify-center border border-border rounded-lg w-10 h-10 transition hover:bg-primary-xl"
+            title="Refresh"
+            onClick={handleRefresh}
+          >
+            <svg
+              width="20"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              viewBox="0 0 24 24"
+              className="text-primary"
+            >
+              <path d="M23 4v6h-6" />
+              <path d="M1 20v-6h6" />
+              <path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10M1 14l5.36 5.36A9 9 0 0 0 20.49 15" />
+            </svg>
+          </button>
+          <form
+            className="relative flex items-center"
+            onSubmit={(e) => e.preventDefault()}
+          >
+            <input
+              type="text"
+              placeholder="Search"
+              className="pl-4 pr-10 py-2 border border-border rounded-lg focus:outline-none bg-secondary-color-lt text-secondary-text-dark min-w-full"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <button
+              type="submit"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-primary"
+              tabIndex={-1}
+              aria-label="Search"
+            >
+              <svg
+                width="18"
+                height="18"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+                className="text-primary"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 min-w-[12rem]">
           <Button onClick={() => handleStatusUpdate("Approved")}>
             Approve
           </Button>
           <Button onClick={() => handleStatusUpdate("Rejected")}>Reject</Button>
         </div>
+
+        {/* Search Results Info */}
+        {searchTerm && (
+          <div className="text-sm text-gray-600">
+            Found {filteredData.length} result(s) for "{searchTerm}"
+            <button
+              onClick={() => setSearchTerm("")}
+              className="ml-2 text-primary hover:underline"
+            >
+              Clear
+            </button>
+          </div>
+        )}
       </div>
-    </div>
 
       <div className="shadow-lg border border-border">
         <DndContext
