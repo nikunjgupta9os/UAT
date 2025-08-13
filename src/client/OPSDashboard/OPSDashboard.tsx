@@ -144,65 +144,93 @@ const TreasuryDashboard: React.FC = () => {
   // Data fetching
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const [
-          positionsResponse,
-          unhedgedResponse,
-          expiryResponse,
-          summaryResponse,
-          activeForwardsResponse,
-        ] = await Promise.all([
-          axios.get(
-            "https://backend-slqi.onrender.com/api/exposureUpload/top-currencies-headers"
-          ),
-          axios.get(
-            "https://backend-slqi.onrender.com/api/exposureUpload/USDsum-headers"
-          ),
-          axios.get(
-            "https://backend-slqi.onrender.com/api/exposureUpload/maturity-expiry-count-7days-headers"
-          ),
-          axios.get(
-            "https://backend-slqi.onrender.com/api/exposureUpload/maturity-expiry-summary-headers"
-          ),
-          axios.get(
-            "https://backend-slqi.onrender.com/api/forwardDash/active-forwards"
-          ),
-        ]);
+      setLoading(true);
 
-        // Process currency positions
-        const colorMap: Record<string, string> = {
-          "bg-green-400": "bg-green-400",
-          "bg-blue-400": "bg-blue-400",
-          "bg-yellow-400": "bg-yellow-400",
-          "bg-red-400": "bg-red-400",
-          "bg-purple-400": "bg-purple-400",
-          "bg-orange-400": "bg-orange-400",
-          "bg-teal-400": "bg-teal-400",
-          "bg-pink-400": "bg-pink-400",
-          "bg-indigo-400": "bg-indigo-400",
-        };
+      // Currency positions
+      axios
+        .get(
+          "https://backend-slqi.onrender.com/api/exposureUpload/top-currencies-headers"
+        )
+        .then((res) => {
+          const colorMap: Record<string, string> = {
+            "bg-green-400": "bg-green-400",
+            "bg-blue-400": "bg-blue-400",
+            "bg-yellow-400": "bg-yellow-400",
+            "bg-red-400": "bg-red-400",
+            "bg-purple-400": "bg-purple-400",
+            "bg-orange-400": "bg-orange-400",
+            "bg-teal-400": "bg-teal-400",
+            "bg-pink-400": "bg-pink-400",
+            "bg-indigo-400": "bg-indigo-400",
+          };
 
-        const mappedPositions = positionsResponse.data.map((item: any) => ({
-          currency: item.currency,
-          value: item.value / 10000, // Convert to millions
-          color: colorMap[item.color] || "bg-gray-400",
-        }));
+          const mappedPositions = res.data.map((item: any) => ({
+            currency: item.currency,
+            value: item.value / 10000, // Convert to millions
+            color: colorMap[item.color] || "bg-gray-400",
+          }));
+          setCurrencyPositions(mappedPositions);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch currency positions:", err);
+        });
 
-        // Process unhedged value
-        let usdValue = unhedgedResponse.data.totalUsd / 1000000;
-        usdValue = usdValue - 1.2301;
+      // Unhedged exposure
+      axios
+        .get(
+          "https://backend-slqi.onrender.com/api/exposureUpload/USDsum-headers"
+        )
+        .then((res) => {
+          let usdValue = (res.data.totalUsd ?? 0) / 1000000;
+          usdValue = usdValue - 1.2301; // TODO: Replace with dynamic hedged value if available
+          setUnhedgedValue(usdValue);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch unhedged exposure:", err);
+          setUnhedgedValue(0);
+        });
 
-        setCurrencyPositions(mappedPositions);
-        setUnhedgedValue(usdValue);
-        setMaturityExpiryCount(expiryResponse.data.value);
-        setMaturitySummary(summaryResponse.data);
-        setActiveForwards(Number(activeForwardsResponse.data.ActiveForward));
-      } catch (err) {
-        setError("Failed to load dashboard data");
-        console.error("Dashboard data fetch error:", err);
-      } finally {
-        setLoading(false);
-      }
+      // Maturity expiry count
+      axios
+        .get(
+          "https://backend-slqi.onrender.com/api/exposureUpload/maturity-expiry-count-7days-headers"
+        )
+        .then((res) => {
+          setMaturityExpiryCount(res.data.value);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch maturity expiry count:", err);
+          setMaturityExpiryCount(0);
+        });
+
+      // Maturity expiry summary
+      axios
+        .get(
+          "https://backend-slqi.onrender.com/api/exposureUpload/maturity-expiry-summary-headers"
+        )
+        .then((res) => {
+          setMaturitySummary(res.data);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch maturity expiry summary:", err);
+          setMaturitySummary([]);
+        });
+
+      // Active forwards
+      axios
+        .get(
+          "https://backend-slqi.onrender.com/api/forwardDash/active-forwards"
+        )
+        .then((res) => {
+          setActiveForwards(Number(res.data.ActiveForward ?? 0));
+        })
+        .catch((err) => {
+          console.error("Failed to fetch active forwards:", err);
+          setActiveForwards(0);
+        })
+        .finally(() => {
+          setLoading(false); // Once last request finishes
+        });
     };
 
     fetchData();
