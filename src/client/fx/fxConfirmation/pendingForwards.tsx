@@ -1101,7 +1101,7 @@ const TransactionTable: React.FC = () => {
                               <div className="grid grid-cols-1 md:grid-cols-7    gap-4">
                                 {(
                                   [
-                                    "systemTransactionId",
+                                    // "systemTransactionId",
                                     "internalReferenceId",
                                     "orderType",
                                     "transactionType",
