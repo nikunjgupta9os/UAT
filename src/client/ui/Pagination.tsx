@@ -19,12 +19,12 @@ function Pagination<T>({
   const pagination = table.getState().pagination;
 
   return (
-    <div className="flex items-center justify-between bg-gray-50 px-4 py-2 text-sm text-gray-700">
+    <div className="flex items-center justify-between bg-secondary-color rounded-sm px-4 py-2 text-sm text-secondary-text-dark">
       {/* Left side - Page size selector */}
       <div className="flex items-center gap-2">
         <span>Show</span>
         <select
-          className="border rounded px-2 py-1"
+          className="border bg-secondary-color border-border rounded px-2 py-1"
           value={pagination.pageSize}
           onChange={(e) => {
             table.setPageSize(Number(e.target.value));
@@ -45,7 +45,7 @@ function Pagination<T>({
           <button
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
-            className="flex items-center gap-1 px-3 py-1 border border-primary-lt rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+            className="flex items-center gap-1 px-3 py-1 border border-primary-lt rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-xl"
           >
             <ChevronLeft className="w-4 h-4" />
             Previous
@@ -62,7 +62,7 @@ function Pagination<T>({
           <button
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
-            className="flex items-center gap-1 px-3 py-1 border border-primary-lt rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+            className="flex items-center gap-1 px-3 py-1 border border-primary-lt rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-xl"
           >
             Next
             <ChevronRight className="w-4 h-4" />
