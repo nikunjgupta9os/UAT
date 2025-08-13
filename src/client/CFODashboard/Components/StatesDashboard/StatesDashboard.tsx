@@ -4,22 +4,19 @@ import axios from "axios";
 
 type CurrencyData = {
   currency: string;
-  amount: string; // assuming backend sends plain number like 89200000
+  amount: string;
 };
+
 const FinancialDashboard = () => {
   const [payablesData, setPayablesData] = useState<CurrencyData[]>([]);
   const [receivablesData, setReceivablesData] = useState<CurrencyData[]>([]);
   const [forwardsData, setForwardsData] = useState<any[]>([]);
 
-  // Function to parse formatted currency string back to number (only for calculations)
   const parseCurrencyString = (currencyStr: string): number => {
     if (!currencyStr || typeof currencyStr !== 'string') return 0;
-    // Remove $ symbol and get the numeric part
     const cleanStr = currencyStr.replace('$', '').trim();
-    // Handle negative values
     const isNegative = cleanStr.startsWith('-');
     const positiveStr = cleanStr.replace('-', '');
-    // Parse based on suffix
     let value = 0;
     if (positiveStr.endsWith('K')) {
       value = parseFloat(positiveStr.replace('K', '')) * 1000;
@@ -31,7 +28,6 @@ const FinancialDashboard = () => {
     return isNegative ? -value : value;
   };
 
-  // Function to format numbers with K, M prefixes
   const formatCurrency = (amount: number): string => {
     const absAmount = Math.abs(amount);
     const sign = amount < 0 ? '-' : '';
@@ -44,28 +40,45 @@ const FinancialDashboard = () => {
     }
   };
 
-  // Calculate totals by parsing the formatted strings
   const totalPayables = payablesData.reduce((sum, item) => sum + parseCurrencyString(item.amount), 0);
   const totalReceivables = receivablesData.reduce((sum, item) => sum + parseCurrencyString(item.amount), 0);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [payablesRes, receivablesRes, forwardsRes] = await Promise.all([
-          axios.get("https://backend-slqi.onrender.com/api/exposureUpload/payables-headers"),
-          axios.get("https://backend-slqi.onrender.com/api/exposureUpload/receivables-headers"),
-          axios.get("https://backend-slqi.onrender.com/api/forwardDash/bank-trades"),
-        ]);
+  const fetchData = async () => {
+    // Payables
+    axios.get("https://backend-slqi.onrender.com/api/exposureUpload/payables-headers")
+      .then(res => {
+        setPayablesData(res.data);
+      })
+      .catch(err => {
+        console.error("Failed to fetch payables:", err);
+        setPayablesData([]); // fallback
+      });
 
-        setPayablesData(payablesRes.data);
-        setReceivablesData(receivablesRes.data);
-        setForwardsData(forwardsRes.data);
-      } catch (error) {
-        console.error("Error fetching exposure data:", error);
-      }
-    };
-    fetchData();
-  }, []);
+    // Receivables
+    axios.get("https://backend-slqi.onrender.com/api/exposureUpload/receivables-headers")
+      .then(res => {
+        setReceivablesData(res.data);
+      })
+      .catch(err => {
+        console.error("Failed to fetch receivables:", err);
+        setReceivablesData([]); // fallback
+      });
+
+    // Forwards
+    axios.get("https://backend-slqi.onrender.com/api/forwardDash/bank-trades")
+      .then(res => {
+        setForwardsData(res.data);
+      })
+      .catch(err => {
+        console.error("Failed to fetch forwards:", err);
+        setForwardsData([]); // fallback
+      });
+  };
+
+  fetchData();
+}, []);
+
 
   const rolloversData = [
     { label: 'Total Rollovers:', value: '5' },
@@ -74,13 +87,10 @@ const FinancialDashboard = () => {
     { label: 'JPY Rollovers:', value: '1' },
   ];
 
-
-
   return (
-    <div className="grid grid-cols-4 gap-x-6">
-      {/* Total Payables Card - Enhanced with Scroll */}
-      <div className="bg-gradient-to-br from-[#bdf6e1] to-[#90cbb5] border border-primary-lt rounded-xl p-6 shadow-sm hover:shadow-lg hover:scale-[1.02] transition-all duration-300 group relative overflow-hidden max-h-[500px] flex flex-col">
-        {/* Complex Background Pattern */}
+    <div className="flex flex-wrap gap-6">
+      {/* Total Payables Card */}
+      <div className="flex-[1_1_22%] min-w-[200px] bg-gradient-to-br from-[#bdf6e1] to-[#90cbb5] border border-primary-lt rounded-xl p-6 shadow-sm hover:shadow-lg transform-gpu hover:scale-[1.015] hover:z-10 transition-all duration-300 group relative overflow-hidden max-h-[500px] flex flex-col will-change-transform">
         <div className="absolute inset-0 opacity-10">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -113,7 +123,7 @@ const FinancialDashboard = () => {
           </div>
           <div className="flex-1 overflow-y-auto mt-2 pr-2 custom-scrollbar">
             <div className="space-y-1">
-              {payablesData.map((item, _) => (
+              {payablesData.map((item) => (
                 <div key={item.currency} className="flex justify-between items-center py-1 px-3 bg-white/70 rounded-lg hover:bg-white/50 transition-colors shadow-sm">
                   <span className="text-slate-600 text-md font-medium flex items-center">
                     <span className="w-3 h-3 bg-primary-lt rounded-full mr-2"></span>
@@ -129,9 +139,8 @@ const FinancialDashboard = () => {
         </div>
       </div>
 
-      {/* Total Receivables Card - Enhanced with Scroll */}
-      <div className="bg-gradient-to-br from-[#93DA97] to-green-600 border border-green-400 rounded-xl p-6 shadow-sm hover:shadow-lg hover:scale-[1.02] transition-all duration-300 group relative overflow-hidden h-[500px] flex flex-col">
-        {/* Diagonal Stripe Background */}
+      {/* Total Receivables Card */}
+      <div className="flex-[1_1_22%] min-w-[200px] bg-gradient-to-br from-[#93DA97] to-green-600 border border-green-400 rounded-xl p-6 shadow-sm hover:shadow-lg transform-gpu hover:scale-[1.015] hover:z-10 transition-all duration-300 group relative overflow-hidden max-h-[500px] flex flex-col will-change-transform">
         <div className="absolute inset-0 opacity-10">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -161,7 +170,7 @@ const FinancialDashboard = () => {
           </div>
           <div className="flex-1 overflow-y-auto mt-2 pr-2 custom-scrollbar">
             <div className="space-y-1">
-              {receivablesData.map((item, _) => (
+              {receivablesData.map((item) => (
                 <div key={item.currency} className="flex justify-between items-center py-1 px-3 bg-white/70 rounded-lg hover:bg-[#b9e6cbd0] transition-colors shadow-sm">
                   <span className="text-slate-700 text-md font-medium flex items-center">
                     <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
@@ -177,8 +186,8 @@ const FinancialDashboard = () => {
         </div>
       </div>
 
-      <div className="bg-gradient-to-br from-[#A3DC9A] to-[#4A9782] border border-teal-400 rounded-xl p-6 shadow-sm hover:shadow-lg hover:scale-[1.02] transition-all duration-300 group relative overflow-hidden h-[500px] flex flex-col">
-        {/* Wave Background Pattern */}
+      {/* Bank Wise Forwards Card */}
+      <div className="flex-[1_1_22%] min-w-[200px] bg-gradient-to-br from-[#A3DC9A] to-[#4A9782] border border-teal-400 rounded-xl p-6 shadow-sm hover:shadow-lg transform-gpu hover:scale-[1.015] hover:z-10 transition-all duration-300 group relative overflow-hidden max-h-[500px] flex flex-col will-change-transform">
         <div className="absolute inset-0 opacity-10">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -203,7 +212,6 @@ const FinancialDashboard = () => {
             </div>
           </div>
           
-          {/* Scrollable Container */}
           <div className="flex-1 overflow-y-auto pr-2 mt-2 custom-scrollbar">
             <div className="space-y-3">
               {forwardsData.map((bank, index) => (
@@ -235,10 +243,8 @@ const FinancialDashboard = () => {
         </div>
       </div>
 
-
-      {/* Forward Rollovers Card - Enhanced with Scroll */}
-      <div className="bg-gradient-to-br from-emerald-200 to-teal-200 border border-emerald-200 rounded-xl p-6 shadow-sm hover:shadow-lg hover:scale-[1.02] transition-all duration-300 group relative overflow-hidden h-[500px] flex flex-col">
-        {/* Dot Grid Background */}
+      {/* Forward Rollovers Card */}
+      <div className="flex-[1_1_22%] min-w-[200px] bg-gradient-to-br from-emerald-200 to-teal-200 border border-emerald-200 rounded-xl p-6 shadow-sm hover:shadow-lg transform-gpu hover:scale-[1.015] hover:z-10 transition-all duration-300 group relative overflow-hidden max-h-[500px] flex flex-col will-change-transform">
         <div className="absolute inset-0 opacity-10">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -284,8 +290,6 @@ const FinancialDashboard = () => {
           </div>
         </div>
       </div>
-
-      
     </div>
   );
 };
