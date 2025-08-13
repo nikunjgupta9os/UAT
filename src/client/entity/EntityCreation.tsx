@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import Layout from "../common/Layout";
-import { no } from "zod/v4/locales";
+// import { no } from "zod/v4/locales";
 import Button from "../ui/Button";
 import { useNotification } from "../Notification/Notification.tsx";
 const entityTypes = ["Legal", "Non-Legal"];
@@ -21,14 +21,14 @@ const InputGroup = ({
   placeholder,
 }: any) => (
   <div>
-    <label className="text-secondary-text">
+    <label>
       {label}
       {required && <span className="text-red-500"> *</span>}
     </label>
     <input
       type={type}
       {...register(name, { required })}
-      className="w-full p-2 border border-border bg-secondary-color-lt text-secondary-text outline-none rounded"
+      className="w-full p-2 border rounded"
       placeholder={placeholder || `Enter ${label.toLowerCase()}`}
     />
   </div>
@@ -43,7 +43,7 @@ const DropdownGroup = ({
   onChange,
 }: any) => (
   <div>
-    <label className="text-secondary-text">
+    <label>
       {label}
       {required && <span className="text-red-500"> *</span>}
     </label>
@@ -53,7 +53,7 @@ const DropdownGroup = ({
         register(name).onChange?.(e);
         onChange?.(e);
       }}
-      className="w-full p-2 border border-border bg-secondary-color-lt text-secondary-text outline-none rounded"
+      className="w-full p-2 border rounded"
     >
       <option value="" disabled hidden>
         Select {label}
@@ -103,6 +103,7 @@ const EntityCreation: React.FC = () => {
       parentname: level > 1 ? data.parent || null : null,
       is_top_level_entity: level === 1,
       address: data.address || null,
+      companny_name : data.companyName || null,
       contact_phone: data.contact || null,
       contact_email: data.contactEmail || null,
       registration_number: legal ? data.registerNumber || null : null,
@@ -191,13 +192,13 @@ const EntityCreation: React.FC = () => {
   return (
     <Layout
       title="Entity Creation"
-        // showButton
-        // buttonText="Back"
+      showButton
+      buttonText="Back"
       onButtonClick={PageChange}
     >
       <div className="flex justify-center">
-        <div className="p-6 rounded-xl border bg-secondary-color-lt border-border shadow-md space-y-6 w-full max-w-[1500px]">
-          <h2 className="text-xl font-semibold text-secondary-text-dark">Entity User Form</h2>
+        <div className="p-6 rounded-xl border border-gray-300 bg-white shadow-md space-y-6 w-full max-w-[1500px]">
+          <h2 className="text-xl font-semibold">Entity User Form</h2>
           <form
             onSubmit={handleSubmit(onSubmit)}
             className="grid grid-cols-3 gap-x-6 gap-y-4"
@@ -209,13 +210,22 @@ const EntityCreation: React.FC = () => {
             />
 
             <InputGroup
+              label="Company Name (Full Name)"
+              name="companyName"
+              register={register}
+              required
+            />
+            
+
+            <InputGroup
               label="Company / Entity Name"
               name="entityName"
               register={register}
               required
             />
+            
             <DropdownGroup
-              label="Entity"
+              label="Entity Level"
               name="entity"
               options={entities}
               register={register}
