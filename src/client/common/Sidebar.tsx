@@ -30,7 +30,6 @@ import {
   Calculator,
   ChevronsLeftRightEllipsis,
   CircleX,
-  Radius,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -120,7 +119,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       { label: "FX Cancellation & Rollover", path: "/fx-wizard", icon: <CircleX /> },
     ],
   },
-  {label:"MTM Screens", icon: <Radius />,
+  {label:"MTM Screens", icon: <Store />,
     subItems: [
       { label: "MTM Calculator", path: "/mtm-calculator", icon: <Calculator /> },
       { label: "MTM Rates Input", path: "/mtm-rate-input", icon: <ChevronsLeftRightEllipsis /> },
@@ -350,7 +349,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 }`}
               >
                 <span className="w-6 flex justify-center">{subItem.icon}</span>
-                <span className="ml-3 text-sm">{subItem.label}</span>
+                <span className="ml-3 text-sm text-start">{subItem.label}</span>
               </button>
             ))}
           </div>
