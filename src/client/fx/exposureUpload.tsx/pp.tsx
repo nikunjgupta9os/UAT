@@ -180,9 +180,9 @@ interface ExposureRequest {
 }
 
 type TabVisibility = {
-    delete: boolean;
-    view: boolean;
-  };
+  delete: boolean;
+  view: boolean;
+};
 
 const AllExposureRequest: React.FC = () => {
   const [renderVars, setRenderVars] = useState<IfPayload["renderVars"] | null>(
@@ -201,11 +201,11 @@ const AllExposureRequest: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   const roleName = localStorage.getItem("userRole");
-    const [Visibility, setVisibility] = useState<TabVisibility>({
-      view: true,
-      delete: true,
-    });
-  
+  const [Visibility, setVisibility] = useState<TabVisibility>({
+    view: true,
+    delete: true,
+  });
+
   const statusOptions = useMemo(() => {
     const options = new Set<string>();
     data.forEach((user) => {
@@ -215,29 +215,29 @@ const AllExposureRequest: React.FC = () => {
   }, [data]);
 
   const filteredData = useMemo(() => {
-      let result = [...data];
-  
-      if (searchTerm.trim()) {
-        const lowerSearch = searchTerm.toLowerCase();
-        result = result.filter((item) => {
-          return Object.values(item)
-            .filter(Boolean)
-            .some((val) => String(val).toLowerCase().includes(lowerSearch));
-        });
-      }
-  
-      if (statusFilter !== "All") {
+    let result = [...data];
+
+    if (searchTerm.trim()) {
+      const lowerSearch = searchTerm.toLowerCase();
+      result = result.filter((item) => {
+        return Object.values(item)
+          .filter(Boolean)
+          .some((val) => String(val).toLowerCase().includes(lowerSearch));
+      });
+    }
+
+    if (statusFilter !== "All") {
       result = result.filter(
         (item) =>
           item.approval_status &&
           item.approval_status.toLowerCase() === statusFilter.toLowerCase()
       );
     }
-  
-      return result;
-    }, [data, searchTerm, statusFilter]);
 
-   const toggleSelect = (id: string) => {
+    return result;
+  }, [data, searchTerm, statusFilter]);
+
+  const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(id)) newSet.delete(id);
@@ -252,12 +252,10 @@ const AllExposureRequest: React.FC = () => {
     fetchRenderVars()
       .then((renderVarsRes) => {
         setRenderVars(renderVarsRes);
-        setVisibility(
-          {
-            view: renderVarsRes.btnApprove,
-            delete: renderVarsRes.btnApprove,
-          }
-        )
+        setVisibility({
+          view: renderVarsRes.btnApprove,
+          delete: renderVarsRes.btnApprove,
+        });
         if (Array.isArray(renderVarsRes.pageData)) {
           setData(renderVarsRes.pageData);
           setLoading(false);
@@ -267,7 +265,7 @@ const AllExposureRequest: React.FC = () => {
         }
       })
       .catch((err) => {
-         console.error("Error fetching renderVars:", err);
+        console.error("Error fetching renderVars:", err);
         setRenderVars(fallbackRenderVars);
         setLoading(false);
       });
@@ -320,7 +318,7 @@ const AllExposureRequest: React.FC = () => {
         accessorKey: "document_id",
         header: "Document ID",
         cell: ({ getValue }) => (
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-secondary-text-dark">
             {getValue() as string}
           </span>
         ),
@@ -329,21 +327,21 @@ const AllExposureRequest: React.FC = () => {
         accessorKey: "exposure_type",
         header: "Type",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string}</span>
+          <span className="text-secondary-text">{getValue() as string}</span>
         ),
       },
       {
         accessorKey: "entity",
         header: "Entity",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string}</span>
+          <span className="text-secondary-text">{getValue() as string}</span>
         ),
       },
       {
         accessorKey: "counterparty_name",
         header: "Counterparty",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string}</span>
+          <span className="text-secondary-text">{getValue() as string}</span>
         ),
       },
       {
@@ -353,7 +351,7 @@ const AllExposureRequest: React.FC = () => {
           const amount = Number(getValue());
           const currency = row.original.currency;
           return (
-            <span className="font-medium text-gray-900">
+            <span className="font-medium text-secondary-text-dark">
               {isNaN(amount)
                 ? "-"
                 : new Intl.NumberFormat("en-US", {
@@ -371,7 +369,7 @@ const AllExposureRequest: React.FC = () => {
           const amount = Number(getValue());
           const currency = row.original.currency;
           return (
-            <span className="font-medium text-gray-900">
+            <span className="font-medium text-secondary-text-dark">
               {isNaN(amount)
                 ? "-"
                 : new Intl.NumberFormat("en-US", {
@@ -386,7 +384,7 @@ const AllExposureRequest: React.FC = () => {
         accessorKey: "currency",
         header: "Currency",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string}</span>
+          <span className="text-secondary-text">{getValue() as string}</span>
         ),
       },
       {
@@ -395,7 +393,7 @@ const AllExposureRequest: React.FC = () => {
         cell: ({ getValue }) => {
           const date = new Date(getValue() as string);
           return (
-            <span className="text-gray-700">
+            <span className="text-secondary-text">
               {isNaN(date.getTime()) ? "—" : date.toLocaleDateString()}
             </span>
           );
@@ -407,7 +405,7 @@ const AllExposureRequest: React.FC = () => {
         cell: ({ getValue }) => {
           const date = new Date(getValue() as string);
           return (
-            <span className="text-gray-700">
+            <span className="text-secondary-text">
               {isNaN(date.getTime()) ? "—" : date.toLocaleDateString()}
             </span>
           );
@@ -440,7 +438,7 @@ const AllExposureRequest: React.FC = () => {
           return (
             <span
               className={`px-2 py-1 text-xs font-medium rounded-full ${
-                statusColors[status] || "bg-gray-100 text-gray-800"
+                statusColors[status] || "bg-gray-100 text-secondary-text-dark"
               }`}
             >
               {status}
@@ -473,7 +471,7 @@ const AllExposureRequest: React.FC = () => {
           return (
             <span
               className={`px-2 py-1 text-xs font-medium rounded-full ${
-                statusColors[status] || "bg-gray-100 text-gray-800"
+                statusColors[status] || "bg-gray-100 text-secondary-text"
               }`}
             >
               {status}
@@ -485,70 +483,70 @@ const AllExposureRequest: React.FC = () => {
         accessorKey: "company_code",
         header: "Company Code",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string || "—"}</span>
+          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "counterparty_type",
         header: "Counterparty Type",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string || "—"}</span>
+          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "counterparty_code",
         header: "Counterparty Code",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string || "—"}</span>
+          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "entity1",
         header: "Entity 1",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string || "—"}</span>
+          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "entity2",
         header: "Entity 2",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string || "—"}</span>
+          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "entity3",
         header: "Entity 3",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string || "—"}</span>
+          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "product_id",
         header: "Product ID",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string}</span>
+          <span className="text-secondary-text">{getValue() as string}</span>
         ),
       },
       {
         accessorKey: "product_description",
         header: "Product Description",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string}</span>
+          <span className="text-secondary-text">{getValue() as string}</span>
         ),
       },
       {
         accessorKey: "quantity",
         header: "Quantity",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string}</span>
+          <span className="text-secondary-text">{getValue() as string}</span>
         ),
       },
       {
         accessorKey: "unit_of_measure",
         header: "UOM",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string || "—"}</span>
+          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
         ),
       },
       {
@@ -603,42 +601,42 @@ const AllExposureRequest: React.FC = () => {
         accessorKey: "payment_terms",
         header: "Payment Terms",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string || "—"}</span>
+          <span className="text-gray-700">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "inco_terms",
         header: "Inco Terms",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string || "—"}</span>
+          <span className="text-gray-700">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "plant_code",
         header: "Plant Code",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string || "—"}</span>
+          <span className="text-gray-700">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "approved_by",
         header: "Approved By",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string || "—"}</span>
+          <span className="text-gray-700">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "rejected_by",
         header: "Rejected By",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string || "—"}</span>
+          <span className="text-gray-700">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "requested_by",
         header: "Requested By",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string || "—"}</span>
+          <span className="text-gray-700">{(getValue() as string) || "—"}</span>
         ),
       },
       {
@@ -805,7 +803,7 @@ const AllExposureRequest: React.FC = () => {
     changes: Partial<ExposureRequest>
   ) => {
     try {
-       console.log("Updating row:", rowId, "with changes:", changes);
+      console.log("Updating row:", rowId, "with changes:", changes);
 
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -819,23 +817,26 @@ const AllExposureRequest: React.FC = () => {
 
       return true;
     } catch (error) {
-       console.error("Error updating:", error);
+      console.error("Error updating:", error);
       return false;
     }
   };
 
-  if(loading){
-    return <LoadingSpinner />
+  if (loading) {
+    return <LoadingSpinner />;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-2.5">
+      {/* Row 1 - Status Filter */}
       <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Status Filter */}
-        <div className="flex flex-col space-y-2">
-          <label className="text-sm font-medium text-gray-700">Status</label>
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-secondary-text">
+            Status
+          </label>
           <select
-            className="border border-border rounded-md px-3 py-2 focus:outline-none bg-secondary-color-lt text-secondary-text"
+            className="text-secondary-text bg-secondary-color px-3 py-2 border border-border rounded-lg shadow-sm focus:outline-none"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
@@ -846,23 +847,25 @@ const AllExposureRequest: React.FC = () => {
             ))}
           </select>
         </div>
+      </div>
 
-        <div></div>
-        <div></div>
-
-        {/* Search and Action Buttons */}
-        <div className="flex items-center justify-end gap-4">
+      {/* Row 2 - Search & Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4">
+        <div className="col-span-1 md:col-span-4 flex items-center justify-end gap-4">
+          {/* Download Button */}
           <button
             type="button"
-            className="flex items-center justify-center border border-border rounded-lg px-2 h-10 text-sm  transition"
+            className="group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
             title="Download All Exposures"
             onClick={() => exportToExcel(filteredData, "All_Exposures")}
           >
-            <Download className="flex item-center justify-center text-primary" />
+            <Download className="flex items-center justify-center text-primary group-hover:text-white" />
           </button>
+
+          {/* Refresh Button */}
           <button
             type="button"
-            className="flex items-center justify-center border border-border rounded-lg w-10 h-10 transition"
+            className="text-primary group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
             title="Refresh"
             onClick={() => window.location.reload()}
           >
@@ -875,13 +878,15 @@ const AllExposureRequest: React.FC = () => {
               strokeLinecap="round"
               strokeLinejoin="round"
               viewBox="0 0 24 24"
-              className="text-primary"
+              className="accent-primary"
             >
               <path d="M23 4v6h-6" />
               <path d="M1 20v-6h6" />
               <path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10M1 14l5.36 5.36A9 9 0 0 0 20.49 15" />
             </svg>
           </button>
+
+          {/* Search Form */}
           <form
             className="relative flex items-center"
             onSubmit={(e) => e.preventDefault()}
@@ -889,7 +894,7 @@ const AllExposureRequest: React.FC = () => {
             <input
               type="text"
               placeholder="Search"
-              className="pl-4 pr-10 py-2 border border-border rounded-lg focus:outline-none bg-secondary-color-lt text-secondary-text-dark min-w-full"
+              className="w-full text-secondary-text bg-secondary-color px-3 py-2 border border-border rounded-lg shadow-sm focus:outline-none hover:border hover:border-primary"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -908,7 +913,7 @@ const AllExposureRequest: React.FC = () => {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 viewBox="0 0 24 24"
-                className="text-primary"
+                className="accent-primary"
               >
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
