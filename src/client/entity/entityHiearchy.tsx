@@ -24,6 +24,7 @@ interface TreeNodeData {
   entity_name: string;
   parentname: string | null;
   is_top_level_entity: boolean;
+  company_name : string | null;
   address: string | null;
   contact_phone: string | null;
   contact_email: string | null;
@@ -458,6 +459,7 @@ const HierarchicalTree = () => {
           // parentname: formData.parentname || "",
           address: formData.address || "",
           contact_phone: formData.contact_phone || "",
+      
           contact_email: formData.contact_email || "",
           registration_number: formData.registration_number || "",
           pan_gst: formData.pan_gst || "",
@@ -514,7 +516,7 @@ const HierarchicalTree = () => {
     return (
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">{node.name} Details</h2>
+          <h2 className="text-xl font-bold">{node.data.company_name} Details</h2>
           {/* <button
             className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm"
             onClick={() => setEditing((prev) => !prev)}
@@ -543,8 +545,9 @@ const HierarchicalTree = () => {
                     </label>
                     <input
                       name="entity_name"
-                      value={formData.entity_name}
+                      value={formData.company_name}
                       onChange={handleChange}
+                      disabled
                       className="w-full border rounded px-2 py-1"
                     />
                   </div>
@@ -801,7 +804,7 @@ const HierarchicalTree = () => {
                     <h3 className="font-semibold text-gray-500">
                       Company Name
                     </h3>
-                    <p>{node.data.entity_name}</p>
+                    <p>{node.data.company_name}</p>
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-500">Address</h3>
@@ -1213,9 +1216,9 @@ const HierarchicalTree = () => {
                 {selectedNode ? (
                   <>
                     <div className="bg-white mt-6 w-full rounded-lg border border-gray-200 p-6">
-                      <h3 className="font-semibold text-gray-700">
+                      {/* <h3 className="font-semibold text-gray-700">
                         Current Node: {selectedNode.id}
-                      </h3>
+                      </h3> */}
                       <div className="flex justify-end gap-2 ml-10 mt-4">
                       
                         {Visibility.approve &&  selectedNode.data.approval_status !== ("Approved" )  &&(
