@@ -145,20 +145,35 @@ const TableContent: React.FC<{
           // Show actual status from the data
           const status = info.getValue() as string;
           const statusColors: Record<string, string> = {
-            approved: "bg-green-100 text-green-800",
+            Approved: "bg-green-100 text-green-800",
+            pending: "bg-yellow-100 text-yellow-800",
+            "Delete-Approval": "bg-yellow-100 text-yellow-800",
+            "delete-approval": "bg-yellow-100 text-yellow-800",
             rejected: "bg-red-100 text-red-800",
-            "awaiting-approval": "bg-yellow-100 text-yellow-800",
-            inactive: "bg-gray-200 text-gray-700",
+            appoved: "bg-green-100 text-green-800",
+            Rejected: "bg-red-100 text-red-800",
+            "Awaiting-Approval": "bg-yellow-100 text-yellow-800",
+            "Awaiting-approval": "bg-yellow-100 text-yellow-800", // ✅ Fix: quotes added
+            Inactive: "bg-gray-200 text-gray-700",
           };
+          const toPascalCase = (str: string) => {
+            return str.replace(
+              /(\w)(\w*)/g,
+              (_, firstChar, rest) =>
+                firstChar.toUpperCase() + rest.toLowerCase()
+            );
+          };
+
+          const displayStatus = toPascalCase(status);
 
           return (
             <span
               className={`px-2 py-1 text-xs font-medium rounded-full ${
-                statusColors[status.toLowerCase()] ||
+                statusColors[status as keyof typeof statusColors] ||
                 "bg-gray-100 text-gray-800"
               }`}
             >
-              {status}
+              {displayStatus}
             </span>
           );
         },
@@ -308,25 +323,32 @@ const TableContent: React.FC<{
     }
   };
 
+
   return (
-    <div className="space-y-6">
-      {/* Header Controls */}
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        <div></div>
-        <div></div>
-        <div></div>
-        <div className="mt-10 flex items-center justify-end gap-4">
+    <div className="space-y-4">
+      {/* Header Controls - Flex row like AwaitingUser */}
+      <div className="mt-14 flex flex-col md:flex-row justify-between items-center gap-4">
+        {/* Left side: Approve / Reject (only if isPending) */}
+        {isPending ? (
+          <div className="flex items-center gap-2 min-w-[12rem]">
+            <Button onClick={handleApprove}>Approve</Button>
+            <Button color="Fade" onClick={handleReject}>Reject</Button>
+          </div>
+        ) : <div />}
+
+        {/* Right side: Download, Refresh, Search */}
+        <div className="flex items-center gap-4 w-full md:w-auto">
           <button
             type="button"
-            className="flex items-center justify-center border border-border rounded-lg px-2 h-10 text-sm transition"
+            className="text-primary group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
             title="Download All Roles"
             onClick={() => exportToExcel(filteredData, "All_Roles")}
           >
-            <Download className="flex item-center justify-center text-primary" />
+            <Download className="flex items-center justify-center text-primary group-hover:text-white" />
           </button>
           <button
             type="button"
-            className="flex items-center text-primary justify-center border border-border rounded-lg w-10 h-10 hover:bg-[#e6f7f5] transition"
+            className="text-primary group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
             title="Refresh"
             onClick={() => window.location.reload()}
           >
@@ -347,13 +369,13 @@ const TableContent: React.FC<{
             </svg>
           </button>
           <form
-            className="relative flex items-center"
+            className="relative flex items-center w-full md:w-64"
             onSubmit={(e) => e.preventDefault()}
           >
             <input
               type="text"
               placeholder="Search"
-              className="pl-4 pr-10 text-secondary-text bg-secondary-color-lt py-2 border border-border rounded-lg focus:outline-none min-w-full"
+              className="pl-4 pr-10 py-2 text-secondary-text bg-secondary-color-lt border border-border rounded-lg focus:outline-none w-full hover:border hover:border-primary"
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
             />
@@ -381,16 +403,6 @@ const TableContent: React.FC<{
           </form>
         </div>
       </div>
-
-      {/* Action Buttons - Only show when isPending is true */}
-      {isPending && (
-        <div className="flex items-center justify-end">
-          <div className="flex items-center gap-2 min-w-[12rem]">
-            <Button onClick={handleApprove}>Approve</Button>
-            <Button onClick={handleReject}>Reject</Button>
-          </div>
-        </div>
-      )}
 
       {/* Table with DndContext properly positioned */}
       <div className="w-full overflow-x-auto">
