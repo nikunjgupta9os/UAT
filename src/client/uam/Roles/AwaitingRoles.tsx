@@ -576,23 +576,32 @@ const AwaitingApproval: React.FC = () => {
 
   return (
     <>
+
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          <div></div>
-          <div></div>
-          <div></div>
-          <div className="mt-10 flex items-center justify-end gap-4">
+        <div className="mt-14 flex flex-col md:flex-row justify-between items-center gap-4">
+          {/* Left side: Approve / Reject */}
+          <div className="flex items-center gap-2 min-w-[12rem]">
+            {filteredData.length > 0 && Visibility.approve && (
+              <Button onClick={handleBulkApprove}>Approve</Button>
+            )}
+            {filteredData.length > 0 && Visibility.reject && (
+              <Button color="Fade" onClick={handleBulkReject}>Reject</Button>
+            )}
+          </div>
+
+          {/* Right side: Download, Refresh, Search */}
+          <div className="flex items-center gap-4 w-full md:w-auto">
             <button
               type="button"
-              className="flex items-center justify-center border border-border rounded-lg px-2 h-10 text-sm transition"
+              className="text-primary group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
               title="Download All Roles"
               onClick={() => exportToExcel(filteredData, "All_Roles")}
             >
-              <Download className="flex item-center justify-center text-primary" />
+              <Download className="flex items-center justify-center text-primary group-hover:text-white" />
             </button>
             <button
               type="button"
-              className="flex items-center justify-center border border-border rounded-lg w-10 h-10 transition"
+              className="text-primary group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
               title="Refresh"
               onClick={() => window.location.reload()}
             >
@@ -605,7 +614,7 @@ const AwaitingApproval: React.FC = () => {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 viewBox="0 0 24 24"
-                className="text-primary"
+                className="accent-primary"
               >
                 <path d="M23 4v6h-6" />
                 <path d="M1 20v-6h6" />
@@ -613,19 +622,19 @@ const AwaitingApproval: React.FC = () => {
               </svg>
             </button>
             <form
-              className="relative flex items-center"
+              className="relative flex items-center w-full md:w-64"
               onSubmit={(e) => e.preventDefault()}
             >
               <input
                 type="text"
-                placeholder="Search..."
-                className="w-full text-secondary-text bg-secondary-color px-3 py-2 border border-border rounded-lg shadow-sm focus:outline-none"
+                placeholder="Search"
+                className="pl-4 pr-10 py-2 text-secondary-text bg-secondary-color-lt border border-border rounded-lg focus:outline-none w-full hover:border hover:border-primary"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               <button
                 type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-[#129990]"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-primary"
                 tabIndex={-1}
                 aria-label="Search"
               >
@@ -638,24 +647,13 @@ const AwaitingApproval: React.FC = () => {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   viewBox="0 0 24 24"
-                  className="text-primary"
+                  className="w-4 h-4 accent-primary"
                 >
                   <circle cx="11" cy="11" r="8" />
                   <line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
               </button>
             </form>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-end">
-          <div className="flex items-center gap-2 min-w-[12rem]">
-            {filteredData.length > 0 && Visibility.approve && (
-              <Button onClick={handleBulkApprove}> Approve </Button>
-            )}
-            {filteredData.length > 0 && Visibility.reject && (
-              <Button onClick={handleBulkReject}>Reject</Button>
-            )}
           </div>
         </div>
 
