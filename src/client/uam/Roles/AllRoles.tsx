@@ -517,10 +517,12 @@ const AllRoles: React.FC = () => {
 
   return (
     <>
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {/* Filters Section */}
-          <div className="flex flex-col space-y-2">
+
+      <div className="space-y-4">
+        {/* Filters Section - Row 1 */}
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Status Filter */}
+          <div className="flex flex-col">
             <label className="text-sm font-medium text-secondary-text">
               Status
             </label>
@@ -537,7 +539,8 @@ const AllRoles: React.FC = () => {
             </select>
           </div>
 
-          <div className="flex flex-col space-y-2 relative">
+          {/* Date Range Filter */}
+          <div className="flex flex-col relative">
             <label className="text-sm font-medium text-secondary-text">
               Created Date
             </label>
@@ -556,57 +559,62 @@ const AllRoles: React.FC = () => {
             </div>
 
             {showDatePicker && (
-              <div className="absolute z-10 top-16 left-0 bg-secondary-color shadow-lg rounded-md">
+              <div className="absolute z-10 top-16 left-0 bg-white shadow-lg rounded-md">
                 <DateRange
                   editableDateInputs={true}
                   onChange={(item) => {
                     setDateRange([
                       {
+                        ...item.selection,
+                        key: "selection",
                         startDate: item.selection.startDate,
                         endDate: item.selection.endDate,
-                        key: "selection", // ✅ explicitly set the key
                       },
                     ]);
-
-                    if (item.selection.startDate && item.selection.endDate) {
-                      setShowDatePicker(false);
-                    }
                   }}
                   moveRangeOnFirstSelection={false}
                   ranges={dateRange}
                 />
-                <div className="flex justify-end p-2 border-t">
+                <div className="flex justify-between p-2 border-t">
                   <button
-                    className="text-sm text-[#129990] hover:text-[#0d7a73]"
+                    className="px-3 py-1 bg-gray-100 rounded-md text-sm hover:bg-gray-200"
+                    onClick={() => setShowDatePicker(false)}
+                  >
+                    Close
+                  </button>
+                  <button
+                    className="px-3 py-1 bg-[#129990] text-white rounded-md text-sm hover:bg-[#0d7a73]"
                     onClick={() => {
-                      setDateRange([
-                        { startDate: null, endDate: null, key: "selection" },
-                      ]);
-                      setShowDatePicker(false);
+                      if (dateRange[0].startDate && dateRange[0].endDate) {
+                        setShowDatePicker(false);
+                      }
                     }}
                   >
-                    Clear
+                    Apply
                   </button>
                 </div>
               </div>
             )}
           </div>
+        </div>
 
-          <div></div>
-
-          <div className="mt-10 flex items-center justify-end gap-4">
+        {/* Search and Action Buttons - Row 2 */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4">
+          <div className="col-span-1 md:col-span-4 flex items-center justify-end gap-4">
+            {/* Download Button */}
             <button
               type="button"
-              className="flex items-center justify-center border border-border rounded-lg px-2 h-10 text-sm transition"
+              className="group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
               title="Download All Roles"
               onClick={() => exportToExcel(filteredData, "All_Roles")}
             >
-              <Download className="flex item-center justify-center text-primary" />
+              <Download className="flex items-center justify-center text-primary group-hover:text-white" />
             </button>
 
+            {/* Refresh Button */}
             <button
               type="button"
-              className="flex items-center justify-center border border-border rounded-lg w-10 h-10 transition"
+              className="text-primary group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
               title="Refresh"
               onClick={() => window.location.reload()}
             >
@@ -619,27 +627,29 @@ const AllRoles: React.FC = () => {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 viewBox="0 0 24 24"
-                className="text-primary"
+                className="accent-primary"
               >
                 <path d="M23 4v6h-6" />
                 <path d="M1 20v-6h6" />
                 <path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10M1 14l5.36 5.36A9 9 0 0 0 20.49 15" />
               </svg>
             </button>
+
+            {/* Search Form */}
             <form
               className="relative flex items-center"
               onSubmit={(e) => e.preventDefault()}
             >
               <input
                 type="text"
-                placeholder="Search..."
-                className="w-full text-secondary-text bg-secondary-color px-3 py-2 border border-border rounded-lg shadow-sm focus:outline-none"
+                placeholder="Search"
+                className="w-full text-secondary-text bg-secondary-color px-3 py-2 border border-border rounded-lg shadow-sm focus:outline-none hover:border hover:border-primary "
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               <button
                 type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-[#129990]"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-primary"
                 tabIndex={-1}
                 aria-label="Search"
               >
@@ -651,8 +661,8 @@ const AllRoles: React.FC = () => {
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="text-primary"
                   viewBox="0 0 24 24"
+                  className="accent-primary"
                 >
                   <circle cx="11" cy="11" r="8" />
                   <line x1="21" y1="21" x2="16.65" y2="16.65" />
