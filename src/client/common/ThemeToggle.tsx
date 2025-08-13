@@ -11,7 +11,7 @@ const ThemeToggle = () => {
       className="w-8 h-8 bg-primary-xl rounded-full border border-primary-md flex items-center justify-center"
       title="Toggle Theme"
     >
-      {theme === "theme-1" ? <Moon size={16} /> : <Sun size={16} />}
+      <span className="text-text hover:text-primary-lt">{theme === "theme-1" ? <Moon size={16} /> : <Sun size={16} />}</span>
     </button>
   );
 };
