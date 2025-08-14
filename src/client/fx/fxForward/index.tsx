@@ -6,6 +6,7 @@ import { useMemo, useState, useCallback, useEffect } from "react";
 // import TransactionTable from "./pendingForwards";
 import FxBookingForm from "./fxBookingForm";
 import FxUploader from "./fxUploader";
+import axios from "axios";
 
 const useTabNavigation = (initialTab: string = 'Form') => {
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -22,9 +23,45 @@ const useTabNavigation = (initialTab: string = 'Form') => {
   };
 };
 
+type TabVisibility = {
+  fxForm: boolean;
+  fxUpload: boolean;
+};
+
 
 const FxForward = () => {
   const { activeTab, switchTab, isActiveTab } = useTabNavigation('Form');
+  
+  const [Visibility, setVisibility] = useState<TabVisibility>({
+      fxForm: false,
+      fxUpload: false,
+    });
+    const roleName = localStorage.getItem("userRole");
+  
+  useEffect(() => { 
+    const fetchPermissions = async () => {
+      try {
+        const response = await axios.post(
+          "https://backend-slqi.onrender.com/api/permissions/permissionjson",
+          { roleName }
+        );
+        console.log("Permissions response:", response.data);
+        const pages = response.data?.pages;
+        const userTabs = pages?.["fx-forward-booking"]?.tabs;
+        //  console.log(userTabs.allTab.hasAccess);
+        if (userTabs) {
+          setVisibility({
+            fxForm: userTabs.fxForm.hasAccess || false,
+            fxUpload: userTabs.fxUpload.hasAccess || false,
+            
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching permissions:", error);
+      }
+    };
+    fetchPermissions();
+  },[]);
 
   const tabButtons = useMemo(() => {
     const tabConfig = [
