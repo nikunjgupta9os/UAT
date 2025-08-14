@@ -4,7 +4,7 @@ import { ChevronUp, ChevronDown } from "lucide-react";
 
 interface NumberInputProps {
   value: number;
-  onChange: (value: number) => void;
+  onChange? : (value: number) => void;
   step?: number;
   precision?: number;
   min?: number;

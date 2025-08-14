@@ -7,6 +7,7 @@ import "../../styles/theme.css";
 import NyneOSTable from "./HedgingReuseableTable";
 import type { Currency } from "lucide-react";
 const cURLHOST = "https://backend-slqi.onrender.com/api";
+import axios from "axios";
 
 //  fechRenderVars, fetchUserVars, and fetchUserJourney functions
 async function fetchRenderVars(): Promise<IfPayload["renderVars"]> {
@@ -47,6 +48,8 @@ interface IfPayload {
   };
 }
 
+
+
 // Define Interface according to the table Columns and Structure
 
 interface HedgingProposal {
@@ -76,11 +79,22 @@ interface HedgingProposal {
   status_hedging?: string;
 }
 
+type TabVisibility = {
+  edit : boolean;
+  approve : boolean;
+  reject : boolean; 
+}
 
 const AllUsers: React.FC = () => {
   const [renderVars, setRenderVars] = useState<IfPayload["renderVars"] | null>(
     null
   );
+  const [Visibility,setVisibility]= useState<TabVisibility>({
+    edit : false,
+    approve : false,
+    reject : false,
+  })
+  const roleName = localStorage.getItem("userRole") ;
  
   // Change UseState Interface
   const [data, setData] = useState<HedgingProposal[]>([]);
@@ -116,6 +130,29 @@ const AllUsers: React.FC = () => {
       })
       .catch(() => renderVars );
 
+    const fetchPermissions = async () => {
+      try {
+        const response = await axios.post(
+          "https://backend-slqi.onrender.com/api/permissions/permissionJSON",
+          { roleName }
+        );
+        console.log("Permissions response:", response.data);
+        const pages = response.data?.pages;
+        const userTabs = pages?.["hedging-proposal"]?.tabs;
+        //  console.log(userTabs.allTab.hasAccess);
+        if (userTabs) {
+          setVisibility({
+            edit : userTabs.default.showEditButton || false,
+            approve : userTabs.default.showApproveButton || false,
+            reject : userTabs.default.showRejectButton || false,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching permissions:", error);
+      }
+    };
+    fetchPermissions();
+
     // fetchUserVars()
     //   .then(setUserVars)
     //   .catch(() => setUserVars(fallbackUserVars));
@@ -124,6 +161,9 @@ const AllUsers: React.FC = () => {
     //   .then(setUserJourney)
     //   .catch(() => setUserJourney(fallbackUserJourney));
   }, []);
+
+
+  
 
   const columns = useMemo<ColumnDef<HedgingProposal>[]>(
     () => [

@@ -1,4 +1,4 @@
-import React, { useEffect,useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -26,9 +26,7 @@ interface CashSettlementTableProps {
   total_open_amount?: number;
 }
 
-const cleanNumber = (val) =>
-    Number((val || "0").toString().replace(/,/g, ""));
-
+const cleanNumber = (val) => Number((val || "0").toString().replace(/,/g, ""));
 
 const CashSettlementTable: React.FC<CashSettlementTableProps> = ({
   bankName,
@@ -46,45 +44,51 @@ const CashSettlementTable: React.FC<CashSettlementTableProps> = ({
       cleanNumber(total_open_amount) -
       cleanNumber(totalSettlementAmount) -
       cleanNumber(totalAdditionalSettlementAmount);
-    
+
     console.log("Initializing with available amount:", initialAvailableAmount);
-    
+
     return [
       {
         forwardRef: "FWD-FX-001",
-        settlementAmount: initialAvailableAmount > 0 ? initialAvailableAmount : 0,
+        settlementAmount:
+          initialAvailableAmount > 0 ? initialAvailableAmount : 0,
         bankName: bankName || "HDFC Bank",
-        spotRate: 82.50,
+        spotRate: 82.5,
         fwdPremium: 82.75,
         margin: 0.25,
-      }
+      },
     ];
   });
 
   const calculateAvailableAmount = () => {
-    return cleanNumber(total_open_amount) -
-           cleanNumber(totalSettlementAmount) -
-           cleanNumber(totalAdditionalSettlementAmount);
+    return (
+      cleanNumber(total_open_amount) -
+      cleanNumber(totalSettlementAmount) -
+      cleanNumber(totalAdditionalSettlementAmount)
+    );
   };
 
   // Effect to update settlement amounts when dependencies change
   useEffect(() => {
     const availableAmount = calculateAvailableAmount();
-    
-    setRows(prevRows => {
-      return prevRows.map(row => {
+
+    setRows((prevRows) => {
+      return prevRows.map((row) => {
         // Only update if the current amount exceeds the new available amount
         if (cleanNumber(row.settlementAmount) > availableAmount) {
           return {
             ...row,
-            settlementAmount: availableAmount > 0 ? availableAmount : 0
+            settlementAmount: availableAmount > 0 ? availableAmount : 0,
           };
         }
         return row;
       });
     });
-  }, [total_open_amount, totalSettlementAmount, totalAdditionalSettlementAmount]);
-
+  }, [
+    total_open_amount,
+    totalSettlementAmount,
+    totalAdditionalSettlementAmount,
+  ]);
 
   // Generate next forwardRef like FWD-FX-001, FWD-FX-002, etc.
   const getNextForwardRef = () => {
@@ -116,9 +120,13 @@ const CashSettlementTable: React.FC<CashSettlementTableProps> = ({
     field: keyof Omit<CashSettlement, "forwardRef" | "bankName">,
     value: number
   ) => {
-    console.log(`handleInputChange called: idx=${idx}, field=${field}, value=${value}`);
+    console.log(
+      `handleInputChange called: idx=${idx}, field=${field}, value=${value}`
+    );
     setRows((prev) => {
-      const newRows = prev.map((row, i) => (i === idx ? { ...row, [field]: value } : row));
+      const newRows = prev.map((row, i) =>
+        i === idx ? { ...row, [field]: value } : row
+      );
       console.log("Updated rows:", newRows);
       return newRows;
     });
@@ -156,83 +164,52 @@ const CashSettlementTable: React.FC<CashSettlementTableProps> = ({
         ),
       },
       {
-  header: "Settlement Amount",
-  accessorKey: "settlementAmount",
-  cell: ({ row }) => {
-    const availableAmount =
-      cleanNumber(total_open_amount) -
-      cleanNumber(totalSettlementAmount) -
-      cleanNumber(totalAdditionalSettlementAmount);
-      
-    // Calculate the safe initial value
-    const initialValue = Math.min(
-      cleanNumber(row.original.settlementAmount),
-      availableAmount
-    );
+        header: "Settlement Amount",
+        accessorKey: "settlementAmount",
+        cell: ({ row }) => {
+          const availableAmount = calculateAvailableAmount();
+          // const availableAmount =
+          //   cleanNumber(total_open_amount) -
+          //   cleanNumber(totalSettlementAmount) -
+          //   cleanNumber(totalAdditionalSettlementAmount);
 
-    console.log("Available Amount:", availableAmount);
-    console.log("Current Settlement Amount:", row.original.settlementAmount);
-    console.log("Initial Value:", initialValue);
+          // // Calculate the safe initial value
+          // const initialValue = Math.min(
+          //   cleanNumber(row.original.settlementAmount),
+          //   availableAmount
+          // );
 
-    return (
-      <NumberInput
-        value={initialValue}  // Use the safe initial value here
-        onChange={(val) => {
-          console.log("Settlement Amount onChange:", val);
-          handleInputChange(row.index, "settlementAmount", val);
-        }}
-        onBlur={(val) => {
-          console.log("Settlement Amount onBlur:", val);
-          const safeVal = Math.max(
-            0,
-            Math.min(val ?? 0, calculateAvailableAmount())
+          // console.log("Available Amount:", availableAmount);
+          // console.log("Current Settlement Amount:", row.original.settlementAmount);
+          // console.log("Initial Value:", initialValue);
+
+          return (
+            <>
+              <NumberInput
+                value={row.original.settlementAmount} // Use the safe initial value here
+                // onChange={(val) => {
+                //   console.log("Settlement Amount onChange:", val);
+                //   handleInputChange(row.index, "settlementAmount", val);
+                // }}
+                onBlur={(val) => {
+                  console.log("Settlement Amount onBlur:", val);
+                  const safeVal = Math.max(
+                    0,
+                    Math.min(val ?? 0, calculateAvailableAmount())
+                  );
+                  handleInputChange(row.index, "settlementAmount", safeVal);
+                }}
+                step={1}
+                precision={2}
+                min={0}
+                max={availableAmount}
+              />
+              <span>{row.original.settlementAmount}</span>
+            </>
           );
-          handleInputChange(row.index, "settlementAmount", safeVal);
-        }}
-        step={1}
-        precision={2}
-        min={0}
-        max={availableAmount}
-      />
-    );
-  },
-},
-      // {
-      //   header: "Settlement Amount",
-      //   accessorKey: "settlementAmount",
-      //   cell: ({ row }) => {
-      //     // Calculate availableAmount using the same logic as your summary
-      //     const availableAmount =
-      //       cleanNumber(total_open_amount) -
-      //       cleanNumber(totalSettlementAmount) -
-      //       cleanNumber(totalAdditionalSettlementAmount);
-          
-      //     console.log("Available Amount:", availableAmount);
-      //     console.log("Current Settlement Amount:", row.original.settlementAmount);
+        },
+      },
 
-      //     return (
-      //       <div className="flex flex-col">
-      //         <NumberInput
-      //           value={row.original.settlementAmount}
-      //           onChange={() => {}}
-      //           onBlur={(val) => {
-      //             // Clamp value to availableAmount
-      //             const safeVal = Math.max(0, Math.min(val, availableAmount));
-      //             handleInputChange(row.index, "settlementAmount", safeVal);
-      //           }}
-      //           // step={1}
-      //           isStep={false}
-      //           precision={2}
-      //           min={0}
-      //           // max={availableAmount}
-      //         />
-      //         {/* <small className="text-xs text-gray-500 mt-1">
-      //           Max: {availableAmount.toLocaleString()}
-      //         </small> */}
-      //       </div>
-      //     );
-      //   },
-      // },
       {
         header: "Bank Name",
         accessorKey: "bankName",
@@ -283,10 +260,15 @@ const CashSettlementTable: React.FC<CashSettlementTableProps> = ({
         ),
       },
     ],
-    [rows, total_open_amount, totalSettlementAmount, totalAdditionalSettlementAmount, handleInputChange]
+    [
+      rows,
+      total_open_amount,
+      totalSettlementAmount,
+      totalAdditionalSettlementAmount,
+      handleInputChange,
+    ]
   );
 
- 
   const table = useReactTable({
     data: rows,
     columns,

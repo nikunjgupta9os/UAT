@@ -37,7 +37,7 @@ const AssignPermission: React.FC = () => {
             >
               <option value="">Select a Role</option>
               {roles
-                .filter((role) => role.toLowerCase() !== "admin")
+                // .filter((role) => role.toLowerCase() !== "admin")
                 .map((role, index) => (
                   <option key={index} value={role}>
                     {role}
