@@ -24,6 +24,7 @@ interface TreeNodeData {
   entity_name: string;
   parentname: string | null;
   is_top_level_entity: boolean;
+  company_name: string | null;
   address: string | null;
   contact_phone: string | null;
   contact_email: string | null;
@@ -50,6 +51,48 @@ type TreeNodeType = {
   data: TreeNodeData;
   children?: TreeNodeType[];
 };
+
+// interface Message {
+//   date: string;
+//   priority: number;
+//   deadline: string;
+//   text: string;
+// }
+
+// interface IfPayload {
+//   userVars: {
+//     roleName: string;
+//     firstName: string;
+//     secondName: string;
+//     dateLoggedIn: string;
+//     timeLoggedIn: string;
+//     isLoggedIn: boolean;
+//     userEmailId: string;
+//     notification: {
+//       messages: Message[];
+//     };
+//   };
+//   renderVars: {
+//     isLoadable: boolean;
+//     allExposuresTab: boolean;
+//     pendingApprovalTab: boolean;
+//     uploadingTab: boolean;
+//     btnApprove: boolean;
+//     buAccessible: string[];
+//     pageData: TreeNodeType[];
+//   };
+//   userJourney: {
+//     process: string;
+//     nextPageToCall: string;
+//     actionCalledFrom: string;
+//   };
+// }
+
+// async function fetchRenderVars(): Promise<IfPayload["renderVars"]> {
+//   const res = await fetch(`${cURLHOST}/entity/getRenderVarsHierarchical`);
+//   if (!res.ok) throw new Error("Failed to fetch renderVars");
+//   return res.json();
+// }
 
 // Node type configuration based on level
 const getNodeConfig = (level: string) => {
@@ -416,6 +459,7 @@ const HierarchicalTree = () => {
           // parentname: formData.parentname || "",
           address: formData.address || "",
           contact_phone: formData.contact_phone || "",
+
           contact_email: formData.contact_email || "",
           registration_number: formData.registration_number || "",
           pan_gst: formData.pan_gst || "",
@@ -472,7 +516,9 @@ const HierarchicalTree = () => {
     return (
       <div className="bg-secondary-color rounded-lg border border-border p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">{node.name} Details</h2>
+          <h2 className="text-xl text-primary font-bold">
+            {node.data.company_name} Details
+          </h2>
           {/* <button
             className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm"
             onClick={() => setEditing((prev) => !prev)}
@@ -503,7 +549,8 @@ const HierarchicalTree = () => {
                       name="entity_name"
                       value={formData.company_name}
                       onChange={handleChange}
-                      className="w-full border rounded px-2 py-1"
+                      disabled
+                      className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
                     />
                   </div>
                   <div>
@@ -754,10 +801,10 @@ const HierarchicalTree = () => {
               <>
                 <div className="space-y-3">
                   <div>
-                    <h3 className="font-semibold text-gray-500">
-                      Company Name
-                    </h3>
-                    <p>{node.data.entity_name}</p>
+                    <h3 className="font-semibold text-primary">Company Name</h3>
+                    <p className="text-secondary-text-dark">
+                      {node.data.company_name}
+                    </p>
                   </div>
                   <div>
                     <h3 className="font-semibold text-primary">Address</h3>
@@ -1219,8 +1266,8 @@ const HierarchicalTree = () => {
               <div className="flex flex-col bg-secondary-color-lt w-full space-y-10 rounded-lg border border-border p-6">
                 {selectedNode ? (
                   <>
-                    <div className="bg-white mt-6 w-full rounded-lg border border-gray-200 p-6">
-                      <h3 className="font-semibold text-gray-700">
+                    <div className="bg-secondary-color mt-6 w-full rounded-lg border border-border p-6">
+                      {/* <h3 className="font-semibold text-gray-700">
                         Current Node: {selectedNode.id}
                       </h3> */}
                       <div className="flex justify-end gap-2 ml-10 mt-4">
