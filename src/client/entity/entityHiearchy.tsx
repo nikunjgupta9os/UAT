@@ -4,20 +4,15 @@ import {
   Building2,
   ChevronDown,
   ChevronRight,
-  // Edit,
   Trash2,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import Layout from "../common/Layout";
 import LoadingSpinner from "../ui/LoadingSpinner";
-// import { set } from "date-fns";
 import { useNotification } from "../Notification/Notification.tsx";
-// import { no } from "zod/v4/locales";
 import Button from "../ui/Button.tsx";
 const cURL = "https://backend-slqi.onrender.com/api";
 type ApprovalStatus = "pending" | "approved" | "rejected" | "delete-approval";
-
-// const cURLHOST = "https://backend-slqi.onrender.com/api";
 
 interface TreeNodeData {
   entity_id: string;
@@ -52,49 +47,7 @@ type TreeNodeType = {
   children?: TreeNodeType[];
 };
 
-// interface Message {
-//   date: string;
-//   priority: number;
-//   deadline: string;
-//   text: string;
-// }
 
-// interface IfPayload {
-//   userVars: {
-//     roleName: string;
-//     firstName: string;
-//     secondName: string;
-//     dateLoggedIn: string;
-//     timeLoggedIn: string;
-//     isLoggedIn: boolean;
-//     userEmailId: string;
-//     notification: {
-//       messages: Message[];
-//     };
-//   };
-//   renderVars: {
-//     isLoadable: boolean;
-//     allExposuresTab: boolean;
-//     pendingApprovalTab: boolean;
-//     uploadingTab: boolean;
-//     btnApprove: boolean;
-//     buAccessible: string[];
-//     pageData: TreeNodeType[];
-//   };
-//   userJourney: {
-//     process: string;
-//     nextPageToCall: string;
-//     actionCalledFrom: string;
-//   };
-// }
-
-// async function fetchRenderVars(): Promise<IfPayload["renderVars"]> {
-//   const res = await fetch(`${cURLHOST}/entity/getRenderVarsHierarchical`);
-//   if (!res.ok) throw new Error("Failed to fetch renderVars");
-//   return res.json();
-// }
-
-// Node type configuration based on level
 const getNodeConfig = (level: string) => {
   switch (level) {
     case "Level 1":
@@ -142,7 +95,6 @@ type TabVisibility = {
 };
 
 const HierarchicalTree = () => {
-  // const [treeData, setTreeData] = useState<TreeNodeType | null>();
   const [approvalComment, setApprovalComment] = useState("");
   const [isAllExpanded, setIsAllExpanded] = useState(false);
   const [selectedNode, setSelectedNode] = useState<TreeNodeType | null>(null);
@@ -160,8 +112,6 @@ const HierarchicalTree = () => {
     "border-l-green-600",
     "border-l-yellow-600",
     "border-l-purple-600",
-    // "border-l-pink-600",
-    // "border-l-indigo-600"
   ];
 
   useEffect(() => {
@@ -171,16 +121,7 @@ const HierarchicalTree = () => {
         await axios.post(`${cURL}/entity/sync-relationships`);
         const response = await axios.get(
           `${cURL}/entity/getRenderVarsHierarchical`
-          // {
-          //   userId: localStorage.getItem("UserId"),
-          //   roleName: localStorage.getItem("userRole"), // 👈 Ensure userId is set
-          // } // 👈 Updated endpoint
         );
-        // setVisibility({
-        //   approve: response.data.hierarchical.tabs.default.showApproveButton,
-        //   reject: response.data.hierarchical.tabs.default.showRejectButton,
-        //   edit: response.data.hierarchical.tabs.default.showEditButton,
-        // });
 
         console.log("✅ Hierarchy synced and fetched successfully");
         setTreeData(response.data.pageData);
@@ -189,8 +130,6 @@ const HierarchicalTree = () => {
           reject: response.data.hierarchical.tabs.default.showRejectButton,
           edit: response.data.hierarchical.tabs.default.showEditButton,
         });
-        // console.log("🔄 Visibility settings:", response.data.hierarchical.default);
-        // console.log("🔄 Tree data:", Visibility.app);
       } catch (error) {
         console.error("❌ Error syncing or fetching hierarchy:", error);
       } finally {
@@ -200,61 +139,13 @@ const HierarchicalTree = () => {
 
     syncAndFetchHierarchy();
   }, []);
-  // console.log(Visibility.approve, "Visibility approve");
-  // Load from localStorage on mount
-  // useEffect(() => {
-  //   // const saved = localStorage.getItem("treeData");
-  //   // if (saved) {
-  //   //   setTreeData(JSON.parse(saved));
-  //   console.log("🔄 Loading hierarchy from localStorage...");
-  //   // } else {
-  //     const syncAndFetchHierarchy = async () => {
-  //       console.log("🔄 Syncing and fetching hierarchy...");
-  //       try {
-  //         await axios.post(
-  //           "https://backend-slqi.onrender.com/api/entity/sync-relationships"
-  //         );
-  //         const response = await axios.get(
-  //           "https://backend-slqi.onrender.com/api/entity/hierarchy"
-  //         );
 
-  //         console.log("✅ Hierarchy synced and fetched successfully");
-  //         setTreeData(response.data);
-
-  //       } catch (error) {
-
-  //          console.error("❌ Error syncing or fetching hierarchy:", error);
-  //         // Fallback mock data
-  //         // setTreeData(response.data);
-  //       }
-  //     };
-  //     syncAndFetchHierarchy();
-
-  //   }
-  // // }
-  // , []);
-
-  // Save to localStorage whenever treeData changes
   useEffect(() => {
     if (treeData) {
       localStorage.setItem("treeData", JSON.stringify(treeData));
     }
   }, [treeData]);
 
-  // Helper functions
-  // const findNodeById = (
-  //   node: TreeNodeType,
-  //   nodeId: string
-  // ): TreeNodeType | null => {
-  //   if (node.id === nodeId) return node;
-  //   if (node.children) {
-  //     for (const child of node.children) {
-  //       const found = findNodeById(child, nodeId);
-  //       if (found) return found;
-  //     }
-  //   }
-  //   return null;
-  // };
 
   const findNodeByIdUniversal = (
     node: TreeNodeType | TreeNodeType[],
@@ -303,17 +194,15 @@ const HierarchicalTree = () => {
 
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
 
-  // Effects
+
   useEffect(() => {
     if (treeData && selectedNode) {
       const node = findNodeByIdUniversal(treeData, selectedNode.id);
       setSelectedNode(node || null);
-      // console.log("🔍 Selected node updated:", node);
-      // console.log("🔄 Expanded nodes:", selectedNode.id);
+
     }
   }, [treeData, selectedNode?.id]);
 
-  // Reset expanded nodes when treeData changes
   useEffect(() => {
     if (treeData) {
       if (isAllExpanded) {
@@ -325,7 +214,6 @@ const HierarchicalTree = () => {
     }
   }, [treeData, isAllExpanded]);
 
-  // Node operations
   const toggleNode = (nodeId: string) => {
     setExpandedNodes((prev) => {
       const newSet = new Set(prev);
@@ -336,10 +224,8 @@ const HierarchicalTree = () => {
 
   const toggleAllNodes = () => {
     if (isAllExpanded) {
-      // Collapse all - completely collapse to level 0
       setExpandedNodes(new Set());
     } else {
-      // Expand all - get all node IDs including all children
       const allNodeIds = getAllNodeIds(treeData);
       setExpandedNodes(new Set(allNodeIds));
     }
@@ -365,7 +251,6 @@ const HierarchicalTree = () => {
   };
 
   const updateApprovalStatus = (nodeId: string, status: ApprovalStatus) => {
-    // Helper to recursively set status for all descendants
     const setStatusForAllDescendants = (
       node: TreeNodeType,
       status: ApprovalStatus

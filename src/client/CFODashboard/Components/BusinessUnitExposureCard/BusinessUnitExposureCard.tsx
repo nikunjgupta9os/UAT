@@ -28,7 +28,7 @@ const BusinessUnitExposureCard: React.FC = () => {
         setBusinessUnits(res.data);
         setLoading(false);
       } catch (err) {
-        console.error("Failed to fetch business unit data:", err);
+        // console.error("Failed to fetch business unit data:", err);
         setError("Failed to load business unit data");
         setLoading(false);
       }
