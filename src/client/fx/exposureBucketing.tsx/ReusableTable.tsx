@@ -588,7 +588,7 @@ function NyneOSTable<ExposureBucketing extends WithId>({
       <div className="flex items-center justify-end">
         <div className="flex items-center gap-2 min-w-[12rem]">
           {approve && <Button onClick={handleApprove}>Approve</Button>}
-          {reject && <Button onClick={handleReject}>Reject</Button>}
+          {reject && <Button color="Fade" onClick={handleReject}>Reject</Button>}
         </div>
       </div>
 
@@ -627,7 +627,7 @@ function NyneOSTable<ExposureBucketing extends WithId>({
                               </div>
                             ) : (
                               <Draggable id={header.column.id}>
-                                <div className="cursor-move border-border text-header-color hover:bg-blue-100 rounded px-1 py-1 transition duration-150 ease-in-out">
+                                <div className="cursor-move border-border text-header-color hover:bg-primary-lg rounded px-1 py-1 transition duration-150 ease-in-out">
                                   {flexRender(
                                     header.column.columnDef.header,
                                     header.getContext()

@@ -844,7 +844,7 @@ const AllExposureRequest: React.FC = () => {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5">
       <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="flex flex-col">
           <label className="text-sm font-medium text-secondary-text">

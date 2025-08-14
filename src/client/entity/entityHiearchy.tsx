@@ -1015,14 +1015,14 @@ const HierarchicalTree = () => {
               <div className="flex items-center gap-1 ml-2">
                 <div className="absolute -right-2.5 -top-4">
                   <span
-                    className={`px-2 py-0.5 font-bold rounded-xl border-2 text-xs
+                    className={`px-2 py-1 font-bold rounded-xl text-xs
                     ${
                       {
-                        approved: "bg-green-400 border-green-500 text-white",
-                        rejected: "bg-red-500 border-red-500 text-white",
-                        pending: "bg-gray-200 border-gray-400 text-gray-600",
-                        "delete-approval": "bg-purple-400 border-purple-600 text-white",
-                      }[status.toLowerCase()] || "bg-gray-200 border-gray-400 text-gray-600"
+                        approved: "bg-green-200 text-green-600",
+                        rejected: "bg-red-100  text-red-500",
+                        pending: "bg-gray-200  text-gray-600",
+                        "delete-approval": "bg-orange-100  text-orange-500",
+                      }[status.toLowerCase()] || "bg-gray-200  text-gray-600"
                     }
                   `}
                     >

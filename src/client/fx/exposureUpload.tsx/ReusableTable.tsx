@@ -909,7 +909,7 @@ function NyneOSTable<T extends EditableRowData>({
             return (
               <div className="flex items-center space-x-2">
                 <button
-                  className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                  className="p-1.5 hover:bg-primary-xl rounded transition-colors"
                   onClick={handleDelete}
                 >
                   <Trash2 className="w-4 h-4 text-red-600" />

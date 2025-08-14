@@ -1,8 +1,6 @@
-
 import Layout from "../../common/Layout";
 import { useMemo, useState, useCallback, useEffect } from "react";
 import PendingRequest from "./PendingRequest";
-// import AllExposureRequest from "./AllExposureRequest";
 import AddExposure from "./Upload";
 import AllExposureRequest from "./pp";
 import axios from "axios";
@@ -33,12 +31,9 @@ const ExposureUpload = () => {
 
   const roleName = localStorage.getItem("userRole");
   const [Visibility, setVisibility] = useState<TabVisibility>({
-    // approve: true,
     allTab: true,
     uploadTab: true,
     pendingTab: true,
-    // reject: true,
-    // view: true,
   });
 
   useEffect(() => {
@@ -51,7 +46,6 @@ const ExposureUpload = () => {
         console.log("Permissions response:", response.data);
         const pages = response.data?.pages;
         const userTabs = pages?.["exposure-upload"]?.tabs;
-        //  console.log(userTabs.allTab.hasAccess);
         if (userTabs) {
           setVisibility({
             allTab: userTabs?.allTab?.hasAccess || false,

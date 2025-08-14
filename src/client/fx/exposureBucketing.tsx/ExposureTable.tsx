@@ -83,11 +83,10 @@ interface ExposureBucketing {
 }
 
 type TabVisibility = {
-  edit : boolean;
-  approve : boolean;
-  reject : boolean; 
-}
-
+  edit: boolean;
+  approve: boolean;
+  reject: boolean;
+};
 
 interface IfPayload {
   userVars: {
@@ -150,13 +149,12 @@ const ExposureBucketing: React.FC = () => {
     return result;
   }, [data, searchTerm, statusFilter]);
 
-   const [Visibility,setVisibility]= useState<TabVisibility>({
-      edit : false,
-      approve : false,
-      reject : false,
-    })
-    const roleName = localStorage.getItem("userRole") ;
-   
+  const [Visibility, setVisibility] = useState<TabVisibility>({
+    edit: false,
+    approve: false,
+    reject: false,
+  });
+  const roleName = localStorage.getItem("userRole");
 
   useEffect(() => {
     fetchRenderVars()
@@ -178,8 +176,8 @@ const ExposureBucketing: React.FC = () => {
       .catch((err) => {
         console.error("Error fetching renderVars:", err);
       });
-    
-     const fetchPermissions = async () => {
+
+    const fetchPermissions = async () => {
       try {
         const response = await axios.post(
           "https://backend-slqi.onrender.com/api/permissions/permissionJSON",
@@ -191,19 +189,17 @@ const ExposureBucketing: React.FC = () => {
         //  console.log(userTabs.allTab.hasAccess);
         if (userTabs) {
           setVisibility({
-            edit : userTabs.default.showEditButton || false,
-            approve : userTabs.default.showApproveButton || false,
-            reject : userTabs.default.showRejectButton || false,
+            edit: userTabs.default.showEditButton || false,
+            approve: userTabs.default.showApproveButton || false,
+            reject: userTabs.default.showRejectButton || false,
           });
         }
       } catch (error) {
         console.error("Error fetching permissions:", error);
       }
     };
-    fetchPermissions(); 
+    fetchPermissions();
   }, []);
-
-
 
   const columns = useMemo<ColumnDef<ExposureBucketing>[]>(
     () => [
@@ -328,26 +324,31 @@ const ExposureBucketing: React.FC = () => {
         accessorKey: "status_bucketing",
         header: "Status",
         cell: (info) => {
-          let status_bucketing = info.getValue() as string;
+          let status_bucketing = (info.getValue() as string) || "Pending";
 
-          if (!status_bucketing) {
-            status_bucketing = "Pending";
-          }
+          // Normalize for mapping
+          const normalized = status_bucketing.toLowerCase();
 
           const statusColors: Record<string, string> = {
-            Approved: "bg-green-100 text-green-800",
-            Pending: "bg-yellow-100 text-yellow-800",
-            Rejected: "bg-red-100 text-red-800",
-            Inactive: "bg-gray-200 text-gray-700",
+            approved: "bg-green-100 text-green-800",
+            pending: "bg-yellow-100 text-yellow-800",
+            rejected: "bg-red-100 text-red-800",
+            draft: "bg-red-100 text-red-800",
+            inactive: "bg-gray-200 text-gray-700",
+
           };
+
+          // Convert to PascalCase for display
+          const toPascalCase = (str: string) =>
+            str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
 
           return (
             <span
               className={`px-2 py-1 text-xs font-medium rounded-full ${
-                statusColors[status_bucketing] || "bg-gray-100 text-gray-800"
+                statusColors[normalized] || "bg-gray-100 text-gray-800"
               }`}
             >
-              {status_bucketing}
+              {toPascalCase(status_bucketing)}
             </span>
           );
         },
@@ -784,15 +785,15 @@ const ExposureBucketing: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* status_bucketing Filter */}
-        <div className="flex flex-col space-y-2">
-          <label className="text-sm font-medium text-secondary-text-dark">
+    <div className="space-y-5">
+      <div className="-mt-2 grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Status Filter */}
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-secondary-text">
             Status
           </label>
           <select
-            className="border border-border bg-secondary-color-lt text-secondary-text rounded-md px-3 py-2 focus:outline-none"
+            className="text-secondary-text bg-secondary-color px-3 py-2 border border-border rounded-lg shadow-sm focus:outline-none"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
@@ -803,12 +804,12 @@ const ExposureBucketing: React.FC = () => {
             ))}
           </select>
         </div>
+      </div>
 
-        <div></div>
-        <div></div>
-
-        {/* Search */}
-        <div className="flex items-center justify-end gap-4">
+      {/* Row 2: Search */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4">
+        <div className="col-span-1 md:col-span-4 flex items-center justify-end gap-4">
+          {/* Search Form */}
           <form
             className="relative flex items-center"
             onSubmit={(e) => e.preventDefault()}
@@ -816,7 +817,7 @@ const ExposureBucketing: React.FC = () => {
             <input
               type="text"
               placeholder="Search"
-              className="pl-4 pr-10 py-2 border border-border rounded-lg focus:outline-none bg-secondary-color-lt text-secondary-text-dark min-w-full"
+              className="w-full text-secondary-text bg-secondary-color px-3 py-2 border border-border rounded-lg shadow-sm focus:outline-none hover:border hover:border-primary"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -835,7 +836,7 @@ const ExposureBucketing: React.FC = () => {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 viewBox="0 0 24 24"
-                className="text-primary"
+                className="accent-primary"
               >
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />

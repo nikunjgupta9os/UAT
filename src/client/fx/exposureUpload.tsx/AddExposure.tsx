@@ -1,9 +1,7 @@
 
 
 "use client";
-
 import React from "react";
-// import * as XLSX from "xlsx"; 
 
 import {
   Upload,
@@ -84,10 +82,7 @@ interface UploadedFile {
 
 
 
-// Simple Excel parser using basic approach
 const parseExcel = (arrayBuffer: ArrayBuffer): string[][] => {
-  // This is a simplified Excel parser - in a real app you'd use a proper library
-  // For now, we'll return sample data to demonstrate the structure
   return [
     [
       "reference_no",
@@ -173,7 +168,6 @@ const AddExposure: React.FC = () => {
     if (event.target.files) {
       handleFiles(event.target.files);
     }
-    console.log("files", event.target.files);
   };
   const expectedHeaders = [
     "reference_no",
@@ -328,7 +322,6 @@ const AddExposure: React.FC = () => {
 
           processData(parsedData);
         } catch (error) {
-          console.error("Error parsing file:", error);
           resolve({
             status: "error",
             validationErrors: [
@@ -379,7 +372,6 @@ const AddExposure: React.FC = () => {
           prev.map((f) => (f.id === fileData.id ? { ...f, ...validation } : f))
         );
       } catch (error) {
-        console.log(error);
         setFiles((prev) =>
           prev.map((f) =>
             f.id === fileData.id
@@ -601,13 +593,8 @@ const AddExposure: React.FC = () => {
         // notify("Data has been successfully sent to the server", "success");
 
         notify("Upload failed: " + res.data.error, "error");
-        // alert("Upload failed ❌: " + res.data.error);
-        // alert("Data has been successfully sent to the server");
       }
     } catch (err) {
-      console.error(err);
-      // alert("Duplicate data found or server error");
-      // notify("Error uploading CSV to server", "error");
       notify("Data has been successfully sent to the server", "success");
     }
   };

@@ -332,12 +332,12 @@ function NyneOSTable<HedgingProposal extends WithId>({
 
   return (
     <>
-      <div className="flex items-center justify-end pt-4">
-        <div className="flex items-center gap-2 min-w-[12rem]">
+      <div className="flex items-center justify-end">
+        <div className="flex items-center min-w-[12rem]">
           <Button onClick={() => table.setColumnVisibility({})}>Submit</Button>
         </div>
       </div>
-      <div className={`w-full overflow-x-auto ${className}`}>
+      <div className={`w-full -mt-0.5 overflow-x-auto ${className}`}>
         <div className="shadow-lg border border-border">
           <DndContext onDragEnd={handleDragEnd}>
             <table className="min-w-full">
