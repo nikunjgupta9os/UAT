@@ -35,7 +35,7 @@
   --primary-bg-hover: #ccfbf187;
   --primary-bg-active: #ccfbf17f;
   --secondary-color: #F9FAFB;
-  --secondary-color-lt: #F9FAFB;
+  --secondary-color-lt: #FFFFFF;
   --secondary-color-dark: #ededed;
   --header-color: #374151;
   --red-color: #e20f0fe3;
@@ -82,5 +82,6 @@
   --secondary-color-lt:#4c4c4c;
   --secondary-color-dark: #444c47;
   --header-color: #68BA7F;
+  --primary-color-fade: #68ba7f96;
   --red-color: #ff0101ec;
 }
