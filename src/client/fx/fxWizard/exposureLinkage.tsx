@@ -1,33 +1,78 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   flexRender,
   getCoreRowModel,
   useReactTable,
   type ColumnDef,
 } from "@tanstack/react-table";
+import axios from "axios";
 
 type ExposureLinkage = {
   exposureId: string;
   type: string;
   currency: string;
   originalMaturity: string;
-  newMaturity: string;
+  amount: string;
   status: string;
 };
 
-const exposureLinkageData: ExposureLinkage[] = [
-  {
-    exposureId: "EXP-001",
-    type: "Forward",
-    currency: "USD",
-    originalMaturity: "2025-08-31",
-    newMaturity: "2026-02-28",
-    status: "Linked",
-  },
-  // Add more rows as needed
-];
+type SelectedForwardContract = {
+  exposure_header_id: string;
+  deal_id: string;
+  fx_pair: string;
+  original_amount: string;
+  amount_to_cancel_rollover: string;
+  original_rate: string;
+  maturity: string;
+  counterparty: string;
+  order_type: string;
+  company: string;
+  entity: string;
+};
 
-const ExposureLinkageStatus: React.FC = () => {
+const ExposureLinkageStatus: React.FC<{ selectedUsers: SelectedForwardContract[] }> = ({
+  selectedUsers,
+}) => {
+  // Create an array of all exposure_header_id values
+  const exposureHeaderIds = selectedUsers.map(user => user.exposure_header_id);
+
+  const [data, setData] = useState<ExposureLinkage[]>([]);
+
+  useEffect(() => {
+    if (exposureHeaderIds.length === 0) {
+      setData([]);
+      return;
+    }
+
+    const fetchData = async () => {
+      try {
+        const response = await axios.post(
+          "https://backend-slqi.onrender.com/api/settlement/exposuresByBookingIds",
+          { system_transaction_ids: exposureHeaderIds },
+          { headers: { "Content-Type": "application/json" } }
+        );
+        const result = response.data;
+        if (result.success && Array.isArray(result.data)) {
+          const mappedData: ExposureLinkage[] = result.data.map((item: any) => ({
+            exposureId: item.document_id,
+            type: item.exposure_type,
+            currency: item.currency,
+            originalMaturity: item.document_date ? new Date(item.document_date).toISOString().split("T")[0] : "",
+            amount: item.total_open_amount,
+            status: "Linked",
+          }));
+          setData(mappedData);
+        } else {
+          setData([]);
+        }
+      } catch (error) {
+        setData([]);
+      }
+    };
+
+    fetchData();
+  }, [selectedUsers]);
+
   const columns = useMemo<ColumnDef<ExposureLinkage>[]>(
     () => [
       {
@@ -55,8 +100,8 @@ const ExposureLinkageStatus: React.FC = () => {
         cell: ({ getValue }) => <span>{getValue() as string}</span>,
       },
       {
-        accessorKey: "newMaturity",
-        header: "New Maturity",
+        accessorKey: "amount",
+        header: "Amount",
         cell: ({ getValue }) => <span>{getValue() as string}</span>,
       },
       {
@@ -69,7 +114,7 @@ const ExposureLinkageStatus: React.FC = () => {
   );
 
   const table = useReactTable({
-    data: exposureLinkageData,
+    data: data,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
