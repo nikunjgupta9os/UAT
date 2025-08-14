@@ -64,11 +64,20 @@ const formatDateForApi = (dateString: string): string => {
   return date.toISOString().split("T")[0];
 };
 
+type TabVisibility = {
+  approve: boolean;
+  reject: boolean;
+  edit: boolean;
+  delete: boolean;
+};
+
 const nonDraggableColumns = ["expand", "action", "select"];
 
 const TransactionTable: React.FC = () => {
   const { notify, confirm } = useNotification();
-  const [selectedRowIds, setSelectedRowIds] = useState<Record<string, boolean>>({});
+  const [selectedRowIds, setSelectedRowIds] = useState<Record<string, boolean>>(
+    {}
+  );
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   const [data, setData] = useState<Transaction[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -141,7 +150,7 @@ const TransactionTable: React.FC = () => {
         "Local Currency": item.localCurrency,
         "Order Type": item.orderType,
         "Transaction Type": item.transactionType,
-        "Counterparty": item.counterparty,
+        Counterparty: item.counterparty,
         "Mode of Delivery": item.modeOfDelivery,
         "Delivery Period": item.deliveryPeriod,
         "Add Date": item.addDate,
@@ -163,13 +172,13 @@ const TransactionTable: React.FC = () => {
         "Value Local Currency": item.valueLocalCurrency,
         "Internal Dealer": item.internalDealer,
         "Counterparty Dealer": item.counterpartyDealer,
-        "Remarks": item.remarks,
-        "Narration": item.narration,
+        Remarks: item.remarks,
+        Narration: item.narration,
         "Transaction Timestamp": item.transactionTimestamp,
         "Bank Transaction ID": item.bankTransactionId,
         "Swift Unique ID": item.swiftUniqueId,
         "Bank Confirmation Date": item.bankConfirmationDate,
-        "Status": item.status,
+        Status: item.status,
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -178,7 +187,9 @@ const TransactionTable: React.FC = () => {
 
       // Auto-size columns
       const maxWidth = 50;
-      const wscols = Object.keys(exportData[0] || {}).map(() => ({ width: maxWidth }));
+      const wscols = Object.keys(exportData[0] || {}).map(() => ({
+        width: maxWidth,
+      }));
       worksheet["!cols"] = wscols;
 
       XLSX.writeFile(workbook, `${filename}.xlsx`);
@@ -227,7 +238,9 @@ const TransactionTable: React.FC = () => {
         bankMargin: parseFloat(item.bank_margin),
         totalRate: parseFloat(item.total_rate),
         valueQuoteCurrency: parseFloat(item.value_quote_currency),
-        interveningRateQuoteToLocal: parseFloat(item.intervening_rate_quote_to_local),
+        interveningRateQuoteToLocal: parseFloat(
+          item.intervening_rate_quote_to_local
+        ),
         valueLocalCurrency: parseFloat(item.value_local_currency),
         internalDealer: item.internal_dealer,
         counterpartyDealer: item.counterparty_dealer,
@@ -359,7 +372,7 @@ const TransactionTable: React.FC = () => {
       // Initialize edit values with calculated total rate
       const initialValues = {
         ...row.original,
-        totalRate: calculateTotalRate(row.original)
+        totalRate: calculateTotalRate(row.original),
       };
       setEditValues(initialValues);
       setIsEditing(true);
@@ -429,7 +442,43 @@ const TransactionTable: React.FC = () => {
     }
   };
 
+  const [Visibility, setVisibility] = useState<TabVisibility>({
+    approve: false,
+    reject: false,
+    edit: false,
+    delete: false,
+  });
+  // const [isLoading, setIsLoading] = useState(true);
+
+  const roleName = localStorage.getItem("userRole");
+
   useEffect(() => {
+    const fetchPermissions = async () => {
+      try {
+        // setIsLoading(true);
+        const response = await axios.post(
+          "https://backend-slqi.onrender.com/api/permissions/permissionjson",
+          { roleName }
+        );
+
+        const pages = response.data?.pages;
+        const userTabs = pages?.["forward-confirmation"]?.tabs;
+
+        if (userTabs) {
+          setVisibility({
+            approve: userTabs.pendingForward.showApproveButton || false,
+            reject: userTabs.pendingForward.showRejectButton || false,
+            edit: userTabs.pendingForward.showEditButton || false,
+            delete: userTabs.pendingForward.showDeleteButton || false,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching permissions:", error);
+      } finally {
+        // setIsLoading(false);
+      }
+    };
+
     const fetchData = async () => {
       try {
         const response = await axios.get(
@@ -487,6 +536,7 @@ const TransactionTable: React.FC = () => {
       }
     };
 
+    fetchPermissions();
     fetchData();
   }, []);
 
@@ -541,21 +591,29 @@ const TransactionTable: React.FC = () => {
               }
               step={typeof originalValue === "number" ? "0.0001" : undefined}
               onChange={(e) => {
-                const newValue = typeof originalValue === "number"
-                  ? parseFloat(e.target.value) || 0
-                  : e.target.value;
-                
+                const newValue =
+                  typeof originalValue === "number"
+                    ? parseFloat(e.target.value) || 0
+                    : e.target.value;
+
                 // Create updated values object
                 const updatedValues = {
                   ...editValues,
-                  [key]: newValue
+                  [key]: newValue,
                 };
-                
+
                 // If the changed field affects total rate, recalculate it
-                if (['spotRate', 'forwardPoints', 'bankMargin', 'orderType'].includes(key)) {
+                if (
+                  [
+                    "spotRate",
+                    "forwardPoints",
+                    "bankMargin",
+                    "orderType",
+                  ].includes(key)
+                ) {
                   updatedValues.totalRate = calculateTotalRate(updatedValues);
                 }
-                
+
                 setEditValues(updatedValues);
               }}
             />
@@ -568,7 +626,7 @@ const TransactionTable: React.FC = () => {
             {key === "transactionTimestamp"
               ? new Date(value).toLocaleString()
               : typeof value === "number"
-              ? key === "totalRate" 
+              ? key === "totalRate"
                 ? Number(value).toFixed(4)
                 : value.toLocaleString()
               : String(value ?? "—")}
@@ -636,12 +694,14 @@ const TransactionTable: React.FC = () => {
         header: "Action",
         cell: ({ row }) => (
           <div className="flex items-center justify-center gap-1">
-            <button
-              onClick={() => handleForwardDelete()}
-              className="flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded text-red-600 hover:bg-red-100 transition-colors"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            {Visibility.delete && (
+              <button
+                onClick={() => handleForwardDelete()}
+                className="flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded text-red-600 hover:bg-red-100 transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
           </div>
         ),
       },
@@ -719,10 +779,11 @@ const TransactionTable: React.FC = () => {
         header: "Total Rate",
         cell: ({ getValue, row }) => {
           // If we're editing this row, show the calculated total rate
-          const value = expandedRowId === row.id && isEditing 
-            ? editValues.totalRate || calculateTotalRate(editValues)
-            : getValue() as number;
-          
+          const value =
+            expandedRowId === row.id && isEditing
+              ? editValues.totalRate || calculateTotalRate(editValues)
+              : (getValue() as number);
+
           return (
             <span className="font-medium font-semibold">
               {value ? value.toFixed(4) : "—"}
@@ -908,9 +969,9 @@ const TransactionTable: React.FC = () => {
   // Add the calculateTotalRate function
   const calculateTotalRate = (values: Transaction) => {
     const { orderType, spotRate, forwardPoints, bankMargin } = values;
-    if (orderType === 'Buy') {
+    if (orderType === "Buy") {
       return (spotRate || 0) + (forwardPoints || 0) + (bankMargin || 0);
-    } else if (orderType === 'Sell') {
+    } else if (orderType === "Sell") {
       return (spotRate || 0) + (forwardPoints || 0) - (bankMargin || 0);
     }
     return values.totalRate || 0;
@@ -1005,12 +1066,18 @@ const TransactionTable: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-end">
         <div className="flex items-center gap-2 min-w-[12rem]">
-          <Button onClick={() => handleStatusUpdate("Approved")}>
-            Approve
-          </Button>
-          <Button onClick={() => handleStatusUpdate("Rejected")}>Reject</Button>
+          {Visibility.approve && (
+            <Button onClick={() => handleStatusUpdate("Approved")}>
+              Approve
+            </Button>
+          )}
+          {Visibility.reject && (
+            <Button onClick={() => handleStatusUpdate("Rejected")}>
+              Reject
+            </Button>
+          )}
         </div>
 
         {/* Search Results Info */}
@@ -1114,19 +1181,21 @@ const TransactionTable: React.FC = () => {
                         >
                           <div className="bg-secondary-color-lt rounded-lg p-4 shadow-md border border-border">
                             {/* Edit/Save Button */}
-                            <div className="flex justify-end mb-4">
-                              <button
-                                onClick={() => handleForwardEditToggle(row)}
-                                className="bg-primary text-white px-4 py-1 rounded shadow hover:bg-primary-dark disabled:opacity-60"
-                                disabled={isSaving}
-                              >
-                                {isEditing
-                                  ? isSaving
-                                    ? "Saving..."
-                                    : "Save"
-                                  : "Edit"}
-                              </button>
-                            </div>
+                            {Visibility.edit && (
+                              <div className="flex justify-end mb-4">
+                                <button
+                                  onClick={() => handleForwardEditToggle(row)}
+                                  className="bg-primary text-white px-4 py-1 rounded shadow hover:bg-primary-dark disabled:opacity-60"
+                                  disabled={isSaving}
+                                >
+                                  {isEditing
+                                    ? isSaving
+                                      ? "Saving..."
+                                      : "Save"
+                                    : "Edit"}
+                                </button>
+                              </div>
+                            )}
 
                             {/* Basic Information */}
                             <div className="mb-6">
