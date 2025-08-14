@@ -73,13 +73,13 @@ function Pagination<T>({
       {/* Right side - Items info */}
       <div>
         Showing{" "}
-        <span className="font-medium">
+        <span className="font-medium text-primary">
           {totalItems === 0 ? 0 : startIndex}
         </span> to{" "}
-        <span className="font-medium">
+        <span className="font-medium text-primary">
           {endIndex}
         </span>{" "}
-        of <span className="font-medium">{totalItems}</span> entries
+        of <span className="font-medium text-primary">{totalItems}</span> entries
       </div>
     </div>
   );

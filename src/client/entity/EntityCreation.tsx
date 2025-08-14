@@ -192,9 +192,9 @@ const EntityCreation: React.FC = () => {
   return (
     <Layout
       title="Entity Creation"
-      showButton
-      buttonText="Back"
-      onButtonClick={PageChange}
+      // showButton
+      // buttonText="Back"
+      // onButtonClick={PageChange}
     >
       <div className="flex justify-center">
       <div className="p-6 rounded-xl border bg-secondary-color-lt border-border shadow-md space-y-6 w-full max-w-[1500px]">

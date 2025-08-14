@@ -31,7 +31,13 @@ const TableContent: React.FC<{
   showSelected: boolean;
   isPending?: boolean;
   onSearchChange: (term: string) => void;
-}> = ({ data, searchTerm, showSelected, isPending = false, onSearchChange }) => {
+}> = ({
+  data,
+  searchTerm,
+  showSelected,
+  isPending = false,
+  onSearchChange,
+}) => {
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
   // Track selected rows
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
@@ -39,7 +45,7 @@ const TableContent: React.FC<{
 
   const [Visibility, setVisibility] = useState<TabVisibility>({
     allTab: false,
-    uploadTab:false,
+    uploadTab: false,
     pendingTab: false,
   });
 
@@ -71,39 +77,40 @@ const TableContent: React.FC<{
 
   const filteredData = useMemo(() => {
     let statusFilteredData;
-    
+
     if (isPending) {
       // If isPending is true, show only non-approved items
-      statusFilteredData = data.filter((item) => 
-        item.status && item.status.toLowerCase() !== 'approved'
+      statusFilteredData = data.filter(
+        (item) => item.status && item.status.toLowerCase() !== "approved"
       );
     } else {
       // If isPending is false, show everything but prioritize pending over approved for duplicate roleNames
       const roleNameMap = new Map<string, PermissionData>();
-      
+
       // First pass: collect all items, giving priority to non-approved items
       data.forEach((item) => {
         const roleName = item.roleName;
         const currentItem = roleNameMap.get(roleName);
-        
+
         if (!currentItem) {
           // If no item exists for this roleName, add it
           roleNameMap.set(roleName, item);
         } else {
           // If item exists, prioritize non-approved over approved
-          const currentIsApproved = currentItem.status?.toLowerCase() === 'approved';
-          const newIsApproved = item.status?.toLowerCase() === 'approved';
-          
+          const currentIsApproved =
+            currentItem.status?.toLowerCase() === "approved";
+          const newIsApproved = item.status?.toLowerCase() === "approved";
+
           if (currentIsApproved && !newIsApproved) {
             // Replace approved with non-approved
             roleNameMap.set(roleName, item);
           }
         }
       });
-      
+
       statusFilteredData = Array.from(roleNameMap.values());
     }
-    
+
     // Then apply search filter if search term exists
     if (!searchTerm || !searchTerm.trim()) return statusFilteredData;
     const lowerSearch = searchTerm.toLowerCase().trim();
@@ -142,35 +149,31 @@ const TableContent: React.FC<{
         accessorKey: "status",
         header: "Status",
         cell: (info) => {
-          // Show actual status from the data
           const status = info.getValue() as string;
+
           const statusColors: Record<string, string> = {
-            Approved: "bg-green-100 text-green-800",
+            approved: "bg-green-100 text-green-800",
             pending: "bg-yellow-100 text-yellow-800",
-            "Delete-Approval": "bg-yellow-100 text-yellow-800",
-            "delete-approval": "bg-yellow-100 text-yellow-800",
+            "delete-approval": "bg-orange-100 text-orange-800",
+            "awaiting-approval": "bg-yellow-100 text-yellow-800",
             rejected: "bg-red-100 text-red-800",
-            appoved: "bg-green-100 text-green-800",
-            Rejected: "bg-red-100 text-red-800",
-            "Awaiting-Approval": "bg-yellow-100 text-yellow-800",
-            "Awaiting-approval": "bg-yellow-100 text-yellow-800", // ✅ Fix: quotes added
-            Inactive: "bg-gray-200 text-gray-700",
+            inactive: "bg-gray-200 text-gray-700",
           };
-          const toPascalCase = (str: string) => {
-            return str.replace(
-              /(\w)(\w*)/g,
-              (_, firstChar, rest) =>
-                firstChar.toUpperCase() + rest.toLowerCase()
+
+          const normalizedStatus = status.toLowerCase();
+
+          const toPascalCase = (str: string) =>
+            str.replace(
+              /\w+/g,
+              (word) => word[0].toUpperCase() + word.substring(1).toLowerCase()
             );
-          };
 
           const displayStatus = toPascalCase(status);
 
           return (
             <span
               className={`px-2 py-1 text-xs font-medium rounded-full ${
-                statusColors[status as keyof typeof statusColors] ||
-                "bg-gray-100 text-gray-800"
+                statusColors[normalizedStatus] || "bg-gray-100 text-gray-800"
               }`}
             >
               {displayStatus}
@@ -323,85 +326,90 @@ const TableContent: React.FC<{
     }
   };
 
-
   return (
-    <div className="space-y-4">
-      {/* Header Controls - Flex row like AwaitingUser */}
-      <div className="mt-14 flex flex-col md:flex-row justify-between items-center gap-4">
-        {/* Left side: Approve / Reject (only if isPending) */}
-        {isPending ? (
-          <div className="flex items-center gap-2 min-w-[12rem]">
-            <Button onClick={handleApprove}>Approve</Button>
-            <Button color="Fade" onClick={handleReject}>Reject</Button>
-          </div>
-        ) : <div />}
-
-        {/* Right side: Download, Refresh, Search */}
-        <div className="flex items-center gap-4 w-full md:w-auto">
-          <button
-            type="button"
-            className="text-primary group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
-            title="Download All Roles"
-            onClick={() => exportToExcel(filteredData, "All_Roles")}
-          >
-            <Download className="flex items-center justify-center text-primary group-hover:text-white" />
-          </button>
-          <button
-            type="button"
-            className="text-primary group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
-            title="Refresh"
-            onClick={() => window.location.reload()}
-          >
-            <svg
-              width="20"
-              height="20"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              viewBox="0 0 24 24"
-              className="accent-primary"
-            >
-              <path d="M23 4v6h-6" />
-              <path d="M1 20v-6h6" />
-              <path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10M1 14l5.36 5.36A9 9 0 0 0 20.49 15" />
-            </svg>
-          </button>
-          <form
-            className="relative flex items-center w-full md:w-64"
-            onSubmit={(e) => e.preventDefault()}
-          >
-            <input
-              type="text"
-              placeholder="Search"
-              className="pl-4 pr-10 py-2 text-secondary-text bg-secondary-color-lt border border-border rounded-lg focus:outline-none w-full hover:border hover:border-primary"
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-            />
+    <div className="space-y-6">
+      {/* Header Controls - Two rows on mobile, one row on desktop */}
+      <div className="mt-14 flex flex-col gap-6 w-full">
+        <div className="flex justify-end w-full">
+          <div className="flex items-center gap-4 w-2xl justify-end">
             <button
-              type="submit"
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-primary"
-              tabIndex={-1}
-              aria-label="Search"
+              type="button"
+              className="text-primary group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
+              title="Download All Roles"
+              onClick={() => exportToExcel(filteredData, "All_Roles")}
+            >
+              <Download className="flex items-center justify-center text-primary group-hover:text-white" />
+            </button>
+
+            <button
+              type="button"
+              className="text-primary group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
+              title="Refresh"
+              onClick={() => window.location.reload()}
             >
               <svg
-                width="18"
-                height="18"
+                width="20"
+                height="20"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 viewBox="0 0 24 24"
-                className="w-4 h-4 accent-primary"
+                className="accent-primary"
               >
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                <path d="M23 4v6h-6" />
+                <path d="M1 20v-6h6" />
+                <path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10M1 14l5.36 5.36A9 9 0 0 0 20.49 15" />
               </svg>
             </button>
-          </form>
+
+            <form
+              className="relative flex items-center w-full md:w-64"
+              onSubmit={(e) => e.preventDefault()}
+            >
+              <input
+                type="text"
+                placeholder="Search"
+                className="pl-4 pr-10 py-2 text-secondary-text bg-secondary-color-lt border border-border rounded-lg focus:outline-none w-full hover:border hover:border-primary"
+                value={searchTerm}
+                onChange={(e) => onSearchChange(e.target.value)}
+              />
+              <button
+                type="submit"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-primary"
+                tabIndex={-1}
+                aria-label="Search"
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  viewBox="0 0 24 24"
+                  className="w-4 h-4 accent-primary"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+              </button>
+            </form>
+          </div>
         </div>
+
+        {isPending && (
+          <div className="flex justify-end w-full">
+            <div className="flex items-center gap-2 w-2xl justify-end">
+              <Button onClick={handleApprove}>Approve</Button>
+              <Button color="Fade" onClick={handleReject}>
+                Reject
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Table with DndContext properly positioned */}

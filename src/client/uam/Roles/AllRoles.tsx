@@ -122,7 +122,9 @@ const AllRoles: React.FC = () => {
   }, []);
 
   async function handleDelete(roleId: number) {
-    const confirmed = await confirm("Are you sure you want to delete this role?");
+    const confirmed = await confirm(
+      "Are you sure you want to delete this role?"
+    );
     if (!confirmed) return;
 
     axios
@@ -320,34 +322,30 @@ const AllRoles: React.FC = () => {
         header: "Status",
         cell: (info) => {
           const status = info.getValue() as string;
+
           const statusColors: Record<string, string> = {
-            Approved: "bg-green-100 text-green-800",
-            pending: "bg-yellow-100 text-yellow-800",
-            "Delete-Approval": "bg-yellow-100 text-yellow-800",
-            "Awaiting-Approval": "bg-yellow-100 text-yellow-800",
-            "Delete-approval": "bg-yellow-100 text-yellow-800",
-            "delete-approval": "bg-yellow-100 text-yellow-800",
-            rejected: "bg-red-100 text-red-800",
             approved: "bg-green-100 text-green-800",
-            Rejected: "bg-red-100 text-red-800",
-            "Awaiting-approval": "bg-yellow-100 text-yellow-800", // ✅ Fix: quotes added
-            Inactive: "bg-gray-200 text-gray-700",
+            pending: "bg-yellow-100 text-yellow-800",
+            "delete-approval": "bg-orange-100 text-orange-800",
+            "awaiting-approval": "bg-yellow-100 text-yellow-800",
+            rejected: "bg-red-100 text-red-800",
+            inactive: "bg-gray-200 text-gray-700",
           };
-          const toPascalCase = (str: string) => {
-            return str.replace(
-              /(\w)(\w*)/g,
-              (_, firstChar, rest) =>
-                firstChar.toUpperCase() + rest.toLowerCase()
+
+          const normalizedStatus = status.toLowerCase();
+
+          const toPascalCase = (str: string) =>
+            str.replace(
+              /\w+/g,
+              (word) => word[0].toUpperCase() + word.substring(1).toLowerCase()
             );
-          };
 
           const displayStatus = toPascalCase(status);
 
           return (
             <span
               className={`px-2 py-1 text-xs font-medium rounded-full ${
-                statusColors[status as keyof typeof statusColors] ||
-                "bg-gray-100 text-gray-800"
+                statusColors[normalizedStatus] || "bg-gray-100 text-gray-800"
               }`}
             >
               {displayStatus}
@@ -396,7 +394,9 @@ const AllRoles: React.FC = () => {
         cell: ({ row }) => (
           <div className="flex items-center space-x-1">
             <button
-              onClick={() => exportToExcel([row.original], `Role_${row.original.id}`)}
+              onClick={() =>
+                exportToExcel([row.original], `Role_${row.original.id}`)
+              }
               className="p-1.5 hover:bg-primary-xl rounded transition-colors"
             >
               <Download className="w-4 h-4 text-primary" />
@@ -517,7 +517,6 @@ const AllRoles: React.FC = () => {
 
   return (
     <>
-
       <div className="space-y-4">
         {/* Filters Section - Row 1 */}
         <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -716,8 +715,8 @@ const AllRoles: React.FC = () => {
                                 </div>
                               ) : (
                                 <Draggable id={header.column.id}>
-                                  <div className="cursor-move rounded py-1 transition duration-150 ease-in-out">
-                                    {flexRender(
+                                  <div className="cursor-move border-border text-header-color hover:bg-primary-lg rounded px-1 py-1 transition duration-150 ease-in-out">
+                                  {flexRender(
                                       header.column.columnDef.header,
                                       header.getContext()
                                     )}
@@ -802,7 +801,7 @@ const AllRoles: React.FC = () => {
                           visibleColumnCount={
                             table.getVisibleLeafColumns().length
                           }
-                          editableKeys={["startTime", "description","endTime"]}
+                          editableKeys={["startTime", "description", "endTime"]}
                           timeFields={["startTime", "endTime"]} // Add this line for time fields
                           detailsFields={[
                             // "Role ID",
@@ -827,14 +826,14 @@ const AllRoles: React.FC = () => {
             </table>
           </div>
           {/* Add Pagination Component */}
-          <Pagination
-            table={table}
-            totalItems={totalItems}
-            currentPageItems={currentPageItems}
-            startIndex={startIndex}
-            endIndex={endIndex}
-          />
         </div>
+        <Pagination
+          table={table}
+          totalItems={totalItems}
+          currentPageItems={currentPageItems}
+          startIndex={startIndex}
+          endIndex={endIndex}
+        />
       </div>
     </>
   );

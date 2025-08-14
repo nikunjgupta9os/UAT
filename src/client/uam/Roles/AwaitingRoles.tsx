@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronUp, Download } from "lucide-react";
 import Pagination from "../../ui/Pagination";
-import LoadingSpinner from '../../ui/LoadingSpinner';
+import LoadingSpinner from "../../ui/LoadingSpinner";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import { useNotification } from "../../Notification/Notification";
@@ -20,7 +20,7 @@ import ExpandedRow from "../../common/RenderExpandedCell";
 import Button from "../../ui/Button";
 import { exportToExcel } from "../../ui/exportToExcel";
 // import LoadingSpinner from "../../ui/LoadingSpinner";
-import {useCallback} from 'react';
+import { useCallback } from "react";
 
 const roleFieldLabels: Record<string, string> = {
   id: "Role ID",
@@ -45,8 +45,6 @@ type BackendResponse = {
   roleData?: Role[];
 };
 
-
-
 const AwaitingApproval: React.FC = () => {
   // const [data] = useState<UserType[]>(sampleUsers);
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
@@ -60,7 +58,7 @@ const AwaitingApproval: React.FC = () => {
   const [editingRows, setEditingRows] = useState<Set<string>>(new Set());
   // const [showSelected, setShowSelected] = useState<boolean>(true);
   const [data, setData] = useState<Role[]>([]);
-  
+
   // const [actionVisibility, setActionVisibility] = useState({
   //   showCreateButton: false,
   //   showEditButton: false,
@@ -103,7 +101,7 @@ const AwaitingApproval: React.FC = () => {
           });
         }
       } catch (error) {
-         console.error("Error fetching permissions:", error);
+        console.error("Error fetching permissions:", error);
       }
     };
 
@@ -119,7 +117,7 @@ const AwaitingApproval: React.FC = () => {
       .then(({ data }) => {
         if (!data || !data.roleData) {
           setLoading(false);
-           console.error("Invalid payload structure or empty response:", data);
+          console.error("Invalid payload structure or empty response:", data);
           return;
         }
 
@@ -146,7 +144,7 @@ const AwaitingApproval: React.FC = () => {
       .catch((err) => {
         setLoading(false);
 
-         console.error("Error fetching roles:", err);
+        console.error("Error fetching roles:", err);
       });
   }, []);
 
@@ -154,7 +152,8 @@ const AwaitingApproval: React.FC = () => {
     const selectedRoleIds = table
       .getSelectedRowModel()
       .rows.map((row) => row.original.id);
-    if (selectedRoleIds.length === 0) return notify("No roles selected", "warning");
+    if (selectedRoleIds.length === 0)
+      return notify("No roles selected", "warning");
 
     axios
       .post("https://backend-slqi.onrender.com/roles/bulk-approve", {
@@ -188,7 +187,8 @@ const AwaitingApproval: React.FC = () => {
       .getSelectedRowModel()
       .rows.map((row) => row.original.id);
 
-    if (selectedRoleIds.length === 0) return notify("No roles selected", "warning");  
+    if (selectedRoleIds.length === 0)
+      return notify("No roles selected", "warning");
 
     axios
       .post("https://backend-slqi.onrender.com/roles/bulk-reject", {
@@ -239,8 +239,7 @@ const AwaitingApproval: React.FC = () => {
   //     });
   // }
 
-  const toggleRowExpansion = useCallback(
-    (rowId: string) => {
+  const toggleRowExpansion = useCallback((rowId: string) => {
     setExpandedRows((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(rowId)) {
@@ -250,8 +249,7 @@ const AwaitingApproval: React.FC = () => {
       }
       return newSet;
     });
-  },[]
-  )
+  }, []);
 
   const filteredData = useMemo(() => {
     if (!searchTerm.trim()) return data;
@@ -260,7 +258,7 @@ const AwaitingApproval: React.FC = () => {
 
     return data.filter((user) => {
       return Object.entries(user)
-        .flatMap(([ value]) => {
+        .flatMap(([value]) => {
           if (typeof value === "object" && value !== null) {
             // Handle nested object (e.g., role.name)
             return Object.values(value);
@@ -376,33 +374,30 @@ const AwaitingApproval: React.FC = () => {
         header: "Status",
         cell: (info) => {
           const status = info.getValue() as string;
+
           const statusColors: Record<string, string> = {
-            Approved: "bg-green-100 text-green-800",
-            pending: "bg-yellow-100 text-yellow-800",
-            "Delete-Approval": "bg-yellow-100 text-yellow-800",
-            "Awaiting-Approval": "bg-yellow-100 text-yellow-800",
-            "Delete-approval": "bg-yellow-100 text-yellow-800",
-            "delete-approval": "bg-yellow-100 text-yellow-800",
-            rejected: "bg-red-100 text-red-800",
             approved: "bg-green-100 text-green-800",
-            Rejected: "bg-red-100 text-red-800",
-            "Awaiting-approval": "bg-yellow-100 text-yellow-800", // ✅ Fix: quotes added
-            Inactive: "bg-gray-200 text-gray-700",
+            pending: "bg-yellow-100 text-yellow-800",
+            "delete-approval": "bg-orange-100 text-orange-800",
+            "awaiting-approval": "bg-yellow-100 text-yellow-800",
+            rejected: "bg-red-100 text-red-800",
+            inactive: "bg-gray-200 text-gray-700",
           };
-          const toPascalCase = (str: string) => {
-            return str.replace(
-              /(\w)(\w*)/g,
-              (_, firstChar, rest) =>
-                firstChar.toUpperCase() + rest.toLowerCase()
+
+          const normalizedStatus = status.toLowerCase();
+
+          const toPascalCase = (str: string) =>
+            str.replace(
+              /\w+/g,
+              (word) => word[0].toUpperCase() + word.substring(1).toLowerCase()
             );
-          };
+
           const displayStatus = toPascalCase(status);
 
           return (
             <span
               className={`px-2 py-1 text-xs font-medium rounded-full ${
-                statusColors[status as keyof typeof statusColors] ||
-                "bg-gray-100 text-gray-800"
+                statusColors[normalizedStatus] || "bg-gray-100 text-gray-800"
               }`}
             >
               {displayStatus}
@@ -520,8 +515,6 @@ const AwaitingApproval: React.FC = () => {
       },
     ];
 
-    
-
     return baseColumns;
   }, [expandedRows, toggleRowExpansion, data]);
 
@@ -576,21 +569,10 @@ const AwaitingApproval: React.FC = () => {
 
   return (
     <>
-
       <div className="space-y-6">
-        <div className="mt-14 flex flex-col md:flex-row justify-between items-center gap-4">
-          {/* Left side: Approve / Reject */}
-          <div className="flex items-center gap-2 min-w-[12rem]">
-            {filteredData.length > 0 && Visibility.approve && (
-              <Button onClick={handleBulkApprove}>Approve</Button>
-            )}
-            {filteredData.length > 0 && Visibility.reject && (
-              <Button color="Fade" onClick={handleBulkReject}>Reject</Button>
-            )}
-          </div>
-
-          {/* Right side: Download, Refresh, Search */}
-          <div className="flex items-center gap-4 w-full md:w-auto">
+        <div className="mt-14 flex flex-col gap-6 w-full">
+          {/* First row */}
+          <div className="flex items-center gap-4 w-full md:w-auto justify-end">
             <button
               type="button"
               className="text-primary group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
@@ -599,6 +581,7 @@ const AwaitingApproval: React.FC = () => {
             >
               <Download className="flex items-center justify-center text-primary group-hover:text-white" />
             </button>
+
             <button
               type="button"
               className="text-primary group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
@@ -621,6 +604,7 @@ const AwaitingApproval: React.FC = () => {
                 <path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10M1 14l5.36 5.36A9 9 0 0 0 20.49 15" />
               </svg>
             </button>
+
             <form
               className="relative flex items-center w-full md:w-64"
               onSubmit={(e) => e.preventDefault()}
@@ -654,6 +638,20 @@ const AwaitingApproval: React.FC = () => {
                 </svg>
               </button>
             </form>
+          </div>
+
+          {/* Second row */}
+          <div className="flex justify-end w-full">
+            <div className="flex items-center gap-2 justify-end">
+              {filteredData.length > 0 && Visibility.approve && (
+                <Button onClick={handleBulkApprove}>Approve</Button>
+              )}
+              {filteredData.length > 0 && Visibility.reject && (
+                <Button color="Fade" onClick={handleBulkReject}>
+                  Reject
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -709,8 +707,8 @@ const AwaitingApproval: React.FC = () => {
                                 </div>
                               ) : (
                                 <Draggable id={header.column.id}>
-                                  <div className="cursor-move rounded py-1 transition duration-150 ease-in-out">
-                                    {flexRender(
+                                  <div className="cursor-move border-border text-header-color hover:bg-primary-lg rounded px-1 py-1 transition duration-150 ease-in-out">
+                                  {flexRender(
                                       header.column.columnDef.header,
                                       header.getContext()
                                     )}

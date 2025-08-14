@@ -24,7 +24,7 @@ interface TreeNodeData {
   entity_name: string;
   parentname: string | null;
   is_top_level_entity: boolean;
-  company_name : string | null;
+  company_name: string | null;
   address: string | null;
   contact_phone: string | null;
   contact_email: string | null;
@@ -459,7 +459,7 @@ const HierarchicalTree = () => {
           // parentname: formData.parentname || "",
           address: formData.address || "",
           contact_phone: formData.contact_phone || "",
-      
+
           contact_email: formData.contact_email || "",
           registration_number: formData.registration_number || "",
           pan_gst: formData.pan_gst || "",
@@ -516,7 +516,9 @@ const HierarchicalTree = () => {
     return (
       <div className="bg-secondary-color rounded-lg border border-border p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl text-primary font-bold">{node.data.company_name} Details</h2>
+          <h2 className="text-xl text-primary font-bold">
+            {node.data.company_name} Details
+          </h2>
           {/* <button
             className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm"
             onClick={() => setEditing((prev) => !prev)}
@@ -605,7 +607,7 @@ const HierarchicalTree = () => {
                       name="pan_gst"
                       value={formData.pan_gst || ""}
                       onChange={handleChange}
-                       className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
+                      className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
                     />
                   </div>
                   <div>
@@ -616,7 +618,7 @@ const HierarchicalTree = () => {
                       name="legal_entity_identifier"
                       value={formData.legal_entity_identifier || ""}
                       onChange={handleChange}
-                       className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
+                      className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
                     />
                   </div>
                   <div>
@@ -627,7 +629,7 @@ const HierarchicalTree = () => {
                       name="tax_identification_number"
                       value={formData.tax_identification_number || ""}
                       onChange={handleChange}
-                       className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
+                      className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
                     />
                   </div>
                   <div>
@@ -638,7 +640,7 @@ const HierarchicalTree = () => {
                       name="default_currency"
                       value={formData.default_currency || ""}
                       onChange={handleChange}
-                       className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
+                      className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
                     />
                   </div>
                   <div>
@@ -671,9 +673,7 @@ const HierarchicalTree = () => {
                     />
                   </div>
                   <div>
-                    <label className="font-semibold text-primary">
-                      Parent
-                    </label>
+                    <label className="font-semibold text-primary">Parent</label>
                     <input
                       name="parentname"
                       value={formData.parentname || ""}
@@ -802,41 +802,71 @@ const HierarchicalTree = () => {
                 <div className="space-y-3">
                   <div>
                     <h3 className="font-semibold text-primary">Company Name</h3>
-                    <p className="text-secondary-text-dark">{node.data.company_name}</p>
+                    <p className="text-secondary-text-dark">
+                      {node.data.company_name}
+                    </p>
                   </div>
                   <div>
                     <h3 className="font-semibold text-primary">Address</h3>
-                    <p className="text-secondary-text-dark">{node.data.address}</p>
+                    <p className="text-secondary-text-dark">
+                      {node.data.address}
+                    </p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">Contact Number</h3>
-                    <p className="text-secondary-text-dark">{node.data.contact_phone}</p>
+                    <h3 className="font-semibold text-primary">
+                      Contact Number
+                    </h3>
+                    <p className="text-secondary-text-dark">
+                      {node.data.contact_phone}
+                    </p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">Contact Email</h3>
-                    <p className="text-secondary-text-dark">{node.data.contact_email}</p>
+                    <h3 className="font-semibold text-primary">
+                      Contact Email
+                    </h3>
+                    <p className="text-secondary-text-dark">
+                      {node.data.contact_email}
+                    </p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">Registration Number</h3>
-                    <p className="text-secondary-text-dark">{node.data.registration_number}</p>
+                    <h3 className="font-semibold text-primary">
+                      Registration Number
+                    </h3>
+                    <p className="text-secondary-text-dark">
+                      {node.data.registration_number}
+                    </p>
                   </div>
                 </div>
                 <div className="space-y-3">
                   <div>
                     <h3 className="font-semibold text-primary">PAN/GST</h3>
-                    <p className="text-secondary-text-dark">{node.data.pan_gst}</p>
+                    <p className="text-secondary-text-dark">
+                      {node.data.pan_gst}
+                    </p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">Legal Entity Identifier</h3>
-                    <p className="text-secondary-text-dark">{node.data.legal_entity_identifier}</p>
+                    <h3 className="font-semibold text-primary">
+                      Legal Entity Identifier
+                    </h3>
+                    <p className="text-secondary-text-dark">
+                      {node.data.legal_entity_identifier}
+                    </p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">Tax Identification Number</h3>
-                    <p className="text-secondary-text-dark">{node.data.tax_identification_number}</p>
+                    <h3 className="font-semibold text-primary">
+                      Tax Identification Number
+                    </h3>
+                    <p className="text-secondary-text-dark">
+                      {node.data.tax_identification_number}
+                    </p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">Default Currency</h3>
-                    <p className="text-secondary-text-dark">{node.data.default_currency}</p>
+                    <h3 className="font-semibold text-primary">
+                      Default Currency
+                    </h3>
+                    <p className="text-secondary-text-dark">
+                      {node.data.default_currency}
+                    </p>
                   </div>
                   <div>
                     {/* <h3 className="font-semibold text-primary">Business Units</h3>
@@ -849,49 +879,83 @@ const HierarchicalTree = () => {
                 <div className="space-y-3">
                   <div>
                     <h3 className="font-semibold text-primary">Entity Name</h3>
-                    <p className="text-secondary-text-dark">{node.data.entity_name}</p>
+                    <p className="text-secondary-text-dark">
+                      {node.data.entity_name}
+                    </p>
                   </div>
                   <div>
                     <h3 className="font-semibold text-primary">Parent</h3>
-                    <p className="text-secondary-text-dark">{node.data.parentname}</p>
+                    <p className="text-secondary-text-dark">
+                      {node.data.parentname}
+                    </p>
                   </div>
                   <div>
                     <h3 className="font-semibold text-primary">Address</h3>
-                    <p className="text-secondary-text-dark">{node.data.address}</p>
+                    <p className="text-secondary-text-dark">
+                      {node.data.address}
+                    </p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">Contact Number</h3>
-                    <p className="text-secondary-text-dark">{node.data.contact_phone}</p>
+                    <h3 className="font-semibold text-primary">
+                      Contact Number
+                    </h3>
+                    <p className="text-secondary-text-dark">
+                      {node.data.contact_phone}
+                    </p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">Contact Email</h3>
-                    <p className="text-secondary-text-dark">{node.data.contact_email}</p>
+                    <h3 className="font-semibold text-primary">
+                      Contact Email
+                    </h3>
+                    <p className="text-secondary-text-dark">
+                      {node.data.contact_email}
+                    </p>
                   </div>
                 </div>
                 <div className="space-y-3">
                   <div>
-                    <h3 className="font-semibold text-primary">Unique Identifier</h3>
-                    <p className="text-secondary-text-dark">{node.data.unique_identifier}</p>
+                    <h3 className="font-semibold text-primary">
+                      Unique Identifier
+                    </h3>
+                    <p className="text-secondary-text-dark">
+                      {node.data.unique_identifier}
+                    </p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">Legal Entity Type</h3>
-                    <p className="text-secondary-text-dark">{node.data.legal_entity_type}</p>
+                    <h3 className="font-semibold text-primary">
+                      Legal Entity Type
+                    </h3>
+                    <p className="text-secondary-text-dark">
+                      {node.data.legal_entity_type}
+                    </p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">Reporting Currency</h3>
-                    <p className="text-secondary-text-dark">{node.data.reporting_currency}</p>
+                    <h3 className="font-semibold text-primary">
+                      Reporting Currency
+                    </h3>
+                    <p className="text-secondary-text-dark">
+                      {node.data.reporting_currency}
+                    </p>
                   </div>
                   <div>
                     <h3 className="font-semibold text-primary">FX Authority</h3>
-                    <p className="text-secondary-text-dark">{node.data.fx_trading_authority}</p>
+                    <p className="text-secondary-text-dark">
+                      {node.data.fx_trading_authority}
+                    </p>
                   </div>
                   <div>
                     <h3 className="font-semibold text-primary">FX Limit</h3>
-                    <p className="text-secondary-text-dark">{node.data.internal_fx_trading_limit}</p>
+                    <p className="text-secondary-text-dark">
+                      {node.data.internal_fx_trading_limit}
+                    </p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">Treasury Contact</h3>
-                    <p className="text-secondary-text-dark">{node.data.associated_treasury_contact}</p>
+                    <h3 className="font-semibold text-primary">
+                      Treasury Contact
+                    </h3>
+                    <p className="text-secondary-text-dark">
+                      {node.data.associated_treasury_contact}
+                    </p>
                   </div>
                 </div>
               </>
@@ -961,7 +1025,9 @@ const HierarchicalTree = () => {
   };
 
   const handleDelete = async (node: TreeNodeType) => {
-    const confirmed = await confirm(`Delete ${node.name} and all its children?`);
+    const confirmed = await confirm(
+      `Delete ${node.name} and all its children?`
+    );
     if (!confirmed) return;
 
     try {
@@ -1014,11 +1080,13 @@ const HierarchicalTree = () => {
     const status = node.data.approval_status;
 
     // Filter children to hide rejected nodes when edit visibility is false
-    const visibleChildren = hasChildren && node.children 
-      ? node.children.filter(child => 
-          !(child.data.approval_status === "rejected" && !Visibility.edit)
-        )
-      : [];
+    const visibleChildren =
+      hasChildren && node.children
+        ? node.children.filter(
+            (child) =>
+              !(child.data.approval_status === "rejected" && !Visibility.edit)
+          )
+        : [];
 
     const hasVisibleChildren = visibleChildren.length > 0;
 
@@ -1063,20 +1131,21 @@ const HierarchicalTree = () => {
                 <div className="absolute -right-2.5 -top-4">
                   <span
                     className={`px-2 py-0.5 font-bold rounded-xl border-2 text-xs
-                      ${
-                        status === "Approved"
-                          ? "bg-green-400 border-green-500 text-white"
-                          : status === "Rejected"
-                          ? "bg-red-500 border-red-500 text-white"
-                          : status === "Pending"
-                          ? "bg-gray-200 border-gray-400 text-gray-600"
-                          : status === "delete-approval"
-                          ? "bg-purple-400 border-purple-600 text-white"
-                          : "bg-gray-200 border-gray-400 text-gray-600"
-                      }
-                    `}
-                  >
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                    ${
+                      {
+                        approved: "bg-green-400 border-green-500 text-white",
+                        rejected: "bg-red-500 border-red-500 text-white",
+                        pending: "bg-gray-200 border-gray-400 text-gray-600",
+                        "delete-approval": "bg-purple-400 border-purple-600 text-white",
+                      }[status.toLowerCase()] || "bg-gray-200 border-gray-400 text-gray-600"
+                    }
+                  `}
+                    >
+                    {status.replace(
+                      /\w+/g,
+                      (word) =>
+                        word[0].toUpperCase() + word.substring(1).toLowerCase()
+                    )}
                   </span>
                 </div>
 
@@ -1173,7 +1242,11 @@ const HierarchicalTree = () => {
                 <div className="flex justify-between items-center mt-6 border-b border-border mb-8 pb-2">
                   <h2 className="text-[24px] font-semibold">Hierarchy Tree</h2>
                   <div className="flex items-center gap-2 w-[7rem] justify-end">
-                    <Button categories="Medium" color="Fade" onClick={toggleAllNodes}>
+                    <Button
+                      categories="Medium"
+                      color="Fade"
+                      onClick={toggleAllNodes}
+                    >
                       {isAllExpanded ? "Collapse All" : "Expand All"}
                     </Button>
                   </div>
@@ -1193,38 +1266,44 @@ const HierarchicalTree = () => {
               <div className="flex flex-col bg-secondary-color-lt w-full space-y-10 rounded-lg border border-border p-6">
                 {selectedNode ? (
                   <>
-                     <div className="bg-secondary-color mt-6 w-full rounded-lg border border-border p-6">
+                    <div className="bg-secondary-color mt-6 w-full rounded-lg border border-border p-6">
                       {/* <h3 className="font-semibold text-gray-700">
                         Current Node: {selectedNode.id}
                       </h3> */}
                       <div className="flex justify-end gap-2 ml-10 mt-4">
-                      
-                        {Visibility.approve &&  selectedNode.data.approval_status !== ("Approved" )  &&(
-                          <button
-                            onClick={() => {
-                              updateApprovalStatus(selectedNode.id, "approved");
-                              handleApprove(selectedNode.data.entity_id);
-                            }}
-                            className="bg-primary hover:bg-primary-hover text-center text-white rounded px-4 py-2 font-bold transition min-w-[4rem]"
-
-                          >
-                            Approve
-                          </button>
-                        )}
-                        {Visibility.reject && selectedNode.data.approval_status !== ("Approved" )  &&(
-                          <button
-                            onClick={() => {
-                              updateApprovalStatus(selectedNode.id, "rejected");
-                              handleRejectBulk(
-                                [selectedNode.data.entity_id],
-                                approvalComment
-                              );
-                            }}
-                            className="bg-primary hover:bg-primary-hover text-center text-white rounded px-4 py-2 font-bold transition min-w-[4rem]"
-                          >
-                            Reject
-                          </button>
-                        )}
+                        {Visibility.approve &&
+                          selectedNode.data.approval_status !== "Approved" && (
+                            <button
+                              onClick={() => {
+                                updateApprovalStatus(
+                                  selectedNode.id,
+                                  "approved"
+                                );
+                                handleApprove(selectedNode.data.entity_id);
+                              }}
+                              className="bg-primary hover:bg-primary-hover text-center text-white rounded px-4 py-2 font-bold transition min-w-[4rem]"
+                            >
+                              Approve
+                            </button>
+                          )}
+                        {Visibility.reject &&
+                          selectedNode.data.approval_status !== "Approved" && (
+                            <button
+                              onClick={() => {
+                                updateApprovalStatus(
+                                  selectedNode.id,
+                                  "rejected"
+                                );
+                                handleRejectBulk(
+                                  [selectedNode.data.entity_id],
+                                  approvalComment
+                                );
+                              }}
+                              className="bg-primary hover:bg-primary-hover text-center text-white rounded px-4 py-2 font-bold transition min-w-[4rem]"
+                            >
+                              Reject
+                            </button>
+                          )}
                       </div>
                       <div className="mb-3">
                         <label className="block font-semibold mb-1 text-secondary-text-dark">
@@ -1269,7 +1348,7 @@ const HierarchicalTree = () => {
                     />
                   </>
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-primary">
                     Select a node to view details
                   </div>
                 )}

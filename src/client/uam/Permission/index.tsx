@@ -7,6 +7,7 @@ import Layout from "../../common/Layout";
 import AssignPermission from "./AssignPermissions";
 import AwaitingPermission from "./AwaitingPermission";
 import AllPermission from "./AllPermission";
+import { Users, Clock, ListChecks, Contrast } from "lucide-react";
 const useTabNavigation = (initialTab: string = "all") => {
   const [activeTab, setActiveTab] = useState(initialTab);
 
@@ -73,16 +74,19 @@ const Permission = () => {
     {
       id: "all",
       label: "Assign Permissions",
+      icon: Users,
       visibility: Visibility.allTab,
     },
     {
       id: "Awaiting",
       label: "Pending Permissions",
+      icon: Contrast,
       visibility: Visibility.allTab,
     },
     {
       id: "AllPermission",
       label: "All Permissions",
+      icon: ListChecks,
       visibility: Visibility.allTab,
     },
   ];
@@ -100,7 +104,10 @@ const Permission = () => {
         }
       `}
       >
-        <span>{tab.label}</span>
+        <span className="flex items-center">
+          <tab.icon size={20} className="mr-2" />
+          {tab.label}
+        </span>
       </button>
     ));
   }, [Visibility, activeTab, switchTab, isActiveTab]);

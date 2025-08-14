@@ -1,11 +1,12 @@
-
-
 import axios from "axios";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../../common/Layout";
 import AllRoles from "./AllRoles";
 import AwaitingRoles from "./AwaitingRoles";
+
+import { Users, Contrast } from "lucide-react";
+
 const useTabNavigation = (initialTab: string = "all") => {
   const [activeTab, setActiveTab] = useState(initialTab);
 
@@ -75,15 +76,17 @@ const Roles = () => {
   }, []);
   const TAB_CONFIG = [
     {
-      id: "all",
-      label: "All Roles",
-      Visbility: Visibility.allTab,
-    },
-    {
-      id: "awaiting",
-      label: "Awaiting Approval",
-      Visbility: Visibility.pendingTab,
-    },
+    id: "all",
+    label: "All Roles",
+    icon: Users,
+    Visbility: Visibility.allTab,
+  },
+  {
+    id: "awaiting",
+    label: "Awaiting Approval",
+    icon: Contrast,
+    Visbility: Visibility.pendingTab,
+  },
   ];
 
   const tabButtons = useMemo(() => {
@@ -100,7 +103,10 @@ const Roles = () => {
         }
       `}
       >
-        <span>{tab.label}</span>
+        <span className="flex items-center">
+          <tab.icon size={20} className="mr-2" />
+          {tab.label}
+        </span>
       </button>
     ));
   }, [Visibility, activeTab, switchTab, isActiveTab]);
