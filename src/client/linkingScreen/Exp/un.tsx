@@ -35,22 +35,28 @@ interface TableProps {
     bank: string;
     maturityMonths: string;
   };
+  edit: boolean;
   selectedSystemTransactionId: string | null;
-  setSelectedSystemTransactionId: React.Dispatch<React.SetStateAction<string | null>>;
-  setEntityOptions: React.Dispatch<React.SetStateAction<{ value: string; label: string }[]>>;
-  setCurrencyOptions?: React.Dispatch<React.SetStateAction<{ value: string; label: string }[]>>;
+  setSelectedSystemTransactionId: React.Dispatch<
+    React.SetStateAction<string | null>
+  >;
+  setEntityOptions: React.Dispatch<
+    React.SetStateAction<{ value: string; label: string }[]>
+  >;
+  setCurrencyOptions?: React.Dispatch<
+    React.SetStateAction<{ value: string; label: string }[]>
+  >;
 }
-
 
 const nonDraggableColumns = ["expand", "select"];
 
-
-const AvailableForward: React.FC<TableProps> = ({ 
-  filters, 
-  setEntityOptions, 
-  selectedSystemTransactionId, 
+const AvailableForward: React.FC<TableProps> = ({
+  filters,
+  setEntityOptions,
+  selectedSystemTransactionId,
   setSelectedSystemTransactionId,
-  setCurrencyOptions
+  setCurrencyOptions,
+  edit,
 }) => {
   const [selectedRowIds, setSelectedRowIds] = useState<Record<string, boolean>>(
     {}
@@ -80,7 +86,6 @@ const AvailableForward: React.FC<TableProps> = ({
     {} as LinkedSummaryData
   );
 
-  
   const transformApiData = (apiData: any[]): LinkedSummaryData[] => {
     return apiData.map((item) => ({
       bank: item.Bank,
@@ -91,44 +96,50 @@ const AvailableForward: React.FC<TableProps> = ({
       rate: 0, // Placeholder if not available
       lcyAmt: 0, // Placeholder if not available
       linked: item.linked_amount,
-      system_transaction_id : item.system_transaction_id, // Assuming this is the correct field
+      system_transaction_id: item.system_transaction_id, // Assuming this is the correct field
       available: parseFloat(item.amount) - item.linked_amount,
     }));
   };
-  
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await axios.get("https://backend-slqi.onrender.com/api/exposureUpload/expfwdLinkingBookings");
+      const response = await axios.get(
+        "https://backend-slqi.onrender.com/api/exposureUpload/expfwdLinkingBookings"
+      );
       const transformed = transformApiData(response.data);
       setData(transformed);
 
       // Extract unique banks for bank filter
-      const uniqueBanks = Array.from(new Set(response.data.map((item: any) => item.Bank)));
+      const uniqueBanks = Array.from(
+        new Set(response.data.map((item: any) => item.Bank))
+      );
       const bankOptions = uniqueBanks.map((bank: string) => ({
         value: bank,
         label: bank,
       }));
 
       // Extract unique currencies for currency filter
-      const uniqueCurrencies = Array.from(new Set(response.data.map((item: any) => item.currency)));
+      const uniqueCurrencies = Array.from(
+        new Set(response.data.map((item: any) => item.currency))
+      );
       const currencyOptions = uniqueCurrencies.map((currency: string) => ({
         value: currency,
         label: currency,
       }));
 
       setEntityOptions([{ value: "", label: "Select" }, ...bankOptions]);
-      
+
       // Set currency options if the setter is provided
       if (setCurrencyOptions) {
-        setCurrencyOptions([{ value: "", label: "Select" }, ...currencyOptions]);
+        setCurrencyOptions([
+          { value: "", label: "Select" },
+          ...currencyOptions,
+        ]);
       }
     };
 
     fetchData();
   }, [setEntityOptions, setCurrencyOptions]);
-
-
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -152,8 +163,8 @@ const AvailableForward: React.FC<TableProps> = ({
 
     // Bank filter - exact match (case insensitive)
     if (filters?.bank) {
-      result = result.filter((item) => 
-        item.bank.toLowerCase() === filters.bank.toLowerCase()
+      result = result.filter(
+        (item) => item.bank.toLowerCase() === filters.bank.toLowerCase()
       );
     }
 
@@ -181,8 +192,6 @@ const AvailableForward: React.FC<TableProps> = ({
 
     return result;
   }, [data, filters]);
-
-  
 
   const renderField = (
     key: keyof LinkedSummaryData,
@@ -308,7 +317,7 @@ const AvailableForward: React.FC<TableProps> = ({
         cell: ({ getValue }) => <span>{getValue() as string}</span>,
       },
       {
-        accessorKey:"system_transaction_id",
+        accessorKey: "system_transaction_id",
         header: "System Transaction ID",
         cell: ({ getValue }) => <span>{getValue() as string}</span>,
       },
@@ -379,11 +388,11 @@ const AvailableForward: React.FC<TableProps> = ({
   useEffect(() => {
     const selectedRows = table.getSelectedRowModel().rows;
     if (selectedRows.length === 1) {
-      setSelectedSystemTransactionId(selectedRows[0].original.system_transaction_id);
+      setSelectedSystemTransactionId(
+        selectedRows[0].original.system_transaction_id
+      );
     }
   }, [selectedRowIds, setSelectedSystemTransactionId]);
-  
-
 
   const selectedRows = table.getSelectedRowModel().rows;
 
@@ -489,35 +498,37 @@ const AvailableForward: React.FC<TableProps> = ({
                         >
                           <div className="bg-secondary-color-lt rounded-lg p-4 shadow-md border border-border">
                             <div className="flex justify-end mb-4">
-                              <button
-                                onClick={() => {
-                                  if (isEditing) {
-                                    setIsSaving(true);
-                                    setTimeout(() => {
-                                      setData((prev) =>
-                                        prev.map((item, idx) =>
-                                          idx === row.index
-                                            ? { ...item, ...editValues }
-                                            : item
-                                        )
-                                      );
-                                      setIsEditing(false);
-                                      setIsSaving(false);
-                                    }, 500);
-                                  } else {
-                                    setEditValues(row.original);
-                                    setIsEditing(true);
-                                  }
-                                }}
-                                className="bg-primary text-white px-4 py-1 rounded shadow hover:bg-primary-dark disabled:opacity-60"
-                                disabled={isSaving}
-                              >
-                                {isEditing
-                                  ? isSaving
-                                    ? "Saving..."
-                                    : "Save"
-                                  : "Edit"}
-                              </button>
+                              {edit && (
+                                <button
+                                  onClick={() => {
+                                    if (isEditing) {
+                                      setIsSaving(true);
+                                      setTimeout(() => {
+                                        setData((prev) =>
+                                          prev.map((item, idx) =>
+                                            idx === row.index
+                                              ? { ...item, ...editValues }
+                                              : item
+                                          )
+                                        );
+                                        setIsEditing(false);
+                                        setIsSaving(false);
+                                      }, 500);
+                                    } else {
+                                      setEditValues(row.original);
+                                      setIsEditing(true);
+                                    }
+                                  }}
+                                  className="bg-primary text-white px-4 py-1 rounded shadow hover:bg-primary-dark disabled:opacity-60"
+                                  disabled={isSaving}
+                                >
+                                  {isEditing
+                                    ? isSaving
+                                      ? "Saving..."
+                                      : "Save"
+                                    : "Edit"}
+                                </button>
+                              )}
                             </div>
                             <div className="mb-6">
                               <div className="font-semibold mb-2 text-primary-lt">
