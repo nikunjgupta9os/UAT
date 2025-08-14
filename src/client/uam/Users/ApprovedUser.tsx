@@ -569,8 +569,8 @@ const ApprovedUser: React.FC = () => {
                                 </div>
                               ) : (
                                 <Draggable id={header.column.id}>
-                                  <div className="cursor-move rounded py-1 transition duration-150 ease-in-out">
-                                                                    {flexRender(
+                                  <div className="cursor-move border-border text-header-color hover:bg-primary-lg rounded px-1 py-1 transition duration-150 ease-in-out">
+                                      {flexRender(
                                       header.column.columnDef.header,
                                       header.getContext()
                                     )}

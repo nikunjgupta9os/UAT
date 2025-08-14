@@ -416,6 +416,8 @@ const AllExposureRequest: React.FC = () => {
         header: "Status",
         cell: (info) => {
           const rawStatus = info.getValue();
+
+          // Fallback for missing or invalid status
           if (!rawStatus || typeof rawStatus !== "string") {
             return (
               <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-500">
@@ -424,9 +426,12 @@ const AllExposureRequest: React.FC = () => {
             );
           }
 
+          // Normalize status text
           const status =
             rawStatus.charAt(0).toUpperCase() +
             rawStatus.slice(1).toLowerCase();
+
+          // Status → color mapping
           const statusColors: Record<string, string> = {
             Open: "bg-green-100 text-green-800",
             Closed: "bg-gray-100 text-gray-800",
@@ -435,14 +440,18 @@ const AllExposureRequest: React.FC = () => {
             Rejected: "bg-red-100 text-red-800",
           };
 
+          // Default style if not found
+          const colorClass =
+            statusColors[status] || "bg-gray-100 text-secondary-text-dark";
+
           return (
-            <span
-              className={`px-2 py-1 text-xs font-medium rounded-full ${
-                statusColors[status] || "bg-gray-100 text-secondary-text-dark"
-              }`}
-            >
-              {status}
-            </span>
+            <div className="flex justify-end w-full">
+              <span
+                className={`px-2 py-1 text-xs font-medium rounded-full ${colorClass}`}
+              >
+                {status}
+              </span>
+            </div>
           );
         },
       },
@@ -483,42 +492,54 @@ const AllExposureRequest: React.FC = () => {
         accessorKey: "company_code",
         header: "Company Code",
         cell: ({ getValue }) => (
-          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text">
+            {(getValue() as string) || "—"}
+          </span>
         ),
       },
       {
         accessorKey: "counterparty_type",
         header: "Counterparty Type",
         cell: ({ getValue }) => (
-          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text">
+            {(getValue() as string) || "—"}
+          </span>
         ),
       },
       {
         accessorKey: "counterparty_code",
         header: "Counterparty Code",
         cell: ({ getValue }) => (
-          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text">
+            {(getValue() as string) || "—"}
+          </span>
         ),
       },
       {
         accessorKey: "entity1",
         header: "Entity 1",
         cell: ({ getValue }) => (
-          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text">
+            {(getValue() as string) || "—"}
+          </span>
         ),
       },
       {
         accessorKey: "entity2",
         header: "Entity 2",
         cell: ({ getValue }) => (
-          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text">
+            {(getValue() as string) || "—"}
+          </span>
         ),
       },
       {
         accessorKey: "entity3",
         header: "Entity 3",
         cell: ({ getValue }) => (
-          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text">
+            {(getValue() as string) || "—"}
+          </span>
         ),
       },
       {
@@ -546,7 +567,9 @@ const AllExposureRequest: React.FC = () => {
         accessorKey: "unit_of_measure",
         header: "UOM",
         cell: ({ getValue }) => (
-          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text">
+            {(getValue() as string) || "—"}
+          </span>
         ),
       },
       {

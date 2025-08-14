@@ -7,6 +7,7 @@ import AllUser from "./AllUser";
 import AwaitingUser from "./AwaitingUser";
 import ApprovedUser from "./ApprovedUser";
 import axios from "axios";
+import { Users, CheckCircle2, Clock, Contrast } from "lucide-react";
 
 
 
@@ -77,16 +78,19 @@ const User = () => {
     {
       id: "all",
       label: "All Users",
+      icon: Users,
       visibility: Visibility.allTab,
     },
     {
       id: "approved",
       label: "Approved Users",
+      icon: CheckCircle2,
       visibility: true, // fallback if needed
     },
     {
       id: "Awaiting",
       label: "Awaiting Users",
+      icon: Contrast,
       visibility: Visibility.pendingTab,
     },
   ];
@@ -105,7 +109,10 @@ const User = () => {
         }
         `}
       >
-        <span>{tab.label}</span>
+        <span className="flex items-center">
+          <tab.icon size={20} className="mr-2" />
+          {tab.label}
+        </span>
       </button>
     ));
   }, [Visibility, activeTab, switchTab, isActiveTab]);

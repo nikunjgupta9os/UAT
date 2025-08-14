@@ -897,9 +897,9 @@ const UploadFile: React.FC = () => {
           <div
             className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
               dragActive
-                ? "border-green-500 bg-green-50"
+                ? "border-green-500 bg-secondary-color-lt"
                 : !selectedType
-                ? "border-gray-300 bg-gray-50 cursor-not-allowed"
+                ? "border-primary bg-secondary-color-lt cursor-not-allowed"
                 : "border-border hover:border-primary-lt"
             }`}
             // className="relative border-2 border-dashed rounded-lg p-8 text-center transition-colors hover:border-primary-lt bg-secondary-color-lt text-secondary-text-dark"
@@ -928,10 +928,10 @@ const UploadFile: React.FC = () => {
             <div className="space-y-2">
               <Upload
                 className={`w-8 h-8 mx-auto ${
-                  selectedType ? "text-primary" : "text-gray-400"
+                  selectedType ? "text-primary" : "text-primary"
                 }`}
               />
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-primary">
                 {selectedType ? (
                   <>
                     <span className="font-medium text-primary">
@@ -942,7 +942,7 @@ const UploadFile: React.FC = () => {
                     </span>
                   </>
                 ) : (
-                  <span className="text-gray-500">
+                  <span className="text-primary">
                     Please select a type of exposure first
                   </span>
                 )}
@@ -1034,7 +1034,7 @@ const UploadFile: React.FC = () => {
         </div>
 
         {files.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm border">
+          <div className="bg-secondary-color-lt rounded-lg shadow-sm border">
             <div className="p-4 border-b flex items-center justify-between">
               <h3 className="text-lg font-medium text-gray-900">
                 Upload Summary
@@ -1239,14 +1239,14 @@ const UploadFile: React.FC = () => {
           />
         )}
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-secondary-color-lt p-6 rounded-lg shadow-sm border border-border">
           <div className="wi-full px-4 py-6">
             {/* Header Section */}
             <div className="mb-8">
-              <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+              <h1 className="text-2xl font-semibold text-secondary-text-dark mb-2">
                 Download Templates
               </h1>
-              <p className="text-gray-600 text-sm">
+              <p className="text-secondary-text text-sm">
                 Use our standardized templates to ensure your data is formatted
                 correctly.
               </p>
@@ -1257,19 +1257,19 @@ const UploadFile: React.FC = () => {
               {templates.map((template) => (
                 <div
                   key={template.id}
-                  className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 cursor-pointer"
+                  className="bg-secondary-color-lt p-6 rounded-lg shadow-sm border border-border hover:shadow-md transition-shadow duration-200 cursor-pointer"
                 >
                   <div className="flex items-start justify-between Download">
                     <div className="flex-1 Download">
-                      <h3 className="text-base font-medium text-gray-900 mb-1 ">
+                      <h3 className="text-base font-medium text-secondary-text-dark mb-1 ">
                         {template.name}
                       </h3>
-                      <p className="text-sm text-gray-500">{template.type}</p>
+                      <p className="text-sm text-primary">{template.type}</p>
                     </div>
                     <div className="relative">
                       <button
                         onClick={() => setDownloadMenuOpen(template.id)}
-                        className="ml-4 p-1 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                        className="ml-4 p-1 text-primary-lt hover:text-primary transition-colors duration-200"
                         aria-label={`Download ${template.name}`}
                       >
                         <Download size={16} />

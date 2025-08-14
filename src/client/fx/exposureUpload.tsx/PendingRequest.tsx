@@ -312,7 +312,7 @@ const AllExposureRequest: React.FC = () => {
         accessorKey: "document_id",
         header: "Document ID",
         cell: ({ getValue }) => (
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-secondary-text-dark">
             {getValue() as string}
           </span>
         ),
@@ -321,21 +321,27 @@ const AllExposureRequest: React.FC = () => {
         accessorKey: "exposure_type",
         header: "Type",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string}</span>
+          <span className="text-secondary-text-dark">
+            {getValue() as string}
+          </span>
         ),
       },
       {
         accessorKey: "entity",
         header: "Entity",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string}</span>
+          <span className="text-secondary-text-dark">
+            {getValue() as string}
+          </span>
         ),
       },
       {
         accessorKey: "counterparty_name",
         header: "Counterparty",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string}</span>
+          <span className="text-secondary-text-dark">
+            {getValue() as string}
+          </span>
         ),
       },
       {
@@ -345,7 +351,7 @@ const AllExposureRequest: React.FC = () => {
           const amount = Number(getValue());
           const currency = row.original.currency;
           return (
-            <span className="font-medium text-gray-900">
+            <span className="font-medium text-secondary-text-dark">
               {isNaN(amount)
                 ? "-"
                 : new Intl.NumberFormat("en-US", {
@@ -363,7 +369,7 @@ const AllExposureRequest: React.FC = () => {
           const amount = Number(getValue());
           const currency = row.original.currency;
           return (
-            <span className="font-medium text-gray-900">
+            <span className="font-medium text-secondary-text-dark">
               {isNaN(amount)
                 ? "-"
                 : new Intl.NumberFormat("en-US", {
@@ -378,7 +384,9 @@ const AllExposureRequest: React.FC = () => {
         accessorKey: "currency",
         header: "Currency",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string}</span>
+          <span className="text-secondary-text-dark">
+            {getValue() as string}
+          </span>
         ),
       },
       {
@@ -387,7 +395,7 @@ const AllExposureRequest: React.FC = () => {
         cell: ({ getValue }) => {
           const date = new Date(getValue() as string);
           return (
-            <span className="text-gray-700">
+            <span className="text-secondary-text-dark">
               {isNaN(date.getTime()) ? "—" : date.toLocaleDateString()}
             </span>
           );
@@ -399,7 +407,7 @@ const AllExposureRequest: React.FC = () => {
         cell: ({ getValue }) => {
           const date = new Date(getValue() as string);
           return (
-            <span className="text-gray-700">
+            <span className="text-secondary-text-dark">
               {isNaN(date.getTime()) ? "—" : date.toLocaleDateString()}
             </span>
           );
@@ -410,6 +418,8 @@ const AllExposureRequest: React.FC = () => {
         header: "Status",
         cell: (info) => {
           const rawStatus = info.getValue();
+          console.log(rawStatus);
+
           if (!rawStatus || typeof rawStatus !== "string") {
             return (
               <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-500">
@@ -418,24 +428,32 @@ const AllExposureRequest: React.FC = () => {
             );
           }
 
-          const status =
-            rawStatus.charAt(0).toUpperCase() +
-            rawStatus.slice(1).toLowerCase();
+          const normalizedStatus = rawStatus.toLowerCase();
+
           const statusColors: Record<string, string> = {
-            Open: "bg-green-100 text-green-800",
-            Closed: "bg-gray-100 text-gray-800",
-            Pending: "bg-yellow-100 text-yellow-800",
-            Approved: "bg-blue-100 text-blue-800",
-            Rejected: "bg-red-100 text-red-800",
+            open: "bg-green-100 text-green-800",
+            closed: "bg-gray-100 text-gray-800",
+            pending: "bg-yellow-100 text-yellow-800",
+            approved: "bg-blue-100 text-blue-800",
+            rejected: "bg-red-100 text-red-800",
+            "delete-approval": "bg-orange-100 text-orange-800",
           };
+
+          const toPascalCase = (str: string) =>
+            str.replace(
+              /\w+/g,
+              (word) => word[0].toUpperCase() + word.substring(1).toLowerCase()
+            );
+
+          const displayStatus = toPascalCase(normalizedStatus);
 
           return (
             <span
               className={`px-2 py-1 text-xs font-medium rounded-full ${
-                statusColors[status] || "bg-gray-100 text-gray-800"
+                statusColors[normalizedStatus] || "bg-gray-100 text-gray-800"
               }`}
             >
-              {status}
+              {displayStatus}
             </span>
           );
         },
@@ -445,6 +463,7 @@ const AllExposureRequest: React.FC = () => {
         header: "Approval Status",
         cell: (info) => {
           const rawStatus = info.getValue();
+
           if (!rawStatus || typeof rawStatus !== "string") {
             return (
               <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-500">
@@ -453,22 +472,30 @@ const AllExposureRequest: React.FC = () => {
             );
           }
 
-          const status =
-            rawStatus.charAt(0).toUpperCase() +
-            rawStatus.slice(1).toLowerCase();
+          const normalizedStatus = rawStatus.toLowerCase();
+
           const statusColors: Record<string, string> = {
-            Approved: "bg-green-100 text-green-800",
-            Pending: "bg-yellow-100 text-yellow-800",
-            Rejected: "bg-red-100 text-red-800",
+            approved: "bg-green-100 text-green-800",
+            pending: "bg-yellow-100 text-yellow-800",
+            "delete-approval": "bg-orange-100 text-orange-800",
+            rejected: "bg-red-100 text-red-800",
           };
+
+          const toPascalCase = (str: string) =>
+            str.replace(
+              /\w+/g,
+              (word) => word[0].toUpperCase() + word.substring(1).toLowerCase()
+            );
+
+          const displayStatus = toPascalCase(normalizedStatus);
 
           return (
             <span
               className={`px-2 py-1 text-xs font-medium rounded-full ${
-                statusColors[status] || "bg-gray-100 text-gray-800"
+                statusColors[normalizedStatus] || "bg-gray-100 text-gray-800"
               }`}
             >
-              {status}
+              {displayStatus}
             </span>
           );
         },
@@ -817,13 +844,14 @@ const AllExposureRequest: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* Status Filter */}
-        <div className="flex flex-col space-y-2">
-          <label className="text-sm font-medium text-gray-700">Status</label>
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-secondary-text">
+            Status
+          </label>
           <select
-            className="border border-border rounded-md px-3 py-2 focus:outline-none bg-secondary-color-lt text-secondary-text"
+            className="border border-border rounded-md px-3 py-2 focus:outline-none bg-secondary-color text-secondary-text"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
@@ -834,23 +862,21 @@ const AllExposureRequest: React.FC = () => {
             ))}
           </select>
         </div>
+      </div>
 
-        <div></div>
-        <div></div>
-
-        {/* Search and Action Buttons */}
-        <div className="flex items-center justify-end gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4">
+        <div className="col-span-1 md:col-span-4 flex items-center justify-end gap-4">
           <button
             type="button"
-            className="flex items-center justify-center border border-border rounded-lg px-2 h-10 text-sm  transition"
+            className="group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
             title="Download All Exposures"
             onClick={() => exportToExcel(filteredData, "All_Exposures")}
           >
-            <Download className="flex item-center justify-center text-primary" />
+            <Download className="flex item-center justify-center text-primary group-hover:text-white" />
           </button>
           <button
             type="button"
-            className="flex items-center justify-center border border-border rounded-lg w-10 h-10 transition"
+            className="text-primary group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
             title="Refresh"
             onClick={() => window.location.reload()}
           >
@@ -863,7 +889,7 @@ const AllExposureRequest: React.FC = () => {
               strokeLinecap="round"
               strokeLinejoin="round"
               viewBox="0 0 24 24"
-              className="text-primary"
+              className="accent-primary"
             >
               <path d="M23 4v6h-6" />
               <path d="M1 20v-6h6" />
@@ -877,7 +903,7 @@ const AllExposureRequest: React.FC = () => {
             <input
               type="text"
               placeholder="Search"
-              className="pl-4 pr-10 py-2 border border-border rounded-lg focus:outline-none bg-secondary-color-lt text-secondary-text-dark min-w-full"
+              className="w-full text-secondary-text bg-secondary-color px-3 py-2 border border-border rounded-lg shadow-sm focus:outline-none hover:border hover:border-primary"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />

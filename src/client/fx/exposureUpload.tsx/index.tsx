@@ -6,6 +6,7 @@ import PendingRequest from "./PendingRequest";
 import AddExposure from "./Upload";
 import AllExposureRequest from "./pp";
 import axios from "axios";
+import { List, Clock, UploadCloud, Contrast } from "lucide-react";
 const useTabNavigation = (initialTab: string = 'existing') => {
   const [activeTab, setActiveTab] = useState(initialTab);
   const switchTab = useCallback((tab: string) => {
@@ -68,9 +69,9 @@ const ExposureUpload = () => {
 
   const tabButtons = useMemo(() => {
     const tabConfig = [
-      { id: 'existing', label: 'All Exposure Request', visible: Visibility.allTab },
-      { id: 'forwards', label: 'Pending Exposure Request', visible: Visibility.pendingTab },
-      { id: 'add', label: 'Add Exposure', visible: Visibility.uploadTab },
+      { id: 'existing', label: 'All Exposure Request', icon: List, visible: Visibility.allTab },
+      { id: 'forwards', label: 'Pending Exposure Request', icon: Contrast, visible: Visibility.pendingTab },
+      { id: 'add', label: 'Add Exposure', icon: UploadCloud, visible: Visibility.uploadTab },
     ];
 
     return tabConfig
@@ -87,7 +88,10 @@ const ExposureUpload = () => {
             }
           `}
         >
-          <span>{tab.label}</span>
+          <span className="flex items-center">
+          <tab.icon size={20} className="mr-2" />
+          {tab.label}
+        </span>
         </button>
       ));
   }, [Visibility, activeTab, switchTab, isActiveTab]);

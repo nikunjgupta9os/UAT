@@ -397,52 +397,31 @@ const AllUser: React.FC = () => {
         accessorKey: "status",
         header: "Status",
         cell: (info) => {
-          const rawStatus = info.getValue();
-
-          //  console.log("Status Cell:", rawStatus);
-
-          if (!rawStatus || typeof rawStatus !== "string") {
-            return (
-              <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-500">
-                —
-              </span>
-            );
-          }
-
-          const status =
-            rawStatus.charAt(0).toUpperCase() +
-            rawStatus.slice(1).toLowerCase();
+          const status = info.getValue() as string;
 
           const statusColors: Record<string, string> = {
-            Approved: "bg-green-100 text-green-800",
+            approved: "bg-green-100 text-green-800",
             pending: "bg-yellow-100 text-yellow-800",
-            Pending: "bg-yellow-100 text-yellow-800",
-            "Delete-Approval": "bg-yellow-100 text-yellow-800",
-            "delete-approval": "bg-yellow-100 text-yellow-800",
-            "Delete-approval": "bg-yellow-100 text-yellow-800",
-            // "Delete-Approval": "bg-yellow-100 text-yellow-800",
+            "delete-approval": "bg-orange-100 text-orange-800",
+            "awaiting-approval": "bg-yellow-100 text-yellow-800",
             rejected: "bg-red-100 text-red-800",
-            appoved: "bg-green-100 text-green-800",
-            Rejected: "bg-red-100 text-red-800",
-            "Awaiting-approval": "bg-yellow-100 text-yellow-800", // ✅ Fix: quotes added
-            Inactive: "bg-gray-200 text-gray-700",
+            inactive: "bg-gray-200 text-gray-700",
           };
 
-          const toPascalCase = (str: string) => {
-            return str.replace(
-              /(\w)(\w*)/g,
-              (_, firstChar, rest) =>
-                firstChar.toUpperCase() + rest.toLowerCase()
+          const normalizedStatus = status.toLowerCase();
+
+          const toPascalCase = (str: string) =>
+            str.replace(
+              /\w+/g,
+              (word) => word[0].toUpperCase() + word.substring(1).toLowerCase()
             );
-          };
 
           const displayStatus = toPascalCase(status);
 
           return (
             <span
               className={`px-2 py-1 text-xs font-medium rounded-full ${
-                statusColors[status as keyof typeof statusColors] ||
-                "bg-gray-100 text-gray-800"
+                statusColors[normalizedStatus] || "bg-gray-100 text-gray-800"
               }`}
             >
               {displayStatus}
@@ -791,8 +770,8 @@ const AllUser: React.FC = () => {
                               </div>
                             ) : (
                               <Draggable id={header.column.id}>
-                                <div className="cursor-move rounded py-1 transition duration-150 ease-in-out">
-                                  {flexRender(
+                                <div className="cursor-move border-border text-header-color hover:bg-primary-lg rounded px-1 py-1 transition duration-150 ease-in-out">
+                                    {flexRender(
                                     header.column.columnDef.header,
                                     header.getContext()
                                   )}
@@ -813,12 +792,12 @@ const AllUser: React.FC = () => {
                 <tr>
                   <td
                     colSpan={columns.length}
-                    className="px-6 py-12 text-center text-gray-500"
+                    className="px-6 py-12 text-center text-primary"
                   >
                     <div className="flex flex-col items-center">
                       <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
                         <svg
-                          className="w-6 h-6 text-gray-400"
+                          className="w-6 h-6 text-primary"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -831,7 +810,7 @@ const AllUser: React.FC = () => {
                           />
                         </svg>
                       </div>
-                      <p className="text-lg font-medium text-gray-900 mb-1">
+                      <p className="text-lg font-medium text-primary mb-1">
                         No users found
                       </p>
                       <p className="text-sm text-primary">

@@ -507,9 +507,9 @@ function NyneOSTable<T extends EditableRowData>({
     <>
       <div className="flex items-center justify-end"></div>
       <div className="flex items-center justify-end">
-        <div className="flex items-center gap-2 min-w-[12rem]">
+        <div className="flex items-center pb-2.5 gap-2 min-w-[12rem]">
           <Button onClick={handleApprove}>Approve</Button>
-          <Button onClick={handleReject}>Reject</Button>
+          <Button color="Fade" onClick={handleReject}>Reject</Button>
         </div>
       </div>
       <div className={`w-full overflow-x-auto ${className}`}>
@@ -546,7 +546,7 @@ function NyneOSTable<T extends EditableRowData>({
                               </div>
                             ) : (
                               <Draggable id={header.column.id}>
-                                <div className="cursor-move border-border text-header-color hover:bg-blue-100 rounded px-1 py-1 transition duration-150 ease-in-out">
+                                <div className="cursor-move border-border text-header-color hover:bg-primary-lg rounded px-1 py-1 transition duration-150 ease-in-out">
                                   {flexRender(
                                     header.column.columnDef.header,
                                     header.getContext()
@@ -566,13 +566,13 @@ function NyneOSTable<T extends EditableRowData>({
                   <tr>
                     <td
                       colSpan={finalColumns.length}
-                      className="px-6 py-12 text-center text-gray-500"
+                      className="px-6 py-12 text-center text-primary"
                     >
                       <div className="flex flex-col items-center">
                         <p className="text-lg font-medium text-primary mb-1">
                           No data found
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-primary">
                           There is no data to display at the moment.
                         </p>
                       </div>
@@ -616,14 +616,15 @@ function NyneOSTable<T extends EditableRowData>({
             </table>
           </DndContext>
         </div>
-        {/* Add Pagination Component */}
+      </div>
+      <div className="pt-3">
         <Pagination
-          table={table}
-          totalItems={totalItems}
-          currentPageItems={currentPageItems}
-          startIndex={startIndex}
-          endIndex={endIndex}
-        />
+            table={table}
+            totalItems={totalItems}
+            currentPageItems={currentPageItems}
+            startIndex={startIndex}
+            endIndex={endIndex}
+          />
       </div>
     </>
   );

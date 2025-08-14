@@ -396,33 +396,30 @@ const Awaitinguser: React.FC = () => {
         header: "Status",
         cell: (info) => {
           const status = info.getValue() as string;
+
           const statusColors: Record<string, string> = {
-            Approved: "bg-green-100 text-green-800",
+            approved: "bg-green-100 text-green-800",
             pending: "bg-yellow-100 text-yellow-800",
-            "Delete-Approval": "bg-yellow-100 text-yellow-800",
-            "delete-approval": "bg-yellow-100 text-yellow-800",
+            "delete-approval": "bg-orange-100 text-orange-800",
+            "awaiting-approval": "bg-yellow-100 text-yellow-800",
             rejected: "bg-red-100 text-red-800",
-            appoved: "bg-green-100 text-green-800",
-            Rejected: "bg-red-100 text-red-800",
-            "Awaiting-Approval": "bg-yellow-100 text-yellow-800",
-            "Awaiting-approval": "bg-yellow-100 text-yellow-800", // ✅ Fix: quotes added
-            Inactive: "bg-gray-200 text-gray-700",
+            inactive: "bg-gray-200 text-gray-700",
           };
-          const toPascalCase = (str: string) => {
-            return str.replace(
-              /(\w)(\w*)/g,
-              (_, firstChar, rest) =>
-                firstChar.toUpperCase() + rest.toLowerCase()
+
+          const normalizedStatus = status.toLowerCase();
+
+          const toPascalCase = (str: string) =>
+            str.replace(
+              /\w+/g,
+              (word) => word[0].toUpperCase() + word.substring(1).toLowerCase()
             );
-          };
 
           const displayStatus = toPascalCase(status);
 
           return (
             <span
               className={`px-2 py-1 text-xs font-medium rounded-full ${
-                statusColors[status as keyof typeof statusColors] ||
-                "bg-gray-100 text-gray-800"
+                statusColors[normalizedStatus] || "bg-gray-100 text-gray-800"
               }`}
             >
               {displayStatus}
@@ -546,83 +543,90 @@ const Awaitinguser: React.FC = () => {
   return (
     <>
       <div className="space-y-6">
-        <div className="mt-14 flex flex-col md:flex-row justify-between items-center gap-4">
-          {/* Left side: Approve / Reject */}
-          <div className="flex items-center gap-2 min-w-[12rem]">
-            {filteredData.length > 0 && Visibility.approve && (
-              <Button onClick={handleBulkUserApprove}>Approve</Button>
-            )}
-            {filteredData.length > 0 && Visibility.reject && (
-              <Button onClick={handleBulkUserReject}>Reject</Button>
-            )}
-          </div>
-
-          {/* Right side: Download, Refresh, Search */}
-          <div className="flex items-center gap-4 w-full md:w-auto">
-            <button
-              type="button"
-              className="text-primary group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
-            title="Download All Roles"
-              onClick={() => exportToExcel(filteredData, "All_Roles")}
-            >
-              <Download className="flex items-center justify-center text-primary group-hover:text-white" />
-            </button>
-            <button
-              type="button"
-              className="text-primary group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
-              title="Refresh"
-              onClick={() => window.location.reload()}
-            >
-              <svg
-                width="20"
-                height="20"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                viewBox="0 0 24 24"
-                className="accent-primary"
-              >
-                <path d="M23 4v6h-6" />
-                <path d="M1 20v-6h6" />
-                <path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10M1 14l5.36 5.36A9 9 0 0 0 20.49 15" />
-              </svg>
-            </button>
-            <form
-              className="relative flex items-center w-full md:w-64"
-              onSubmit={(e) => e.preventDefault()}
-            >
-              <input
-                type="text"
-                placeholder="Search"
-                className="pl-4 pr-10 py-2 text-secondary-text bg-secondary-color-lt border border-border rounded-lg focus:outline-none w-full hover:border hover:border-primary"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+        <div className="mt-14 flex flex-col gap-6 w-full">
+          <div className="flex justify-end w-full">
+            <div className="flex items-center gap-4 w-2xl justify-end">
               <button
-                type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-primary"
-                tabIndex={-1}
-                aria-label="Search"
+                type="button"
+                className="text-primary group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
+                title="Download All Roles"
+                onClick={() => exportToExcel(filteredData, "All_Roles")}
+              >
+                <Download className="flex items-center justify-center text-primary group-hover:text-white" />
+              </button>
+
+              <button
+                type="button"
+                className="text-primary group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
+                title="Refresh"
+                onClick={() => window.location.reload()}
               >
                 <svg
-                  width="18"
-                  height="18"
+                  width="20"
+                  height="20"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   viewBox="0 0 24 24"
-                  className="w-4 h-4 accent-primary"
+                  className="accent-primary"
                 >
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  <path d="M23 4v6h-6" />
+                  <path d="M1 20v-6h6" />
+                  <path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10M1 14l5.36 5.36A9 9 0 0 0 20.49 15" />
                 </svg>
               </button>
-            </form>
+
+              <form
+                className="relative flex items-center w-full md:w-64"
+                onSubmit={(e) => e.preventDefault()}
+              >
+                <input
+                  type="text"
+                  placeholder="Search"
+                  className="pl-4 pr-10 py-2 text-secondary-text bg-secondary-color-lt border border-border rounded-lg focus:outline-none w-full hover:border hover:border-primary"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <button
+                  type="submit"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-primary"
+                  tabIndex={-1}
+                  aria-label="Search"
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    viewBox="0 0 24 24"
+                    className="w-4 h-4 accent-primary"
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                </button>
+              </form>
+            </div>
           </div>
+
+          {filteredData.length > 0 &&
+            (Visibility.approve || Visibility.reject) && (
+              <div className="flex justify-end w-full">
+                <div className="flex items-center gap-2 w-2xl justify-end">
+                  {Visibility.approve && (
+                    <Button onClick={handleBulkUserApprove}>Approve</Button>
+                  )}
+                  {Visibility.reject && (
+                    <Button color="Fade" onClick={handleBulkUserReject}>Reject</Button>
+                  )}
+                </div>
+              </div>
+            )}
         </div>
 
         <div className="w-full overflow-x-auto">
@@ -669,7 +673,7 @@ const Awaitinguser: React.FC = () => {
                                 </div>
                               ) : (
                                 <Draggable id={header.column.id}>
-                                  <div className="cursor-move rounded py-1 transition duration-150 ease-in-out">
+                                  <div className="cursor-move border-border text-header-color hover:bg-primary-lg rounded px-1 py-1 transition duration-150 ease-in-out">
                                     {flexRender(
                                       header.column.columnDef.header,
                                       header.getContext()
@@ -691,12 +695,12 @@ const Awaitinguser: React.FC = () => {
                   <tr>
                     <td
                       colSpan={columns.length}
-                      className="px-6 py-12 text-center text-gray-500"
+                      className="px-6 py-12 text-center text-primary"
                     >
                       <div className="flex flex-col items-center">
                         <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
                           <svg
-                            className="w-6 h-6 text-gray-400"
+                            className="w-6 h-6 text-primary"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -709,7 +713,7 @@ const Awaitinguser: React.FC = () => {
                             />
                           </svg>
                         </div>
-                        <p className="text-lg font-medium text-gray-900 mb-1">
+                        <p className="text-lg font-medium text-primary mb-1">
                           No users found
                         </p>
                         <p className="text-sm text-primary">
