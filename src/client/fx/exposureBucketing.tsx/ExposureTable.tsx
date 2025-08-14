@@ -4,7 +4,7 @@ import "react-date-range/dist/theme/default.css";
 import NyneOSTable from "./ReusableTable";
 import type { ColumnDef } from "@tanstack/react-table";
 import "../../styles/theme.css";
-
+import axios from "axios";
 const cURLHOST = "https://backend-slqi.onrender.com/api";
 
 async function fetchRenderVars(): Promise<IfPayload["renderVars"]> {
@@ -82,6 +82,13 @@ interface ExposureBucketing {
   updated_by: string | null;
 }
 
+type TabVisibility = {
+  edit : boolean;
+  approve : boolean;
+  reject : boolean; 
+}
+
+
 interface IfPayload {
   userVars: {
     roleName: string;
@@ -143,6 +150,14 @@ const ExposureBucketing: React.FC = () => {
     return result;
   }, [data, searchTerm, statusFilter]);
 
+   const [Visibility,setVisibility]= useState<TabVisibility>({
+      edit : false,
+      approve : false,
+      reject : false,
+    })
+    const roleName = localStorage.getItem("userRole") ;
+   
+
   useEffect(() => {
     fetchRenderVars()
       .then((renderVarsRes) => {
@@ -163,6 +178,29 @@ const ExposureBucketing: React.FC = () => {
       .catch((err) => {
         console.error("Error fetching renderVars:", err);
       });
+    
+     const fetchPermissions = async () => {
+      try {
+        const response = await axios.post(
+          "https://backend-slqi.onrender.com/api/permissions/permissionJSON",
+          { roleName }
+        );
+        console.log("Permissions response:", response.data);
+        const pages = response.data?.pages;
+        const userTabs = pages?.["exposure-bucketing"]?.tabs;
+        //  console.log(userTabs.allTab.hasAccess);
+        if (userTabs) {
+          setVisibility({
+            edit : userTabs.default.showEditButton || false,
+            approve : userTabs.default.showApproveButton || false,
+            reject : userTabs.default.showRejectButton || false,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching permissions:", error);
+      }
+    };
+    fetchPermissions(); 
   }, []);
 
 
@@ -836,6 +874,9 @@ const ExposureBucketing: React.FC = () => {
         expandedRowConfig={expandedRowConfig}
         onUpdate={handleUpdate}
         className="mb-8"
+        edit={Visibility.edit}
+        approve={Visibility.approve}
+        reject={Visibility.reject}
       />
     </div>
   );
