@@ -356,7 +356,12 @@ const TransactionTable: React.FC = () => {
         setEditValues({} as Transaction);
       }
     } else {
-      setEditValues({ ...row.original });
+      // Initialize edit values with calculated total rate
+      const initialValues = {
+        ...row.original,
+        totalRate: calculateTotalRate(row.original)
+      };
+      setEditValues(initialValues);
       setIsEditing(true);
     }
   };
@@ -534,15 +539,25 @@ const TransactionTable: React.FC = () => {
                   ? "date"
                   : "text"
               }
-              onChange={(e) =>
-                setEditValues((prev) => ({
-                  ...prev,
-                  [key]:
-                    typeof originalValue === "number"
-                      ? parseFloat(e.target.value)
-                      : e.target.value,
-                }))
-              }
+              step={typeof originalValue === "number" ? "0.0001" : undefined}
+              onChange={(e) => {
+                const newValue = typeof originalValue === "number"
+                  ? parseFloat(e.target.value) || 0
+                  : e.target.value;
+                
+                // Create updated values object
+                const updatedValues = {
+                  ...editValues,
+                  [key]: newValue
+                };
+                
+                // If the changed field affects total rate, recalculate it
+                if (['spotRate', 'forwardPoints', 'bankMargin', 'orderType'].includes(key)) {
+                  updatedValues.totalRate = calculateTotalRate(updatedValues);
+                }
+                
+                setEditValues(updatedValues);
+              }}
             />
             <span className="text-xs text-gray-500">
               Old: {String(originalValue ?? "—")}
@@ -553,7 +568,9 @@ const TransactionTable: React.FC = () => {
             {key === "transactionTimestamp"
               ? new Date(value).toLocaleString()
               : typeof value === "number"
-              ? value.toLocaleString()
+              ? key === "totalRate" 
+                ? Number(value).toFixed(4)
+                : value.toLocaleString()
               : String(value ?? "—")}
           </span>
         )}
@@ -700,11 +717,18 @@ const TransactionTable: React.FC = () => {
       {
         accessorKey: "totalRate",
         header: "Total Rate",
-        cell: ({ getValue }) => (
-          <span className="font-medium font-semibold">
-            {(getValue() as number).toFixed(4)}
-          </span>
-        ),
+        cell: ({ getValue, row }) => {
+          // If we're editing this row, show the calculated total rate
+          const value = expandedRowId === row.id && isEditing 
+            ? editValues.totalRate || calculateTotalRate(editValues)
+            : getValue() as number;
+          
+          return (
+            <span className="font-medium font-semibold">
+              {value ? value.toFixed(4) : "—"}
+            </span>
+          );
+        },
       },
       {
         accessorKey: "settlementDate",
@@ -768,7 +792,7 @@ const TransactionTable: React.FC = () => {
         ),
       },
     ],
-    [expandedRowId]
+    [expandedRowId, isEditing, editValues]
   );
 
   const defaultColumnVisibility: Record<string, boolean> = {
@@ -880,6 +904,17 @@ const TransactionTable: React.FC = () => {
     (sum, row) => sum + (row.original.actualValueBaseCurrency || 0),
     0
   );
+
+  // Add the calculateTotalRate function
+  const calculateTotalRate = (values: Transaction) => {
+    const { orderType, spotRate, forwardPoints, bankMargin } = values;
+    if (orderType === 'Buy') {
+      return (spotRate || 0) + (forwardPoints || 0) + (bankMargin || 0);
+    } else if (orderType === 'Sell') {
+      return (spotRate || 0) + (forwardPoints || 0) - (bankMargin || 0);
+    }
+    return values.totalRate || 0;
+  };
 
   return (
     <div className="w-full space-y-4 pt-6">
