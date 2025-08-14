@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import SectionCard from "./SectionCard";
 import CustomSelect from "../../common/SearchSelect";
 
@@ -26,15 +26,20 @@ const InputField = ({ label, value, onChange, step = "any", required = false }) 
   </div>
 );
 
-const CancellationDetailsOldForwards: React.FC = () => {
-  const [form, setForm] = useState({
-    currentSpotRate: "",
-    currentForwardRate: "",
-    bankCharges: "",
-    discountRate: "",
-    reason: "",
-  });
+type FormType = {
+  currentSpotRate: string;
+  currentForwardRate: string;
+  bankCharges: string;
+  discountRate: string;
+  reason: string;
+};
 
+type CancellationDetailsProps = {
+  form: FormType;
+  setForm: React.Dispatch<React.SetStateAction<FormType>>;
+};
+
+const CancellationDetailsOldForwards: React.FC<CancellationDetailsProps> = ({ form, setForm }) => {
   const handleChange = (field: string) => (value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
