@@ -35,8 +35,8 @@ type FormType = {
 };
 
 type CancellationDetailsProps = {
-  form: FormType;
-  setForm: React.Dispatch<React.SetStateAction<FormType>>;
+  form?: FormType;
+  setForm?: React.Dispatch<React.SetStateAction<FormType>>;
 };
 
 const CancellationDetailsOldForwards: React.FC<CancellationDetailsProps> = ({ form, setForm }) => {
