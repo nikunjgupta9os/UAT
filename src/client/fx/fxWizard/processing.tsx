@@ -19,8 +19,8 @@ type OldForward = {
 };
 
 interface ProcessingProps {
-  selectedUsers: SelectedForwardContract[];
-  form: {
+  selectedUsers?: SelectedForwardContract[];
+  form?: {
     currentSpotRate: string;
     currentForwardRate: string;
     bankCharges: string;
