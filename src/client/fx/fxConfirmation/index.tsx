@@ -1,72 +1,159 @@
-
+import { useMemo, useState, useEffect, useCallback } from "react";
 import Layout from "../../common/Layout";
-import { useMemo, useState, useCallback, useEffect } from "react";
 import FxConfirmation from "./fxConfirmation";
 import FxUploadForm from "./fxUpload";
 import TransactionTable from "./pendingForwards";
+import LoadingSpinner from "../../ui/LoadingSpinner";
+import axios from "axios";
 
-const useTabNavigation = (initialTab: string = 'Form') => {
+type TabVisibility = {
+  fxForm: boolean;
+  fxUpload: boolean;
+  pendingForwards: boolean;
+};
+
+const useTabNavigation = (initialTab: string = "Form") => {
   const [activeTab, setActiveTab] = useState(initialTab);
+
   const switchTab = useCallback((tab: string) => {
     setActiveTab(tab);
   }, []);
-  const isActiveTab = useCallback((tab: string) => {
-    return activeTab === tab;
-  }, [activeTab]);
+
+  const isActiveTab = useCallback(
+    (tab: string) => {
+      return activeTab === tab;
+    },
+    [activeTab]
+  );
+
   return {
     activeTab,
     switchTab,
-    isActiveTab
+    isActiveTab,
   };
 };
 
-
 const FxConfirmationPage = () => {
-  const { activeTab, switchTab, isActiveTab } = useTabNavigation('Form');
+  const { activeTab, switchTab, isActiveTab } = useTabNavigation("Form");
+  const roleName = localStorage.getItem("userRole");
+
+  const [Visibility, setVisibility] = useState<TabVisibility>({
+    fxForm: false,
+    fxUpload: false,
+    pendingForwards: false,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.post(
+          "https://backend-slqi.onrender.com/api/permissions/permissionjson",
+          { roleName }
+        );
+
+        const pages = response.data?.pages;
+        const userTabs = pages?.["forward-confirmation"]?.tabs;
+
+        if (userTabs) {
+          setVisibility({
+            fxForm: userTabs.fxForm?.hasAccess || false,
+            fxUpload: userTabs.uploadTab?.hasAccess || false,
+            pendingForwards: userTabs.pendingForward?.hasAccess || false,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching permissions:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPermissions();
+  }, []);
+
+  const TAB_CONFIG = [
+    {
+      id: "Form",
+      label: "Fx Confirmation Form",
+      visibility: Visibility.fxForm,
+    },
+    {
+      id: "Upload",
+      label: "Fx Confirmation Upload",
+      visibility: Visibility.fxUpload,
+    },
+    {
+      id: "add",
+      label: "Pending Forwards",
+      visibility: Visibility.pendingForwards,
+    },
+  ];
 
   const tabButtons = useMemo(() => {
-    const tabConfig = [
-      { id: 'Form', label: 'Fx Confirmation Form', visible: true },
-      { id: 'Upload', label: 'Fx Confirmation Upload', visible: true },
-      { id: 'add', label: 'Pending Forwards', visible: true },
-    ];
-
-    return tabConfig
-      .filter(tab => tab.visible)
-      .map(tab => (
-        <button
-          key={tab.id}
-          onClick={() => switchTab(tab.id)}
-          className={`
-            flex items-center space-x-2 px-6 py-3 text-sm font-medium rounded-t-lg border-b-2 transition-all duration-200
-            ${isActiveTab(tab.id)
+    return TAB_CONFIG.filter(tab => tab.visibility).map((tab) => (
+      <button
+        key={tab.id}
+        onClick={() => switchTab(tab.id)}
+        className={`
+          flex items-center space-x-2 px-6 py-3 text-sm font-medium rounded-t-lg border-b-2 transition-all duration-200
+          ${
+            isActiveTab(tab.id)
               ? "bg-primary-lt text-white border-primary shadow-sm"
-            : "bg-body-hover text-secondary-text border-body-hover hover:bg-body-active hover:text-primary"
-            }
-          `}
-        >
-          <span>{tab.label}</span>
-        </button>
-      ));
-  }, [activeTab, switchTab, isActiveTab]);
+              : "bg-body-hover text-secondary-text border-body-hover hover:bg-body-active hover:text-primary"
+          }
+        `}
+      >
+        <span>{tab.label}</span>
+      </button>
+    ));
+  }, [Visibility, activeTab, switchTab, isActiveTab]);
 
   const currentContent = useMemo(() => {
-    if (activeTab === 'Form') return <FxConfirmation />;
-    if (activeTab === 'Upload') return <FxUploadForm />;
-    if (activeTab === 'add') return <TransactionTable />;
-    return <div className="p-4 text-gray-600">This tab is not available.</div>;
-  }, [activeTab]);
+    // Check if current active tab has visibility
+    const currentTabConfig = TAB_CONFIG.find(tab => tab.id === activeTab);
+    
+    if (!currentTabConfig || !currentTabConfig.visibility) {
+      return <div className="p-4 text-gray-600">No accessible tabs available.</div>;
+    }
+
+    switch (activeTab) {
+      case "Form":
+        return <FxConfirmation />;
+      case "Upload":
+        return <FxUploadForm />;
+      case "add":
+        return <TransactionTable />;
+      default:
+        return <div className="p-4 text-gray-600">This tab is not available.</div>;
+    }
+  }, [activeTab, Visibility.fxForm, Visibility.fxUpload, Visibility.pendingForwards]);
+
+  // Only show content if there are visible tabs
+  const hasVisibleTabs = TAB_CONFIG.some(tab => tab.visibility);
+
+  // Show loading spinner while fetching permissions
+  if (isLoading) {
+    return (
+      <Layout title="Fx Confirmation" showButton={false}>
+        <LoadingSpinner />
+      </Layout>
+    );
+  }
 
   return (
     <Layout title="Fx Confirmation" showButton={false}>
-      <div className="mb-6 pt-4">
-        <div className="flex space-x-1 border-b border-primary-lg">
-          {tabButtons}
+      {hasVisibleTabs && (
+        <div className="mb-6 pt-4">
+          <div className="flex space-x-1 border-b border-primary-lg">
+            {tabButtons}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="transition-opacity duration-300">
-        {currentContent}
+        {hasVisibleTabs ? currentContent : <div className="p-4 text-gray-600">You don't have access to any tabs.</div>}
       </div>
     </Layout>
   );
