@@ -24,6 +24,7 @@ interface TreeNodeData {
   entity_name: string;
   parentname: string | null;
   is_top_level_entity: boolean;
+  company_name : string | null;
   address: string | null;
   contact_phone: string | null;
   contact_email: string | null;
@@ -458,6 +459,7 @@ const HierarchicalTree = () => {
           // parentname: formData.parentname || "",
           address: formData.address || "",
           contact_phone: formData.contact_phone || "",
+      
           contact_email: formData.contact_email || "",
           registration_number: formData.registration_number || "",
           pan_gst: formData.pan_gst || "",
@@ -503,8 +505,6 @@ const HierarchicalTree = () => {
           "error"
         );
       }
-      window.onbeforeunload = null;
-      window.location.reload();
     };
 
     // const handleSave = () => {
@@ -514,9 +514,9 @@ const HierarchicalTree = () => {
     // };
 
     return (
-      <div className="bg-secondary-color rounded-lg border border-border p-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-[24px] text-primary font-semibold">{node.name} Details</h2>
+          <h2 className="text-xl font-bold">{node.data.company_name} Details</h2>
           {/* <button
             className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm"
             onClick={() => setEditing((prev) => !prev)}
@@ -528,7 +528,6 @@ const HierarchicalTree = () => {
               <Button
                 categories="Medium"
                 onClick={() => setEditing((prev) => !prev)}
-                color="Fade"
               >
                 {editing ? "Cancel" : "Edit"}
               </Button>
@@ -541,14 +540,15 @@ const HierarchicalTree = () => {
               <>
                 <div className="space-y-3">
                   <div>
-                    <label className="font-semibold text-primary">
+                    <label className="font-semibold text-gray-500">
                       Company Name
                     </label>
                     <input
                       name="entity_name"
-                      value={formData.entity_name}
+                      value={formData.company_name}
                       onChange={handleChange}
-                      className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
+                      disabled
+                      className="w-full border rounded px-2 py-1"
                     />
                   </div>
                   <div>
@@ -559,90 +559,90 @@ const HierarchicalTree = () => {
                       name="address"
                       value={formData.address || ""}
                       onChange={handleChange}
-                      className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
+                      className="w-full border rounded px-2 py-1"
                     />
                   </div>
                   <div>
-                    <label className="font-semibold text-primary">
+                    <label className="font-semibold text-gray-500">
                       Contact Number
                     </label>
                     <input
                       name="contact_phone"
                       value={formData.contact_phone || ""}
                       onChange={handleChange}
-                      className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
+                      className="w-full border rounded px-2 py-1"
                     />
                   </div>
                   <div>
-                    <label className="font-semibold text-primary">
+                    <label className="font-semibold text-gray-500">
                       Contact Email
                     </label>
                     <input
                       name="contact_email"
                       value={formData.contact_email || ""}
                       onChange={handleChange}
-                      className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
+                      className="w-full border rounded px-2 py-1"
                     />
                   </div>
                   <div>
-                    <label className="font-semibold text-primary">
+                    <label className="font-semibold text-gray-500">
                       Registration Number
                     </label>
                     <input
                       name="registration_number"
                       value={formData.registration_number || ""}
                       onChange={handleChange}
-                      className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
+                      className="w-full border rounded px-2 py-1"
                     />
                   </div>
                 </div>
                 <div className="space-y-3">
                   <div>
-                    <label className="font-semibold text-primary">
+                    <label className="font-semibold text-gray-500">
                       PAN/GST
                     </label>
                     <input
                       name="pan_gst"
                       value={formData.pan_gst || ""}
                       onChange={handleChange}
-                      className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
+                      className="w-full border rounded px-2 py-1"
                     />
                   </div>
                   <div>
-                    <label className="font-semibold text-primary">
+                    <label className="font-semibold text-gray-500">
                       Legal Entity Identifier
                     </label>
                     <input
                       name="legal_entity_identifier"
                       value={formData.legal_entity_identifier || ""}
                       onChange={handleChange}
-                      className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
+                      className="w-full border rounded px-2 py-1"
                     />
                   </div>
                   <div>
-                    <label className="font-semibold text-primary">
+                    <label className="font-semibold text-gray-500">
                       Tax Identification Number
                     </label>
                     <input
                       name="tax_identification_number"
                       value={formData.tax_identification_number || ""}
                       onChange={handleChange}
-                      className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
+                      className="w-full border rounded px-2 py-1"
                     />
                   </div>
                   <div>
-                    <label className="font-semibold text-primary">
+                    <label className="font-semibold text-gray-500">
                       Default Currency
                     </label>
                     <input
                       name="default_currency"
                       value={formData.default_currency || ""}
                       onChange={handleChange}
-                      className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
+                      className="w-full border rounded px-2 py-1"
                     />
                   </div>
                   <div>
-                    <label className="font-semibold text-primary">
+                    <label className="font-semibold text-gray-500">
                       Business Units
                     </label>
                     {/* <input
@@ -660,82 +660,82 @@ const HierarchicalTree = () => {
               <>
                 <div className="space-y-3">
                   <div>
-                    <label className="font-semibold text-primary">
+                    <label className="font-semibold text-gray-500">
                       Entity Name
                     </label>
                     <input
                       name="entity_name"
                       value={formData.entity_name}
                       onChange={handleChange}
-                      className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
+                      className="w-full border rounded px-2 py-1"
                     />
                   </div>
                   <div>
-                    <label className="font-semibold text-primary">
+                    <label className="font-semibold text-gray-500">
                       Parent
                     </label>
                     <input
                       name="parentname"
                       value={formData.parentname || ""}
                       onChange={handleChange}
-                      className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
+                      className="w-full border rounded px-2 py-1"
                     />
                   </div>
                   <div>
-                    <label className="font-semibold text-primary">
+                    <label className="font-semibold text-gray-500">
                       Address
                     </label>
                     <input
                       name="address"
                       value={formData.address || ""}
                       onChange={handleChange}
-                      className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
+                      className="w-full border rounded px-2 py-1"
                     />
                   </div>
                   <div>
-                    <label className="font-semibold text-primary">
+                    <label className="font-semibold text-gray-500">
                       Contact Number
                     </label>
                     <input
                       name="contact_phone"
                       value={formData.contact_phone || ""}
                       onChange={handleChange}
-                      className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
+                      className="w-full border rounded px-2 py-1"
                     />
                   </div>
                   <div>
-                    <label className="font-semibold text-primary">
+                    <label className="font-semibold text-gray-500">
                       Contact Email
                     </label>
                     <input
                       name="contact_email"
                       value={formData.contact_email || ""}
                       onChange={handleChange}
-                      className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
+                      className="w-full border rounded px-2 py-1"
                     />
                   </div>
                 </div>
                 <div className="space-y-3">
                   <div>
-                    <label className="font-semibold text-primary">
+                    <label className="font-semibold text-gray-500">
                       Unique Identifier
                     </label>
                     <input
                       name="unique_identifier"
                       value={formData.unique_identifier || ""}
                       onChange={handleChange}
-                      className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
+                      className="w-full border rounded px-2 py-1"
                     />
                   </div>
                   <div>
-                    <label className="font-semibold text-primary">
+                    <label className="font-semibold text-gray-500">
                       Legal Entity Type
                     </label>
                     <input
                       name="legal_entity_type"
                       value={formData.legal_entity_type || ""}
                       onChange={handleChange}
-                      className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
+                      className="w-full border rounded px-2 py-1"
                     />
                   </div>
                   <div>
@@ -746,7 +746,7 @@ const HierarchicalTree = () => {
                       name="reporting_currency"
                       value={formData.reporting_currency || ""}
                       onChange={handleChange}
-                      className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
+                      className="w-full border rounded px-2 py-1"
                     />
                   </div>
                   <div>
@@ -757,7 +757,7 @@ const HierarchicalTree = () => {
                       name="fx_trading_authority"
                       value={formData.fx_trading_authority || ""}
                       onChange={handleChange}
-                      className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
+                      className="w-full border rounded px-2 py-1"
                     />
                   </div>
                   <div>
@@ -768,7 +768,7 @@ const HierarchicalTree = () => {
                       name="internal_fx_trading_limit"
                       value={formData.internal_fx_trading_limit || ""}
                       onChange={handleChange}
-                      className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
+                      className="w-full border rounded px-2 py-1"
                     />
                   </div>
                   <div>
@@ -779,7 +779,7 @@ const HierarchicalTree = () => {
                       name="associated_treasury_contact"
                       value={formData.associated_treasury_contact || ""}
                       onChange={handleChange}
-                      className="w-full border rounded px-2 py-1 bg-secondary-color-lt text-secondary-text outline-none border-border"
+                      className="w-full border rounded px-2 py-1"
                     />
                   </div>
                 </div>
@@ -788,7 +788,7 @@ const HierarchicalTree = () => {
             <div className="col-span-2 flex justify-end mt-4">
               <button
                 type="button"
-                className="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded font-bold"
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-bold"
                 onClick={handleSave}
               >
                 Save
@@ -801,42 +801,56 @@ const HierarchicalTree = () => {
               <>
                 <div className="space-y-3">
                   <div>
-                    <h3 className="font-semibold text-primary">Company Name</h3>
-                    <p className="text-secondary-text-dark">{node.data.entity_name}</p>
+                    <h3 className="font-semibold text-gray-500">
+                      Company Name
+                    </h3>
+                    <p>{node.data.company_name}</p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">Address</h3>
-                    <p className="text-secondary-text-dark">{node.data.address}</p>
+                    <h3 className="font-semibold text-gray-500">Address</h3>
+                    <p>{node.data.address}</p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">Contact Number</h3>
-                    <p className="text-secondary-text-dark">{node.data.contact_phone}</p>
+                    <h3 className="font-semibold text-gray-500">
+                      Contact Number
+                    </h3>
+                    <p>{node.data.contact_phone}</p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">Contact Email</h3>
-                    <p className="text-secondary-text-dark">{node.data.contact_email}</p>
+                    <h3 className="font-semibold text-gray-500">
+                      Contact Email
+                    </h3>
+                    <p>{node.data.contact_email}</p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">Registration Number</h3>
-                    <p className="text-secondary-text-dark">{node.data.registration_number}</p>
+                    <h3 className="font-semibold text-gray-500">
+                      Registration Number
+                    </h3>
+                    <p>{node.data.registration_number}</p>
                   </div>
                 </div>
                 <div className="space-y-3">
                   <div>
-                    <h3 className="font-semibold text-primary">PAN/GST</h3>
-                    <p className="text-secondary-text-dark">{node.data.pan_gst}</p>
+                    <h3 className="font-semibold text-gray-500">PAN/GST</h3>
+                    <p>{node.data.pan_gst}</p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">Legal Entity Identifier</h3>
-                    <p className="text-secondary-text-dark">{node.data.legal_entity_identifier}</p>
+                    <h3 className="font-semibold text-gray-500">
+                      Legal Entity Identifier
+                    </h3>
+                    <p>{node.data.legal_entity_identifier}</p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">Tax Identification Number</h3>
-                    <p className="text-secondary-text-dark">{node.data.tax_identification_number}</p>
+                    <h3 className="font-semibold text-gray-500">
+                      Tax Identification Number
+                    </h3>
+                    <p>{node.data.tax_identification_number}</p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">Default Currency</h3>
-                    <p className="text-secondary-text-dark">{node.data.default_currency}</p>
+                    <h3 className="font-semibold text-gray-500">
+                      Default Currency
+                    </h3>
+                    <p>{node.data.default_currency}</p>
                   </div>
                   <div>
                     {/* <h3 className="font-semibold text-gray-500">Business Units</h3>
@@ -848,50 +862,64 @@ const HierarchicalTree = () => {
               <>
                 <div className="space-y-3">
                   <div>
-                    <h3 className="font-semibold text-primary">Entity Name</h3>
-                    <p className="text-secondary-text-dark">{node.data.entity_name}</p>
+                    <h3 className="font-semibold text-gray-500">Entity Name</h3>
+                    <p>{node.data.entity_name}</p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">Parent</h3>
-                    <p className="text-secondary-text-dark">{node.data.parentname}</p>
+                    <h3 className="font-semibold text-gray-500">Parent</h3>
+                    <p>{node.data.parentname}</p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">Address</h3>
-                    <p className="text-secondary-text-dark">{node.data.address}</p>
+                    <h3 className="font-semibold text-gray-500">Address</h3>
+                    <p>{node.data.address}</p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">Contact Number</h3>
-                    <p className="text-secondary-text-dark">{node.data.contact_phone}</p>
+                    <h3 className="font-semibold text-gray-500">
+                      Contact Number
+                    </h3>
+                    <p>{node.data.contact_phone}</p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">Contact Email</h3>
-                    <p className="text-secondary-text-dark">{node.data.contact_email}</p>
+                    <h3 className="font-semibold text-gray-500">
+                      Contact Email
+                    </h3>
+                    <p>{node.data.contact_email}</p>
                   </div>
                 </div>
                 <div className="space-y-3">
                   <div>
-                    <h3 className="font-semibold text-primary">Unique Identifier</h3>
-                    <p className="text-secondary-text-dark">{node.data.unique_identifier}</p>
+                    <h3 className="font-semibold text-gray-500">
+                      Unique Identifier
+                    </h3>
+                    <p>{node.data.unique_identifier}</p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">Legal Entity Type</h3>
-                    <p className="text-secondary-text-dark">{node.data.legal_entity_type}</p>
+                    <h3 className="font-semibold text-gray-500">
+                      Legal Entity Type
+                    </h3>
+                    <p>{node.data.legal_entity_type}</p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">Reporting Currency</h3>
-                    <p className="text-secondary-text-dark">{node.data.reporting_currency}</p>
+                    <h3 className="font-semibold text-gray-500">
+                      Reporting Currency
+                    </h3>
+                    <p>{node.data.reporting_currency}</p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">FX Authority</h3>
-                    <p className="text-secondary-text-dark">{node.data.fx_trading_authority}</p>
+                    <h3 className="font-semibold text-gray-500">
+                      FX Authority
+                    </h3>
+                    <p>{node.data.fx_trading_authority}</p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">FX Limit</h3>
-                    <p className="text-secondary-text-dark">{node.data.internal_fx_trading_limit}</p>
+                    <h3 className="font-semibold text-gray-500">FX Limit</h3>
+                    <p>{node.data.internal_fx_trading_limit}</p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">Treasury Contact</h3>
-                    <p className="text-secondary-text-dark">{node.data.associated_treasury_contact}</p>
+                    <h3 className="font-semibold text-gray-500">
+                      Treasury Contact
+                    </h3>
+                    <p>{node.data.associated_treasury_contact}</p>
                   </div>
                 </div>
               </>
@@ -961,9 +989,7 @@ const HierarchicalTree = () => {
   };
 
   const handleDelete = async (node: TreeNodeType) => {
-    const confirmed = await confirm(
-      `Delete ${node.name} and all its children?`
-    );
+    const confirmed = await confirm(`Delete ${node.name} and all its children?`);
     if (!confirmed) return;
 
     try {
@@ -1016,13 +1042,11 @@ const HierarchicalTree = () => {
     const status = node.data.approval_status;
 
     // Filter children to hide rejected nodes when edit visibility is false
-    const visibleChildren =
-      hasChildren && node.children
-        ? node.children.filter(
-            (child) =>
-              !(child.data.approval_status === "rejected" && !Visibility.edit)
-          )
-        : [];
+    const visibleChildren = hasChildren && node.children 
+      ? node.children.filter(child => 
+          !(child.data.approval_status === "rejected" && !Visibility.edit)
+        )
+      : [];
 
     const hasVisibleChildren = visibleChildren.length > 0;
 
@@ -1066,19 +1090,13 @@ const HierarchicalTree = () => {
               <div className="flex items-center gap-1 ml-2">
                 <div className="absolute -right-2.5 -top-4">
                   <span
-                    className={`px-2 py-0.5 font-bold rounded-xl border-2 text-xs
-                      ${
-                        status === "Approved"
-                          ? "bg-green-400 border-green-500 text-white"
-                          : status === "Rejected"
-                          ? "bg-red-500 border-red-500 text-white"
-                          : status === "Pending"
-                          ? "bg-gray-200 border-gray-400 text-gray-600"
-                          : status === "delete-approval"
-                          ? "bg-purple-400 border-purple-600 text-white"
-                          : "bg-gray-200 border-gray-400 text-gray-600"
-                      }
-                    `}
+                    className={`px-2 py-0.5 font-bold rounded-xl border-2 text-xs ${
+                      status === "approved"
+                        ? "bg-green-500 border-green-600 text-white"
+                        : status === "rejected"
+                        ? "bg-red-500 border-red-600 text-white"
+                        : "bg-gray-200 border-gray-400 text-gray-600"
+                    }`}
                   >
                     {status.charAt(0).toUpperCase() + status.slice(1)}
                   </span>
@@ -1169,19 +1187,15 @@ const HierarchicalTree = () => {
           <LoadingSpinner />
         </div>
       ) : (
-        <div className="min-h-screen">
+        <div className="p-6 bg-gray-50 min-h-screen">
           <div className="w-full">
             <div className="flex space-x-4 w-full">
               {/* Left panel (tree view) */}
-              <div className="bg-secondary-color-lt text-secondary-text-dark w-full rounded-lg border border-border p-6">
-                <div className="flex justify-between items-center mt-6 border-b border-border mb-8 pb-2">
-                  <h2 className="text-[24px] font-semibold">Hierarchy Tree</h2>
+              <div className="bg-white w-full mt-6 rounded-lg border border-gray-200 p-6">
+                <div className="flex justify-between items-center mt-6 border-b mb-8 pb-2">
+                  <h2 className="text-xl font-semibold">Hierarchy Tree</h2>
                   <div className="flex items-center gap-2 w-[7rem] justify-end">
-                    <Button
-                      categories="Medium"
-                      color="Fade"
-                      onClick={toggleAllNodes}
-                    >
+                    <Button categories="Medium" onClick={toggleAllNodes}>
                       {isAllExpanded ? "Collapse All" : "Expand All"}
                     </Button>
                   </div>
@@ -1198,55 +1212,44 @@ const HierarchicalTree = () => {
               </div>
 
               {/* Right panel (details and actions) */}
-              <div className="flex flex-col bg-secondary-color-lt w-full space-y-10 rounded-lg border border-border p-6">
+              <div className="flex flex-col bg-white mt-6 w-full space-y-10 rounded-lg border border-gray-200 p-6">
                 {selectedNode ? (
                   <>
-                    <div className="bg-secondary-color mt-6 w-full rounded-lg border border-border p-6">
-                      <h3 className="font-semibold text-secondary-text-dark">
-                        Current Node:{" "}
-                        <span className="text-primary">{selectedNode.id}</span>
-                      </h3>
+                    <div className="bg-white mt-6 w-full rounded-lg border border-gray-200 p-6">
+                      {/* <h3 className="font-semibold text-gray-700">
+                        Current Node: {selectedNode.id}
+                      </h3> */}
                       <div className="flex justify-end gap-2 ml-10 mt-4">
-                        {Visibility.approve &&
-                          selectedNode.data.approval_status !== "Approved" && (
-                            <button
-                              onClick={() => {
-                                updateApprovalStatus(
-                                  selectedNode.id,
-                                  "approved"
-                                );
-                                handleApprove(selectedNode.data.entity_id);
-                                window.onbeforeunload = null;
-                                window.location.reload();
-                              }}
-                              className="bg-primary hover:bg-primary-hover text-center text-white rounded px-4 py-2 font-bold transition min-w-[4rem]"
-                            >
-                              Approve
-                            </button>
-                          )}
-                        {Visibility.reject &&
-                          selectedNode.data.approval_status !== "Approved" && (
-                            <button
-                              onClick={() => {
-                                updateApprovalStatus(
-                                  selectedNode.id,
-                                  "rejected"
-                                );
-                                handleRejectBulk(
-                                  [selectedNode.data.entity_id],
-                                  approvalComment
-                                );
-                                window.onbeforeunload = null;
-                                window.location.reload();
-                              }}
-                              className="bg-primary-fade hover:bg-primary-lt text-center text-white rounded px-4 py-2 font-bold transition min-w-[4rem]"
-                            >
-                              Reject
-                            </button>
-                          )}
+                      
+                        {Visibility.approve &&  selectedNode.data.approval_status !== ("Approved" )  &&(
+                          <button
+                            onClick={() => {
+                              updateApprovalStatus(selectedNode.id, "approved");
+                              handleApprove(selectedNode.data.entity_id);
+                            }}
+                            className="bg-primary hover:bg-primary-hover text-center text-white rounded px-4 py-2 font-bold transition min-w-[4rem]"
+
+                          >
+                            Approve
+                          </button>
+                        )}
+                        {Visibility.reject && selectedNode.data.approval_status !== ("Approved" )  &&(
+                          <button
+                            onClick={() => {
+                              updateApprovalStatus(selectedNode.id, "rejected");
+                              handleRejectBulk(
+                                [selectedNode.data.entity_id],
+                                approvalComment
+                              );
+                            }}
+                            className="bg-primary hover:bg-primary-hover text-center text-white rounded px-4 py-2 font-bold transition min-w-[4rem]"
+                          >
+                            Reject
+                          </button>
+                        )}
                       </div>
                       <div className="mb-3">
-                        <label className="block font-semibold mb-1 text-secondary-text-dark">
+                        <label className="block font-semibold mb-1">
                           Description <span className="text-red-500">*</span>
                         </label>
 
@@ -1254,22 +1257,13 @@ const HierarchicalTree = () => {
                           name="description"
                           value={approvalComment}
                           onChange={(e) => setApprovalComment(e.target.value)}
-                          className="w-full text-secondary-text-dark bg-secondary-color px-3 py-2 border border-border rounded-lg shadow-sm focus:outline-none"
+                          className="w-full text-black bg-white px-3 py-2 border border-border rounded-lg shadow-sm focus:outline-none"
                         />
                       </div>
                       <div className="flex justify-between items-center mt-4">
                         <div>
-                          <p className="text-sm text-secondary-text-dark font-semibold">
-                            Parent:{" "}
-                            <span
-                              className={
-                                selectedNode?.data?.parentname
-                                  ? "text-primary"
-                                  : ""
-                              }
-                            >
-                              {selectedNode?.data?.parentname || "None"}
-                            </span>
+                          <p className="text-sm text-gray-600">
+                            Parent: {selectedNode.data.parentname || "None"}
                           </p>
                         </div>
                       </div>
