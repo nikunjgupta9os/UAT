@@ -36,6 +36,7 @@ interface TableProps {
   };
   hedgedValue?: number | null; // <-- add this
   selectedExposureHeaderId?: string | null; // <-- add this
+  edit?: boolean;
 
   onSelectExposureHeaderId?: React.Dispatch<
     React.SetStateAction<string | null>
@@ -58,6 +59,7 @@ const UnlinkedExposure: React.FC<TableProps> = ({
   selectedExposureHeaderId,
   onSelectExposureHeaderId,
   setBuOptions,
+  edit,
   setCurrencyOptions,
 }) => {
   const [selectedRowIds, setSelectedRowIds] = useState<Record<string, boolean>>(
@@ -200,6 +202,7 @@ const UnlinkedExposure: React.FC<TableProps> = ({
     value: any,
     originalValue: any,
     isEditable: boolean = false
+    
   ) => {
     return (
       <div key={key} className="flex flex-col space-y-1">
@@ -530,7 +533,8 @@ const UnlinkedExposure: React.FC<TableProps> = ({
                         >
                           <div className="bg-secondary-color-lt rounded-lg p-4 shadow-md border border-border">
                             <div className="flex justify-end mb-4">
-                              <button
+                              {
+                                edit && <button
                                 onClick={() => {
                                   if (isEditing) {
                                     setIsSaving(true);
@@ -565,6 +569,8 @@ const UnlinkedExposure: React.FC<TableProps> = ({
                                     : "Save"
                                   : "Edit"}
                               </button>
+                              }
+                              
                             </div>
                             <div className="mb-6">
                               <div className="font-semibold mb-2 text-primary-lt">
