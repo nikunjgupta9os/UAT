@@ -37,6 +37,7 @@ interface ExpandedRowConfig {
   editableFields?: string[];
   fieldLabels?: Record<string, string>;
   customRender?: (row: Row<WithId>) => React.ReactNode;
+  edit? :boolean;
   customRenderPerField?: Record<string, (row: Row<WithId>) => React.ReactNode>; // ✅ NEW
 }
 
@@ -57,7 +58,10 @@ interface TableProps<ExposureBucketing extends WithId> {
     changes: Partial<ExposureBucketing>
   ) => Promise<boolean>;
   className?: string;
-  setData?: (data: ExposureBucketing[]) => void; // Optional prop to update data
+  setData?: (data: ExposureBucketing[]) => void;
+  edit? :boolean;
+  approve? :boolean;
+  reject? :boolean;
 }
 
 interface ExpandedRowProps<ExposureBucketing extends WithId> {
@@ -68,6 +72,7 @@ interface ExpandedRowProps<ExposureBucketing extends WithId> {
     changes: Partial<ExposureBucketing>
   ) => Promise<boolean>;
   visibleColumnCount: number;
+  edit: boolean;
 }
 
 function ExpandedRow<ExposureBucketing extends WithId>({
@@ -75,6 +80,7 @@ function ExpandedRow<ExposureBucketing extends WithId>({
   config,
   onUpdate,
   visibleColumnCount,
+  edit,
 }: ExpandedRowProps<ExposureBucketing>) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValues, setEditValues] = useState<Partial<ExposureBucketing>>({});
@@ -130,8 +136,8 @@ function ExpandedRow<ExposureBucketing extends WithId>({
       },
     };
 
-    console.log(row.original.exposure_header_id);
-    console.log(JSON.stringify(payload));
+    // console.log(row.original.exposure_header_id);
+    // console.log(JSON.stringify(payload));
 
     try {
       const response = await axios.post(
@@ -282,13 +288,16 @@ function ExpandedRow<ExposureBucketing extends WithId>({
       <td colSpan={visibleColumnCount} className="px-6 py-4 bg-primary-md">
         <div className="bg-secondary-color-lt rounded-lg p-4 shadow-md border border-border">
           <div className="flex justify-end items-end mb-4">
-            <button
+            {edit && 
+              <button
               onClick={handleEditToggle}
               className="bg-primary text-white px-4 py-1 rounded shadow hover:bg-primary-dark disabled:opacity-60"
               disabled={isSaving}
             >
               {isEditing ? (isSaving ? "Saving..." : "Save") : "Edit"}
             </button>
+            }
+            
           </div>
           {config.sections.map((section) => (
             <div key={section.title} className="mb-6">
@@ -324,6 +333,9 @@ function NyneOSTable<ExposureBucketing extends WithId>({
   onUpdate,
   className = "",
   setData,
+  approve,
+  edit,
+  reject,
 }: TableProps<ExposureBucketing>) {
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
   const [columnVisibility, setColumnVisibility] = useState(
@@ -575,8 +587,8 @@ function NyneOSTable<ExposureBucketing extends WithId>({
     <>
       <div className="flex items-center justify-end">
         <div className="flex items-center gap-2 min-w-[12rem]">
-          <Button onClick={handleApprove}>Approve</Button>
-          <Button onClick={handleReject}>Reject</Button>
+          {approve && <Button onClick={handleApprove}>Approve</Button>}
+          {reject && <Button onClick={handleReject}>Reject</Button>}
         </div>
       </div>
 
@@ -672,6 +684,7 @@ function NyneOSTable<ExposureBucketing extends WithId>({
                       {row.getIsExpanded() && expandedRowConfig && (
                         <ExpandedRow
                           row={row}
+                          edit={edit}
                           config={expandedRowConfig}
                           onUpdate={onUpdate}
                           visibleColumnCount={row.getVisibleCells().length}
