@@ -214,7 +214,7 @@ const LinkingScreen = () => {
         accessorKey: "srNo",
         header: "Sr No.",
         cell: ({ row }) => (
-          <span className="text-sm text-gray-700">{row.index + 1}</span>
+          <span className="text-sm text-secondary-text-dark">{row.index + 1}</span>
         ),
       },
 
@@ -222,7 +222,7 @@ const LinkingScreen = () => {
         accessorKey: "exposureId",
         header: "Exposure ID",
         cell: ({ getValue }) => (
-          <span className="text-sm text-gray-700">{getValue() as string}</span>
+          <span className="text-sm text-secondary-text-dark">{getValue() as string}</span>
         ),
       },
 
@@ -230,7 +230,7 @@ const LinkingScreen = () => {
         accessorKey: "forwardId",
         header: "Forward ID",
         cell: ({ getValue }) => (
-          <span className="text-sm text-gray-700">{getValue() as string}</span>
+          <span className="text-sm text-secondary-text-dark">{getValue() as string}</span>
         ),
       },
 
@@ -238,7 +238,7 @@ const LinkingScreen = () => {
         accessorKey: "linkedAmount",
         header: "Linked Amount",
         cell: ({ getValue }) => (
-          <span className="text-sm text-gray-700">{getValue() as number}</span>
+          <span className="text-sm text-secondary-text-dark">{getValue() as number}</span>
         ),
       },
       {
@@ -248,7 +248,7 @@ const LinkingScreen = () => {
           const rawDate = getValue() as string;
 
           const formattedDate = formatDate(rawDate);
-          return <span className="text-sm text-gray-700">{formattedDate}</span>;
+          return <span className="text-sm text-secondary-text-dark">{formattedDate}</span>;
         },
       },
 
@@ -257,7 +257,7 @@ const LinkingScreen = () => {
         header: "Actions",
         cell: ({ row }) => (
           <div className="flex items-center space-x-1">
-            <button className="p-1.5 hover:bg-primary-xl rounded transition-colors">
+            <button className="p-1.5 text-primary hover:bg-primary-xl rounded transition-colors">
               <Link size={16} strokeWidth={2} />
             </button>
           </div>
@@ -443,8 +443,8 @@ const LinkingScreen = () => {
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap justify-end gap-4 items-end">
-          <div className="bg-primary text-white rounded px-4 w-[200px] md:w-[200px] lg:w-[200px] flex items-center justify-center">
+        <div className="pt-4 flex flex-wrap justify-end gap-4 items-end">
+          <div className="bg-primary text-white rounded w-[200px] md:w-[200px] lg:w-[200px] flex items-center justify-center">
             {Visibility.add && (
               <Button onClick={handleLinked}>Link Selected</Button>
             )}
@@ -458,10 +458,10 @@ const LinkingScreen = () => {
           </h2>
 
           <div className="mt-4 flex flex-wrap justify-end gap-4 items-end">
-            <div className="bg-primary text-white rounded px-4 flex items-center justify-center">
+            <div className="bg-primary text-white rounded flex items-center justify-center">
               {Visibility.approve && <Button>Approve</Button>}
             </div>
-            <div className="bg-primary text-white rounded px-4 flex items-center justify-center">
+            <div className="bg-primary text-white rounded flex items-center justify-center">
               {Visibility.reject && <Button>Reject</Button>}
             </div>
           </div>
@@ -494,7 +494,7 @@ const LinkingScreen = () => {
                             {isDraggable ? (
                               <Droppable id={header.column.id}>
                                 <Draggable id={header.column.id}>
-                                  <div className="cursor-move rounded py-1 transition duration-150 ease-in-out">
+                                  <div className="cursor-move border-border text-header-color hover:bg-primary-lg rounded px-1 py-1 transition duration-150 ease-in-out">
                                     {flexRender(
                                       header.column.columnDef.header,
                                       header.getContext()
@@ -521,7 +521,7 @@ const LinkingScreen = () => {
                     <tr>
                       <td
                         colSpan={columns.length}
-                        className="px-6 py-12 text-left text-gray-500"
+                        className="px-6 py-12 text-left text-primary"
                       >
                         <div className="flex flex-col items-center">
                           <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
@@ -539,7 +539,7 @@ const LinkingScreen = () => {
                               />
                             </svg>
                           </div>
-                          <p className="text-lg font-medium text-gray-900 mb-1">
+                          <p className="text-lg font-medium text-primary mb-1">
                             No Data available
                           </p>
                           <p className="text-sm text-primary">
@@ -577,17 +577,18 @@ const LinkingScreen = () => {
             </DndContext>
           </div>
 
-          {/* Add Pagination Component */}
+        </div>
+        <div className="pt-2">
           <Pagination
-            table={table}
-            totalItems={data.length}
-            currentPageItems={table.getRowModel().rows.length}
-            startIndex={pagination.pageIndex * pagination.pageSize + 1}
-            endIndex={Math.min(
-              (pagination.pageIndex + 1) * pagination.pageSize,
-              data.length
-            )}
-          />
+              table={table}
+              totalItems={data.length}
+              currentPageItems={table.getRowModel().rows.length}
+              startIndex={pagination.pageIndex * pagination.pageSize + 1}
+              endIndex={Math.min(
+                (pagination.pageIndex + 1) * pagination.pageSize,
+                data.length
+              )}
+            />
         </div>
       </div>
     </Layout>

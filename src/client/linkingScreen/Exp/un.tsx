@@ -411,7 +411,7 @@ const AvailableForward: React.FC<TableProps> = ({
         Avaliable Forward
       </h2>
 
-      <div className="shadow-lg border border-border rounded-lg max-h-[400px] overflow-auto">
+      <div className="shadow-lg border border-border rounded-lg max-h-[500px] overflow-auto">
         <DndContext
           onDragEnd={handleDragEnd}
           modifiers={[restrictToFirstScrollableAncestor]}
@@ -434,8 +434,8 @@ const AvailableForward: React.FC<TableProps> = ({
                         {isDraggable ? (
                           <Droppable id={header.column.id}>
                             <Draggable id={header.column.id}>
-                              <div className="cursor-move rounded py-1">
-                                {flexRender(
+                              <div className="cursor-move border-border text-header-color hover:bg-primary-lg rounded px-1 py-1 transition duration-150 ease-in-out">
+                                    {flexRender(
                                   header.column.columnDef.header,
                                   header.getContext()
                                 )}
@@ -479,7 +479,7 @@ const AvailableForward: React.FC<TableProps> = ({
                       {row.getVisibleCells().map((cell) => (
                         <td
                           key={cell.id}
-                          className="px-6 py-4 whitespace-nowrap text-sm border-b border-border"
+                          className="px-6 py-4 text-secondary-text-dark whitespace-nowrap text-sm border-b border-border"
                         >
                           {flexRender(
                             cell.column.columnDef.cell,
@@ -561,12 +561,12 @@ const AvailableForward: React.FC<TableProps> = ({
                 ))
               )}
             </tbody>
-            <tfoot className="bg-gray-50 font-semibold sticky bottom-0 z-10">
+            <tfoot className="bg-primary font-semibold sticky bottom-0 z-10">
               <tr>
                 {table.getVisibleLeafColumns().map((col) => (
                   <td
                     key={col.id}
-                    className="px-6 py-2 text-sm text-start border-t border-border"
+                    className="px-6 py-2 text-white text-sm text-start border-t border-border"
                   >
                     {{
                       select: "Total",

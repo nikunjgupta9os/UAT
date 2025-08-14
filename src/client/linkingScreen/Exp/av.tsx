@@ -202,7 +202,6 @@ const UnlinkedExposure: React.FC<TableProps> = ({
     value: any,
     originalValue: any,
     isEditable: boolean = false
-    
   ) => {
     return (
       <div key={key} className="flex flex-col space-y-1">
@@ -442,11 +441,11 @@ const UnlinkedExposure: React.FC<TableProps> = ({
 
   return (
     <div className="w-full space-y-4 pt-6">
-      <h2 className="text-2xl font-bold text-secondary-text pl-4">
-        UnLinked Exposure
+      <h2 className="text-2xl font-bold text-secondary-text-dark pl-4">
+        Unlinked Exposure
       </h2>
 
-      <div className="shadow-lg border border-border rounded-lg max-h-[400px] overflow-auto">
+      <div className="shadow-lg border border-border rounded-lg max-h-[500px] overflow-auto">
         <DndContext
           onDragEnd={handleDragEnd}
           modifiers={[restrictToFirstScrollableAncestor]}
@@ -469,7 +468,7 @@ const UnlinkedExposure: React.FC<TableProps> = ({
                         {isDraggable ? (
                           <Droppable id={header.column.id}>
                             <Draggable id={header.column.id}>
-                              <div className="cursor-move rounded py-1">
+                              <div className="cursor-move border-border text-header-color hover:bg-primary-lg rounded px-1 py-1 transition duration-150 ease-in-out">
                                 {flexRender(
                                   header.column.columnDef.header,
                                   header.getContext()
@@ -496,7 +495,7 @@ const UnlinkedExposure: React.FC<TableProps> = ({
                 <tr>
                   <td
                     colSpan={columns.length}
-                    className="px-6 py-12 text-center text-gray-500"
+                    className="px-6 py-12 text-center text-primary-lt"
                   >
                     No Data Available
                   </td>
@@ -514,7 +513,7 @@ const UnlinkedExposure: React.FC<TableProps> = ({
                       {row.getVisibleCells().map((cell) => (
                         <td
                           key={cell.id}
-                          className="px-6 py-4 whitespace-nowrap text-sm border-b border-border"
+                          className="px-6 py-4 text-secondary-text-dark whitespace-nowrap text-sm border-b border-border"
                         >
                           {flexRender(
                             cell.column.columnDef.cell,
@@ -533,44 +532,43 @@ const UnlinkedExposure: React.FC<TableProps> = ({
                         >
                           <div className="bg-secondary-color-lt rounded-lg p-4 shadow-md border border-border">
                             <div className="flex justify-end mb-4">
-                              {
-                                edit && <button
-                                onClick={() => {
-                                  if (isEditing) {
-                                    setIsSaving(true);
-                                    setTimeout(() => {
-                                      setData((prev) =>
-                                        prev.map((item, idx) =>
-                                          idx === row.index
-                                            ? { ...item, ...editValues }
-                                            : item
-                                        )
-                                      );
-                                      setIsEditing(false);
-                                      setIsSaving(false);
-                                      if (
-                                        onEditHedged &&
-                                        typeof editValues.hedged === "number"
-                                      ) {
-                                        onEditHedged(editValues.hedged);
-                                      }
-                                    }, 500);
-                                  } else {
-                                    setEditValues(row.original);
-                                    setIsEditing(true);
-                                  }
-                                }}
-                                className="bg-primary text-white px-4 py-1 rounded shadow hover:bg-primary-dark disabled:opacity-60"
-                                disabled={isSaving}
-                              >
-                                {isEditing
-                                  ? isSaving
-                                    ? "Saving..."
-                                    : "Save"
-                                  : "Edit"}
-                              </button>
-                              }
-                              
+                              {edit && (
+                                <button
+                                  onClick={() => {
+                                    if (isEditing) {
+                                      setIsSaving(true);
+                                      setTimeout(() => {
+                                        setData((prev) =>
+                                          prev.map((item, idx) =>
+                                            idx === row.index
+                                              ? { ...item, ...editValues }
+                                              : item
+                                          )
+                                        );
+                                        setIsEditing(false);
+                                        setIsSaving(false);
+                                        if (
+                                          onEditHedged &&
+                                          typeof editValues.hedged === "number"
+                                        ) {
+                                          onEditHedged(editValues.hedged);
+                                        }
+                                      }, 500);
+                                    } else {
+                                      setEditValues(row.original);
+                                      setIsEditing(true);
+                                    }
+                                  }}
+                                  className="bg-primary text-white px-4 py-1 rounded shadow hover:bg-primary-dark disabled:opacity-60"
+                                  disabled={isSaving}
+                                >
+                                  {isEditing
+                                    ? isSaving
+                                      ? "Saving..."
+                                      : "Save"
+                                    : "Edit"}
+                                </button>
+                              )}
                             </div>
                             <div className="mb-6">
                               <div className="font-semibold mb-2 text-primary-lt">
@@ -628,12 +626,12 @@ const UnlinkedExposure: React.FC<TableProps> = ({
                 ))
               )}
             </tbody>
-            <tfoot className="bg-gray-50 font-semibold sticky bottom-0 z-10">
+            <tfoot className="bg-primary font-semibold sticky bottom-0 z-10">
               <tr>
                 {table.getVisibleLeafColumns().map((col) => (
                   <td
                     key={col.id}
-                    className="px-6 py-2 text-sm text-start border-t border-border "
+                    className="px-6 py-2 text-sm text-white text-start border-t border-border "
                   >
                     {{
                       select: "Total",
