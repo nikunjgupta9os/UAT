@@ -4,6 +4,7 @@ import Layout from "../../common/Layout";
 import Button from "../../ui/Button";
 import Pagination from "../../ui/Pagination";
 import axios from "axios";
+import { useNotification } from "../../Notification/Notification"; // Add this import
 import {
   flexRender,
   getCoreRowModel,
@@ -35,7 +36,16 @@ const typeOptions = [
   { value: "SO", label: "SO" },
 ];
 
+type TabVisibility = {
+  add: boolean;
+  approve: boolean;
+  reject: boolean;
+  edit: boolean;
+};
+
 const LinkingScreen = () => {
+  const { notify } = useNotification(); // Add this hook
+
   // const [selectedEntity, setSelectedEntity] = useState("");
   const [entityOptions, setEntityOptions] = useState<
     { value: string; label: string }[]
@@ -88,6 +98,14 @@ const LinkingScreen = () => {
     pageSize: 10,
   });
 
+  const [Visibility, setVisibility] = useState<TabVisibility>({
+    add: false,
+    approve: false,
+    edit: false,
+    reject: false,
+  });
+  const roleName = localStorage.getItem("userRole");
+
   useEffect(() => {
     const fetchLinkedSummary = async () => {
       try {
@@ -128,6 +146,30 @@ const LinkingScreen = () => {
     };
 
     fetchLinkedSummary();
+
+    const fetchPermissions = async () => {
+      try {
+        const response = await axios.post(
+          "https://backend-slqi.onrender.com/api/permissions/permissionjson",
+          { roleName }
+        );
+        console.log("Permissions response:", response.data);
+        const pages = response.data?.pages;
+        const userTabs = pages?.["exposure-linkage"]?.tabs;
+        //  console.log(userTabs.allTab.hasAccess);
+        if (userTabs) {
+          setVisibility({
+            add: userTabs.default.showCreateButton || false,
+            edit: userTabs.default.showEditButton || false,
+            approve: userTabs.default.showApproveButton || false,
+            reject: userTabs.default.showRejectButton || false,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching permissions:", error);
+      }
+    };
+    fetchPermissions();
   }, []); // Add dependencies here if needed (e.g., [filters] if you want to refetch when filters change)
 
   const handleFilterChange = (name: string, value: string) => {
@@ -156,9 +198,7 @@ const LinkingScreen = () => {
     }
     return date.toISOString().slice(0, 10); // YYYY-MM-DD
   }
-  
-  
-  
+
   // console.log(
   //   "Selected System Transaction ID:",
   //   selectedSystemTransactionId,
@@ -206,8 +246,8 @@ const LinkingScreen = () => {
         header: "Link Date",
         cell: ({ getValue }) => {
           const rawDate = getValue() as string;
-          
-          const formattedDate = formatDate(rawDate); 
+
+          const formattedDate = formatDate(rawDate);
           return <span className="text-sm text-gray-700">{formattedDate}</span>;
         },
       },
@@ -240,8 +280,6 @@ const LinkingScreen = () => {
     },
   });
 
-  
-
   const handleLinked = async () => {
     try {
       const payload = {
@@ -249,15 +287,12 @@ const LinkingScreen = () => {
         booking_id: String(selectedSystemTransactionId),
         hedged_amount: Number(hedgedValue),
       };
-      // console.log("🔗 Linking payload:", payload);
 
       // Validate input (optional but recommended)
       if (!payload.exposure_header_id || !payload.booking_id) {
-        alert("Missing Exposure Header ID or Booking ID.");
+        notify("Missing Exposure Header ID or Booking ID.", "error");
         return;
       }
-
-      // console.log("🔗 Sending linking request with payload:", payload);
 
       const response = await axios.post(
         "https://backend-slqi.onrender.com/api/forwards/exposure-hedge-links/link",
@@ -269,14 +304,55 @@ const LinkingScreen = () => {
         }
       );
 
-      // console.log("✅ Linking successful:", response.data);
-      alert("Linking successful!");
+      notify("Linking successful!", "success");
+
+      // Optionally refresh the linked summary data
+      const fetchLinkedSummary = async () => {
+        try {
+          const response = await axios.get(
+            "https://backend-slqi.onrender.com/api/exposureUpload/hedgeLinksDetails"
+          );
+
+          const apiResponse = response.data as Array<{
+            link_id: string;
+            exposure_header_id: string;
+            booking_id: string;
+            hedged_amount: string;
+            link_date: string;
+            is_active: boolean;
+            document_id: string;
+            internal_reference_id: string;
+          }>;
+
+          setData(
+            apiResponse.map((item, index) => ({
+              srNo: index + 1,
+              exposureId: item.document_id,
+              forwardId: item.internal_reference_id,
+              linkedAmount: parseFloat(item.hedged_amount),
+              exposure_Id: item.exposure_header_id,
+              Booking_Id: item.booking_id,
+              linkDate: new Date(item.link_date).toLocaleDateString(),
+            }))
+          );
+        } catch (error) {
+          console.error("Failed to refresh linked summary:", error);
+        }
+      };
+
+      // Refresh the table after successful linking
+      await fetchLinkedSummary();
+
+      // Clear selections
+      setSelectedExposureHeaderId(null);
+      setSelectedSystemTransactionId(null);
+      setHedgedValue(null);
     } catch (error) {
       console.error(
         "❌ Error linking exposure to forward:",
         error.response?.data || error.message
       );
-      // alert("Linking failed. Check console.");
+      notify("Linking failed. Please try again.", "error");
     }
   };
 
@@ -351,11 +427,13 @@ const LinkingScreen = () => {
               setBuOptions={setBuOptions}
               setCurrencyOptions={setCurrencyOptions}
               filters={filters}
+              edit={Visibility.edit}
             />
           </div>
 
           <div className="w-full">
             <AvailableForward
+              edit={Visibility.edit}
               selectedSystemTransactionId={selectedSystemTransactionId}
               setSelectedSystemTransactionId={setSelectedSystemTransactionId}
               setEntityOptions={setEntityOptions}
@@ -367,7 +445,9 @@ const LinkingScreen = () => {
 
         <div className="mt-4 flex flex-wrap justify-end gap-4 items-end">
           <div className="bg-primary text-white rounded px-4 w-[200px] md:w-[200px] lg:w-[200px] flex items-center justify-center">
-            <Button onClick={handleLinked}>Link Selected</Button>
+            {Visibility.add && (
+              <Button onClick={handleLinked}>Link Selected</Button>
+            )}
           </div>
         </div>
 
@@ -376,6 +456,15 @@ const LinkingScreen = () => {
           <h2 className="text-2xl font-bold text-secondary-text">
             Linking Summary
           </h2>
+
+          <div className="mt-4 flex flex-wrap justify-end gap-4 items-end">
+            <div className="bg-primary text-white rounded px-4 flex items-center justify-center">
+              {Visibility.approve && <Button>Approve</Button>}
+            </div>
+            <div className="bg-primary text-white rounded px-4 flex items-center justify-center">
+              {Visibility.reject && <Button>Reject</Button>}
+            </div>
+          </div>
 
           <div className=" shadow-lg border border-border">
             <DndContext
