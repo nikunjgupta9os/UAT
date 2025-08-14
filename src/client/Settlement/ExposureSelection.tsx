@@ -12,6 +12,7 @@ import CustomSelect from "../common/SearchSelect";
 import Button from "../ui/Button";
 import { useNavigate } from "react-router-dom";
 import { useNotification } from "../Notification/Notification";
+import axios from "axios";
 
 import {
   flexRender,
@@ -166,12 +167,16 @@ type ColumnFilter = {
   value: string;
 };
 
+
+
 const nonDraggableColumns = ["expand", "select"];
 
-// type TabVisibility = {
-//     delete: boolean;
-//     view: boolean;
-//   };
+
+type TabVisibility = {
+  payment: boolean;
+  rollover: boolean;
+  cancellation: boolean;
+};
 
 const ExposureSelection = () => {
   const { notify } = useNotification();
@@ -297,23 +302,7 @@ const ExposureSelection = () => {
       result = result.filter((item) => item.status === statusFilter);
     }
 
-    // Apply filters from the filters state (e.g., settlementDate, bank)
-    // if (filters.settlementDate) {
-    //   result = result.filter(
-    //     (item) =>
-    //       item.value_date &&
-    //       new Date(item.value_date).toISOString().slice(0, 10) === filters.settlementDate
-    //   );
-    // }
-    // if (filters.bank) {
-    //   result = result.filter(
-    //     (item) =>
-    //       (item.bank || "")
-    //         .toString()
-    //         .toLowerCase()
-    //         .includes(filters.bank.toLowerCase())
-    //   );
-    // }
+  
 
     return result;
   }, [data, searchTerm, statusFilter, columnFilters]);
@@ -346,8 +335,42 @@ const ExposureSelection = () => {
     { label: string; value: string }[]
   >([]);
 
+  const roleName = localStorage.getItem("userRole");
+  
+    const [Visibility, setVisibility] = useState<TabVisibility>({
+      payment: false,
+      rollover: false,
+      cancellation: false,
+    });
+
   useEffect(() => {
     setIsLoading(true);
+    const fetchPermissions = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.post(
+          "https://backend-slqi.onrender.com/api/permissions/permissionjson",
+          { roleName }
+        );
+
+        const pages = response.data?.pages;
+        const userTabs = pages?.["settlement"]?.tabs;
+
+        if (userTabs) {
+          setVisibility({
+            payment: userTabs.payment?.hasAccess || false,
+            rollover: userTabs.rollover?.hasAccess || false,
+            cancellation: userTabs.cancellation?.hasAccess || false,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching permissions:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPermissions();
 
     fetchRenderVars()
       .then((renderVarsRes) => {
@@ -1091,13 +1114,19 @@ const ExposureSelection = () => {
 
         <div className="flex items-center justify-end gap-2">
           <div className="w-15rem">
-            <Button onClick={handlePaymentClick}>Payment</Button>
+            {Visibility.payment && 
+              <Button onClick={handlePaymentClick}>Payment</Button>
+            }
           </div>
           <div className="w-15rem">
-            <Button>Rollover</Button>
+            {Visibility.rollover && 
+              <Button>Rollover</Button>
+            }
           </div>
           <div className="w-15rem">
-            <Button>Cancellation</Button>
+            {Visibility.cancellation && 
+              <Button>Cancellation</Button>
+            }
           </div>
         </div>
 
