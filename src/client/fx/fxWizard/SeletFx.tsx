@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useMemo } from "react";
 import CustomSelect from "../../common/SearchSelect";
+import Pagination from "../../ui/Pagination";
 import {
   flexRender,
   getCoreRowModel,
+  getPaginationRowModel,
   useReactTable,
   type ColumnDef,
   type Row,
@@ -22,69 +24,104 @@ interface ExposureRequest {
   entity: string;
 }
 
-const mockData: ExposureRequest[] = [
-  {
-    exposure_header_id: "1",
-    deal_id: "DL-001",
-    fx_pair: "USD/INR",
-    original_amount: "100000",
-    amount_to_cancel_rollover: "0",
-    original_rate: "83.25",
-    maturity: "2025-08-31",
-    counterparty: "Bank A",
-    order_type: "Spot",
-    company: "Company A",
-    entity: "Entity 1",
-  },
-  // Add more mock rows as needed
-];
-
-const companyOptions = [
-  { label: "Company A", value: "Company A" },
-  { label: "Company B", value: "Company B" },
-];
-const entityOptions = [
-  { label: "Entity 1", value: "Entity 1" },
-  { label: "Entity 2", value: "Entity 2" },
-];
-const actionOptions = [
-  { label: "Cancel", value: "Cancel" },
-  { label: "Rollover", value: "Rollover" },
-];
-const orderTypeOptions = [
-  { label: "Spot", value: "Spot" },
-  { label: "Forward", value: "Forward" },
-];
-
+interface ApiResponse {
+  system_transaction_id: string;
+  internal_reference_id: string;
+  currency_pair: string;
+  booking_amount: string;
+  spot_rate: string;
+  maturity_date: string;
+  order_type: string;
+  entity_level_0: string;
+  counterparty: string;
+}
 interface ForwardContractSelectionProps {
-  setSelectedUsers: (rows: ExposureRequest[]) => void;
+  setSelectedUsers: (users: ExposureRequest[]) => void; // Keep as is for full objects
+  // OR
+  // setSelectedUsers: (userIds: string[]) => void; // Change to this for just IDs
 }
 
 const ForwardContractSelection: React.FC<ForwardContractSelectionProps> = ({
   setSelectedUsers,
 }) => {
-  const [company, setCompany] = useState("");
+  const [counterparty, setCounterparty] = useState("");
   const [entity, setEntity] = useState("");
   const [action, setAction] = useState("");
   const [actionDate, setActionDate] = useState(""); 
-  const [data, setData] = useState<ExposureRequest[]>(mockData);
+  const [data, setData] = useState<ExposureRequest[]>([]);
   const [selectedRows, setSelectedRows] = useState<Record<string, boolean>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Filter data based on selects (optional)
+  // Fetch data from API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('https://backend-slqi.onrender.com/api/settlement/bookingList');
+        const result = await response.json();
+        
+        if (result.success) {
+          // Map API data to component interface
+          const mappedData: ExposureRequest[] = result.data.map((item: ApiResponse) => ({
+            exposure_header_id: item.system_transaction_id,
+            deal_id: item.internal_reference_id,
+            fx_pair: item.currency_pair,
+            original_amount: item.booking_amount,
+            amount_to_cancel_rollover: "0",
+            original_rate: item.spot_rate,
+            maturity: item.maturity_date,
+            counterparty: item.counterparty,
+            order_type: item.order_type,
+            company: item.entity_level_0,
+            entity: item.entity_level_0, // Using same as company since entity mapping isn't clear
+          }));
+          
+          setData(mappedData);
+        } else {
+          setError('Failed to fetch data');
+        }
+      } catch (err) {
+        setError('Error fetching data: ' + (err as Error).message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Get unique counterparties and entities for dropdown options
+  const counterpartyOptions = useMemo(() => {
+    const uniqueCounterparties = [...new Set(data.map(item => item.counterparty))];
+    return uniqueCounterparties.map(counterparty => ({ label: counterparty, value: counterparty }));
+  }, [data]);
+
+  const entityOptions = useMemo(() => {
+    const uniqueEntities = [...new Set(data.map(item => item.entity))];
+    return uniqueEntities.map(entity => ({ label: entity, value: entity }));
+  }, [data]);
+
+  // Filter data based on selects
   const filteredData = useMemo(() => {
     return data.filter(
       (row) =>
-        (!company || row.company === company) &&
+        (!counterparty || row.counterparty === counterparty) &&
         (!entity || row.entity === entity)
-      // You can add action filter here if needed
     );
-  }, [data, company, entity]);
+  }, [data, counterparty, entity]);
 
   // Update parent with selected users array whenever selectedRows changes
   useEffect(() => {
     const selected = filteredData.filter(
       (row) => selectedRows[row.exposure_header_id]
     );
+    
+    // If you want just the system_transaction_ids (exposure_header_id):
+    // const selectedIds = selected.map(row => row.exposure_header_id);
+    // setSelectedUsers(selectedIds);
+    
+    // If you want the complete objects (current implementation):
     setSelectedUsers(selected);
   }, [selectedRows, filteredData, setSelectedUsers]);
 
@@ -120,6 +157,20 @@ const ForwardContractSelection: React.FC<ForwardContractSelectionProps> = ({
                 ...prev,
                 [row.original.exposure_header_id]: e.target.checked,
               }));
+              
+              // Set default amount when row is selected
+              if (e.target.checked) {
+                handleAmountChange(
+                  row.original.exposure_header_id,
+                  row.original.original_amount
+                );
+              } else {
+                // Reset to 0 when unchecked
+                handleAmountChange(
+                  row.original.exposure_header_id,
+                  "0"
+                );
+              }
             }}
             className="w-4 h-4 accent-primary"
           />
@@ -204,25 +255,10 @@ const ForwardContractSelection: React.FC<ForwardContractSelectionProps> = ({
         ),
       },
       {
-        accessorKey: "order_type",
-        header: "Order Type Select",
-        cell: ({ row }) => (
-          <select
-            className="border rounded px-2 py-1"
-            value={row.original.order_type}
-            onChange={(e) =>
-              handleOrderTypeChange(
-                row.original.exposure_header_id,
-                e.target.value
-              )
-            }
-          >
-            {orderTypeOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+        accessorKey : "order_type",
+        header: "Order Type",
+        cell: ({ getValue }) => (
+          <span className="text-gray-700">{getValue() as string}</span>
         ),
       },
     ],
@@ -233,19 +269,33 @@ const ForwardContractSelection: React.FC<ForwardContractSelectionProps> = ({
     data: filteredData,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: 5,
+        pageIndex: 0,
+      },
+    },
   });
+
+  // Calculate pagination values - Fixed calculation
+  const totalItems = filteredData.length;
+  const pageSize = table.getState().pagination.pageSize;
+  const pageIndex = table.getState().pagination.pageIndex;
+  const currentPageItems = table.getRowModel().rows.length;
+  const startIndex = totalItems === 0 ? 0 : pageIndex * pageSize + 1;
+  const endIndex = Math.min((pageIndex + 1) * pageSize, totalItems);
 
   return (
     <React.Fragment>
       <div className="space-y-6">
-       
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
           <CustomSelect
-            label="Company"
-            options={companyOptions}
-            selectedValue={company}
-            onChange={setCompany}
-            placeholder="Select company"
+            label="Counterparty"
+            options={counterpartyOptions}
+            selectedValue={counterparty}
+            onChange={setCounterparty}
+            placeholder="Select counterparty"
             isClearable={true}
           />
           <CustomSelect
@@ -256,7 +306,6 @@ const ForwardContractSelection: React.FC<ForwardContractSelectionProps> = ({
             placeholder="Select entity"
             isClearable={true}
           />
-          {/* Replace Action dropdown with Action Date input */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Action Date
@@ -330,6 +379,15 @@ const ForwardContractSelection: React.FC<ForwardContractSelectionProps> = ({
               )}
             </tbody>
           </table>
+          
+          {/* Add Pagination */}
+          <Pagination
+            table={table}
+            totalItems={totalItems}
+            currentPageItems={currentPageItems}
+            startIndex={startIndex}
+            endIndex={endIndex}
+          />
         </div>
       </div>
     </React.Fragment>
