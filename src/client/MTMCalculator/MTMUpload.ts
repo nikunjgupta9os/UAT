@@ -16,7 +16,7 @@ export const mtmDisplayHeaders = [
 
 // Backend headers (for CSV upload/download)
 export const mtmBackendHeaders = [
-  "forward_id",
+  "internal_reference_id",
   "deal_date",
   "maturity_date",
   "currency_pair",
@@ -26,7 +26,7 @@ export const mtmBackendHeaders = [
   "mtm_rate",
   "mtm_value",
   "days_to_maturity",
-  "status",
+  "entity",
 ];
 
 // Sample row for template
@@ -146,7 +146,7 @@ const validateRow = (
 
     // Required fields
     const requiredFields = [
-      "forward_id",
+      "internal_reference_id",
       "deal_date",
       "maturity_date",
       "currency_pair",
@@ -156,7 +156,7 @@ const validateRow = (
       "mtm_rate",
       "mtm_value",
       "days_to_maturity",
-      "status",
+      "entity",
     ];
     requiredFields.forEach((field) => {
       if (!rowObj[field]) {
@@ -416,7 +416,7 @@ export const handleDownload = (template: any) => {
 
 // 1. Mapping between display and backend headers
 const displayToBackendMap: Record<string, string> = {
-  "Forward ID": "forward_id",
+  "Internal Reference ID": "internal_reference_id",
   "Deal Date": "deal_date",
   "Maturity Date": "maturity_date",
   "Currency Pair": "currency_pair",
@@ -426,7 +426,7 @@ const displayToBackendMap: Record<string, string> = {
   "MTM Rate": "mtm_rate",
   "MTM Value": "mtm_value",
   "Days to Maturity": "days_to_maturity",
-  "Status": "status",
+  "Entity": "entity",
 };
 
 // 2. Transform CSV headers and rows to backend format
