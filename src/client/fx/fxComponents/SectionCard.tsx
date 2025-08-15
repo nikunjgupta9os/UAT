@@ -18,14 +18,14 @@ const SectionCard: React.FC<SectionCardProps> = ({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="shadow rounded-xl mb-4">
+    <div className="pt-6">
       <div
-        className="cursor-pointer p-4 text-primary font-semibold border-t border-x border-body-hover bg-primary-xl rounded-t-xl"
+        className="cursor-pointer p-4 text-primary text-xl font-semibold border-t border-x border-body-hover bg-primary-xl"
         onClick={() => setOpen(!open)}
       >
         {heading || title}
       </div>
-      {open && <div className="p-4 border border-body-hover bg-secondary-color rounded-b-xl">{children}</div>}
+      {open && <div className="p-4 border border-body-hover bg-secondary-color">{children}</div>}
     </div>
   );
 };

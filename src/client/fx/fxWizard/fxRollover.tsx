@@ -14,7 +14,7 @@ const FxRollover = () => {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between pb-4">
           <h3 className="text-2xl font-bold text-secondary-text">
             Inputs: Select Activity & Forwards
           </h3>
@@ -38,7 +38,7 @@ const FxRollover = () => {
           </>
         ) : (
           <div className="py-8 flex justify-center">
-            <p className="text-base text-gray-500">
+            <p className="text-base text-primary">
               Select forward contracts to see calculations and linked exposures.
             </p>
           </div>

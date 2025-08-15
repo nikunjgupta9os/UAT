@@ -50,7 +50,7 @@ const NewForward: React.FC = () => {
         />
 
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-700 mb-1">
+          <label className="text-sm font-medium text-secondary-text mb-1">
             New Maturity Date <span className="text-red-500">*</span>
           </label>
           <input
@@ -63,7 +63,7 @@ const NewForward: React.FC = () => {
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-700 mb-1">
+          <label className="text-sm font-medium text-secondary-text mb-1">
             New Amount <span className="text-red-500">*</span>
           </label>
           <input
@@ -77,7 +77,7 @@ const NewForward: React.FC = () => {
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-700 mb-1">
+          <label className="text-sm font-medium text-secondary-text mb-1">
             Spot Rate (New Booking) <span className="text-red-500">*</span>
           </label>
           <input
@@ -91,7 +91,7 @@ const NewForward: React.FC = () => {
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-700 mb-1">
+          <label className="text-sm font-medium text-secondary-text mb-1">
             Premium/Discount (New Booking)
           </label>
           <input
@@ -104,7 +104,7 @@ const NewForward: React.FC = () => {
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-700 mb-1">
+          <label className="text-sm font-medium text-secondary-text mb-1">
             Margin Rate (New Booking)
           </label>
           <input
@@ -117,7 +117,7 @@ const NewForward: React.FC = () => {
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-700 mb-1">
+          <label className="text-sm font-medium text-secondary-text mb-1">
             Net Rate (New Booking)
           </label>
           <input

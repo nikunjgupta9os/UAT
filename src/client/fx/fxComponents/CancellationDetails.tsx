@@ -12,7 +12,7 @@ const reasonOptions = [
 
 const InputField = ({ label, value, onChange, step = "any", required = false }) => (
   <div className="flex flex-col">
-    <label className="text-sm font-medium text-gray-700 mb-1">
+    <label className="text-sm font-medium text-secondary-text mb-1">
       {label} {required && <span className="text-red-500">*</span>}
     </label>
     <input

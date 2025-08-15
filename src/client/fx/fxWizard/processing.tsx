@@ -45,7 +45,11 @@ type SelectedForwardContract = {
   entity: string;
 };
 
-const Processing: React.FC<ProcessingProps> = ({ selectedUsers, form, setOldForwardsData }) => {
+const Processing: React.FC<ProcessingProps> = ({
+  selectedUsers,
+  form,
+  setOldForwardsData,
+}) => {
   // Helper to parse numbers safely
   const parseNum = (val: string) => Number(val?.replace(/,/g, "")) || 0;
 
@@ -102,7 +106,7 @@ const Processing: React.FC<ProcessingProps> = ({ selectedUsers, form, setOldForw
         accessorKey: "dealId",
         header: "Deal ID",
         cell: ({ getValue }) => (
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-secondary-text-dark">
             {getValue() as string}
           </span>
         ),
@@ -180,12 +184,12 @@ const Processing: React.FC<ProcessingProps> = ({ selectedUsers, form, setOldForw
   );
 
   return (
-    <div className="space-y-6">
+    <div className="pt-2">
       <div className="mb-6">
-        <h3 className="mb-2 text-lg font-semibold text-primary">
+        <h3 className="mb-2 text-xl font-semibold text-primary">
           Impact of Old Forwards
         </h3>
-        <div className="overflow-x-auto rounded border border-border bg-white">
+        <div className="overflow-x-auto border border-border">
           <table className="min-w-[900px] w-full table-auto">
             <thead className="bg-secondary-color">
               {table.getHeaderGroups().map((headerGroup) => (
@@ -209,7 +213,7 @@ const Processing: React.FC<ProcessingProps> = ({ selectedUsers, form, setOldForw
                 <tr>
                   <td
                     colSpan={columns.length}
-                    className="px-4 py-12 text-center text-gray-500"
+                    className="px-4 py-12 text-center text-primary"
                   >
                     No Data Available
                   </td>
@@ -227,10 +231,10 @@ const Processing: React.FC<ProcessingProps> = ({ selectedUsers, form, setOldForw
                         key={cell.id}
                         className="px-4 py-3 border-b border-border"
                       >
-                        {flexRender(
+                        <span className="text-secondary-text">{flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
-                        )}
+                        )}</span>
                       </td>
                     ))}
                   </tr>
@@ -238,6 +242,22 @@ const Processing: React.FC<ProcessingProps> = ({ selectedUsers, form, setOldForw
               )}
             </tbody>
           </table>
+          <div className="flex justify-end gap-12 px-8 py-4">
+            <span className="font-bold text-lg text-secondary-text-dark">
+              Total Net Gain/Loss (Spot) : &nbsp;
+              <span className="text-primary">
+                {totalGainLossSpot.toLocaleString()}
+              </span>
+            </span>
+            <span className="font-bold text-lg text-secondary-text-dark">
+              Total ED Impact (Net of Charges) : &nbsp;
+              <span className="text-primary">
+                {totalEDImpact.toLocaleString()}
+              </span>
+            </span>
+          </div>
+        </div>
+        <div className="pt-4">
           <Pagination
             table={table}
             totalItems={totalItems}
@@ -245,20 +265,6 @@ const Processing: React.FC<ProcessingProps> = ({ selectedUsers, form, setOldForw
             startIndex={startIndex}
             endIndex={endIndex}
           />
-        </div>
-        <div className="flex justify-end gap-8 mt-4">
-          <span className="font-bold text-lg">
-            Total Net Gain/Loss (Spot):&nbsp;
-            <span className="text-primary">
-              {totalGainLossSpot.toLocaleString()}
-            </span>
-          </span>
-          <span className="font-bold text-lg">
-            Total ED Impact (Net of Charges):&nbsp;
-            <span className="text-primary">
-              {totalEDImpact.toLocaleString()}
-            </span>
-          </span>
         </div>
       </div>
     </div>

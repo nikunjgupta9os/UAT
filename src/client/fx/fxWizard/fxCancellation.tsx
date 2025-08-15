@@ -115,7 +115,7 @@ const FxCancellation = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pb-4">
         <h3 className="text-2xl font-bold text-secondary-text">
           Inputs: Select Activity & Forwards
         </h3>
@@ -127,7 +127,7 @@ const FxCancellation = () => {
       <SelectFx setSelectedUsers={setSelectedUsers} />
       <CancellationDetail form={form} setForm={setForm} />
 
-      <h2 className="text-2xl font-bold text-secondary-text pt-6">
+      <h2 className="text-2xl font-bold text-secondary-text pt-10">
         Processing: Calculations & Linkages
       </h2>
       {selectedUsers.length > 0 ? (
@@ -141,7 +141,7 @@ const FxCancellation = () => {
         </>
       ) : (
         <div className="py-8 flex justify-center">
-          <p className="text-base text-gray-500">
+          <p className="text-base text-primary">
             Select forward contracts to see calculations and linked exposures.
           </p>
         </div>

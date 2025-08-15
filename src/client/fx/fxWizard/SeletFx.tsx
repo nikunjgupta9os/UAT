@@ -183,7 +183,7 @@ const ForwardContractSelection: React.FC<ForwardContractSelectionProps> = ({
         accessorKey: "deal_id",
         header: "Deal ID",
         cell: ({ getValue }) => (
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-secondary-text-dark">
             {getValue() as string}
           </span>
         ),
@@ -192,14 +192,14 @@ const ForwardContractSelection: React.FC<ForwardContractSelectionProps> = ({
         accessorKey: "fx_pair",
         header: "FX Pair",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string}</span>
+          <span className="text-secondary-text">{getValue() as string}</span>
         ),
       },
       {
         accessorKey: "original_amount",
         header: "Original Amount",
         cell: ({ getValue }) => (
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-secondary-text-dark">
             {Number(getValue()).toLocaleString(undefined, {
               minimumFractionDigits: 2,
             })}
@@ -213,7 +213,7 @@ const ForwardContractSelection: React.FC<ForwardContractSelectionProps> = ({
           selectedRows[row.original.exposure_header_id] ? (
             <input
               type="number"
-              className="border rounded px-2 py-1 w-32"
+              className="border border-border bg-secondary-color-dark text-secondary-text-dark rounded px-2 py-1 w-32"
               value={row.original.amount_to_cancel_rollover}
               min={0}
               max={row.original.original_amount}
@@ -225,14 +225,14 @@ const ForwardContractSelection: React.FC<ForwardContractSelectionProps> = ({
               }
             />
           ) : (
-            <span className="text-gray-400">—</span>
+            <span className="text-primary">—</span>
           ),
       },
       {
         accessorKey: "original_rate",
         header: "Original Rate",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string}</span>
+          <span className="text-secondary-text">{getValue() as string}</span>
         ),
       },
       {
@@ -241,7 +241,7 @@ const ForwardContractSelection: React.FC<ForwardContractSelectionProps> = ({
         cell: ({ getValue }) => {
           const date = new Date(getValue() as string);
           return (
-            <span className="text-gray-700">
+            <span className="text-secondary-text">
               {isNaN(date.getTime()) ? "—" : date.toLocaleDateString()}
             </span>
           );
@@ -251,14 +251,14 @@ const ForwardContractSelection: React.FC<ForwardContractSelectionProps> = ({
         accessorKey: "counterparty",
         header: "Counterparty",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string}</span>
+          <span className="text-secondary-text">{getValue() as string}</span>
         ),
       },
       {
         accessorKey : "order_type",
         header: "Order Type",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string}</span>
+          <span className="text-secondary-text">{getValue() as string}</span>
         ),
       },
     ],
@@ -288,7 +288,7 @@ const ForwardContractSelection: React.FC<ForwardContractSelectionProps> = ({
 
   return (
     <React.Fragment>
-      <div className="space-y-6">
+      <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
           <CustomSelect
             label="Counterparty"
@@ -320,11 +320,11 @@ const ForwardContractSelection: React.FC<ForwardContractSelectionProps> = ({
           </div>
         </div>
 
-        <h3 className="mb-2 text-lg font-semibold text-primary">
+        <h3 className="relative top-3 text-2xl font-semibold text-primary pt-4">
           Select Forward Contracts (for Cancellation/Rollover)
         </h3>
 
-        <div className="shadow-lg border border-border rounded-lg">
+        <div className="shadow-lg border border-border">
           <table className="min-w-[800px] w-full table-auto">
             <thead className="bg-secondary-color rounded-xl">
               {table.getHeaderGroups().map((headerGroup) => (
@@ -348,7 +348,7 @@ const ForwardContractSelection: React.FC<ForwardContractSelectionProps> = ({
                 <tr>
                   <td
                     colSpan={columns.length}
-                    className="px-6 py-12 text-center text-gray-500"
+                    className="px-6 py-12 text-center text-primary"
                   >
                     No Data Available
                   </td>
@@ -379,8 +379,8 @@ const ForwardContractSelection: React.FC<ForwardContractSelectionProps> = ({
               )}
             </tbody>
           </table>
-          
-          {/* Add Pagination */}
+        </div>
+        <div className="pt-2">
           <Pagination
             table={table}
             totalItems={totalItems}
