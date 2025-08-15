@@ -1,4 +1,5 @@
 import Layout from "../../common/Layout";
+import { Ban, Repeat, RouteOff  } from "lucide-react";
 import { useMemo, useState, useCallback, useEffect } from "react";
 import FxCancellation from "./fxCancellation";
 import FxRollover from "./fxRollover";
@@ -41,10 +42,10 @@ const FxCancellationRollover = () => {
   const { activeTab, switchTab, isActiveTab } = useTabNavigation('Cancellation');
 
   const tabButtons = useMemo(() => {
-    const tabConfig = [
-      { id: 'Cancellation', label: 'Cancellation', visible: true },
-      { id: 'Rollover', label: 'Rollover', visible: true },
-    ];
+      const tabConfig = [
+        { id: 'Cancellation', label: 'Cancellation', icon: RouteOff, visible: true },
+        { id: 'Rollover', label: 'Rollover', icon: Repeat, visible: true },
+      ];
 
     return tabConfig
       .filter(tab => tab.visible)
@@ -60,7 +61,10 @@ const FxCancellationRollover = () => {
             }
           `}
         >
-          <span>{tab.label}</span>
+          <span className="flex items-center">
+          <tab.icon size={20} className="mr-2" />
+          {tab.label}
+        </span>
         </button>
       ));
   }, [activeTab, switchTab, isActiveTab]);

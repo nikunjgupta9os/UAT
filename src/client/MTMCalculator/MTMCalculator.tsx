@@ -3,10 +3,12 @@ import React, { useState, useMemo } from "react";
 import Layout from "../common/Layout";
 import CustomSelect from "../common/SearchSelect";
 import Button from "../ui/Button";
+import Pagination from "../ui/Pagination";
 
 import {
   flexRender,
   getCoreRowModel,
+  getPaginationRowModel,
   useReactTable,
   type ColumnDef,
 } from "@tanstack/react-table";
@@ -229,7 +231,9 @@ const AvailableForwards: React.FC<{
   data: ForwardTableColumns[];
   calculationDate: string;
   showSummary: boolean;
-}> = ({ data, calculationDate, showSummary }) => {
+  pagination: { pageIndex: number; pageSize: number };
+  setPagination: React.Dispatch<React.SetStateAction<{ pageIndex: number; pageSize: number }>>;
+}> = ({ data, calculationDate, showSummary, pagination, setPagination }) => {
   const [columnOrder, setColumnOrder] = useState<string[]>([
     "forwardId",
     "dealDate",
@@ -340,8 +344,11 @@ const AvailableForwards: React.FC<{
     columns,
     getCoreRowModel: getCoreRowModel(),
     onColumnOrderChange: setColumnOrder,
+    getPaginationRowModel: getPaginationRowModel(),
+    onPaginationChange: setPagination,
     state: {
       columnOrder,
+      pagination,
     },
   });
 
@@ -371,6 +378,7 @@ const AvailableForwards: React.FC<{
     return sum + inrValue;
   }, 0);
   return (
+    <>
     <div className="shadow-lg border border-border">
       <table className="min-w-[800px] w-full table-auto">
         <colgroup>
@@ -486,11 +494,27 @@ const AvailableForwards: React.FC<{
           </tfoot>
         )}
       </table>
+      
     </div>
+    <Pagination
+        table={table}
+        totalItems={data.length}
+        currentPageItems={table.getRowModel().rows.length}
+        startIndex={pagination.pageIndex * pagination.pageSize + 1}
+        endIndex={Math.min(
+          (pagination.pageIndex + 1) * pagination.pageSize,
+          data.length
+        )}
+      />
+    </>
   );
 };
 
 const MTMCalculator = () => {
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
   const [calculationDate, setCalculationDate] = useState(() => {
     const today = new Date();
     return today.toISOString().split("T")[0];
@@ -571,10 +595,10 @@ const MTMCalculator = () => {
 
         <div className="flex items-center justify-end pt-4 gap-2">
           <div className="w-15rem">
-            <Button>Export Results</Button>
+            <Button color="Fade">Export Results</Button>
           </div>
           <div className="w-15rem">
-            <Button>Save MTM Report</Button>
+            <Button color="Fade">Save MTM Report</Button>
           </div>
 
           <div className="w-15rem">
@@ -586,6 +610,8 @@ const MTMCalculator = () => {
           data={filteredData}
           calculationDate={calculationDate}
           showSummary={showSummary}
+          pagination={pagination}
+          setPagination={setPagination}
         />
       </div>
     </Layout>

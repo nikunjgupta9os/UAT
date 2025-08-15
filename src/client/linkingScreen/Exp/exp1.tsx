@@ -462,7 +462,7 @@ const LinkingScreen = () => {
               {Visibility.approve && <Button>Approve</Button>}
             </div>
             <div className="bg-primary text-white rounded flex items-center justify-center">
-              {Visibility.reject && <Button>Reject</Button>}
+              {Visibility.reject && <Button color="Fade">Reject</Button>}
             </div>
           </div>
 

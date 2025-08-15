@@ -681,10 +681,10 @@ const FxBookingForm: React.FC = () => {
     <React.Fragment>
       <div className="mb-6 pt-4">
         <div className="transition-opacity duration-300">
-          <div className="min-h-screen space-y-5 w-full">
+          <div className="min-h-screen space-y-2 w-full">
             {/* Error and Success Messages */}
 
-            <div className="flex items-center justify-end gap-2">
+            <div className="flex items-center relative top-2 justify-end gap-2">
               <div className="w-15rem">
                 <Button onClick={handleSubmitBooking} disabled={isSubmitting}>
                   {isSubmitting ? "Submitting..." : "Submit Booking"}
