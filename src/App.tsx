@@ -17,7 +17,7 @@ const Roles = lazy(() => import("./client/uam/Roles/index"));
 const RoleCreation = lazy(() => import("./client/uam/Roles/RoleCreationForm"));
 const FxWizard = lazy(() => import("./client/fx/fxWizard/index.tsx"));
 const OutputTabs = lazy(() => import("./client/fx/fxWizard/outputIndex.tsx"));
-
+const MTMUploader = lazy(() => import("./client/MTMCalculator/MTMUploader.tsx"));
 const Permission = lazy(() => import("./client/uam/Permission/index"));
 const ExposureBucketing = lazy(
   () => import("./client/fx/exposureBucketing.tsx/index.tsx")
@@ -94,6 +94,7 @@ function App() {
               <Route path="/fx-cancellation" element={<FxCancellation />} />
               <Route path="/fx-wizard" element={<FxWizard />} />
               <Route path="/fx-output" element={<OutputTabs />} />
+              <Route path="/mtm-upload" element={<MTMUploader />} />
               <Route path="/mtm-calculator" element={<MTMCalculator />} />
               <Route path="/mtm-rate-input" element={<MTMRateInput />} />
               {/* <Route path="/mtm-uploader" element={<MTMUploader />} /> */}
