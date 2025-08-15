@@ -99,7 +99,10 @@ function ExpandedRow<T extends EditableRowData>({
         return;
       }
       if (onUpdate) {
-        const success = await onUpdate(row.original.exposure_header_id, changedFields); // Changed from id to exposure_header_id
+        const success = await onUpdate(
+          row.original.exposure_header_id,
+          changedFields
+        ); // Changed from id to exposure_header_id
         if (success) {
           // Update the original row data
           Object.assign(row.original, changedFields);
@@ -262,7 +265,7 @@ function NyneOSTable<T extends EditableRowData>({
     }
     return col;
   });
-  
+
   const finalColumns: ColumnDef<T>[] = expandedRowConfig
     ? [
         ...enhancedColumns,
@@ -367,54 +370,54 @@ function NyneOSTable<T extends EditableRowData>({
 
   const { notify } = useNotification();
   const handleApprove = async () => {
-  const selectedExposureIds = table
-    .getSelectedRowModel()
-    .rows.map((row) => row.original.exposure_header_id);
+    const selectedExposureIds = table
+      .getSelectedRowModel()
+      .rows.map((row) => row.original.exposure_header_id);
 
-  if (selectedExposureIds.length === 0) {
-    notify("No exposures selected", "warning");
-    return;
-  }
-
-  const approvedBy = localStorage.getItem("userEmail") || "unknown@system.com";
-
-  
-
-  try {
-    const response = await axios.post(
-      "https://backend-slqi.onrender.com/api/exposureUpload/approve-multiple-headers",
-      {
-        exposureHeaderIds: selectedExposureIds,
-        approved_by: approvedBy,
-        approval_comment: "Bulk exposure approval",
-      }
-    );
-
-    if (response.data.success) {
-      if (setData) {
-        const updatedData = data.map((item) =>
-          selectedExposureIds.includes(item.exposure_header_id)
-            ? { ...item, approval_status: "Approved" }
-            : item
-        );
-        setData(updatedData);
-      }
-      setRowSelection({});
-      notify(
-        `${selectedExposureIds.length} exposure(s) approved successfully`,
-        "success"
-      );
-    } else {
-      throw new Error(response.data.message || "Approval failed");
+    if (selectedExposureIds.length === 0) {
+      notify("No exposures selected", "warning");
+      return;
     }
-  } catch (error: any) {
-    notify(
-      error?.response?.data?.message || "Failed to approve selected exposures",
-      "error"
-    );
-    console.error("Approval error:", error);
-  }
-};
+
+    const approvedBy =
+      localStorage.getItem("userEmail") || "unknown@system.com";
+
+    try {
+      const response = await axios.post(
+        "https://backend-slqi.onrender.com/api/exposureUpload/approve-multiple-headers",
+        {
+          exposureHeaderIds: selectedExposureIds,
+          approved_by: approvedBy,
+          approval_comment: "Bulk exposure approval",
+        }
+      );
+
+      if (response.data.success) {
+        if (setData) {
+          const updatedData = data.map((item) =>
+            selectedExposureIds.includes(item.exposure_header_id)
+              ? { ...item, approval_status: "Approved" }
+              : item
+          );
+          setData(updatedData);
+        }
+        setRowSelection({});
+        notify(
+          `${selectedExposureIds.length} exposure(s) approved successfully`,
+          "success"
+        );
+      } else {
+        throw new Error(response.data.message || "Approval failed");
+      }
+    } catch (error: any) {
+      notify(
+        error?.response?.data?.message ||
+          "Failed to approve selected exposures",
+        "error"
+      );
+      console.error("Approval error:", error);
+    }
+  };
 
   // const handleApprove = async () => {
   //   // Get selected row IDs
@@ -488,7 +491,10 @@ function NyneOSTable<T extends EditableRowData>({
           setData(updatedData);
         }
         setRowSelection({}); // Clear selection
-        notify(`${selectedExposureIds.length} exposure(s) rejected successfully`, "success");
+        notify(
+          `${selectedExposureIds.length} exposure(s) rejected successfully`,
+          "success"
+        );
       } else {
         throw new Error(response.data.message || "Rejection failed");
       }
@@ -505,15 +511,17 @@ function NyneOSTable<T extends EditableRowData>({
 
   return (
     <>
-      <div className="flex items-center justify-end"></div>
+      
       <div className="flex items-center justify-end">
-        <div className="flex items-center pb-2.5 gap-2 min-w-[12rem]">
+        <div className="flex items-center py-2.5 gap-2 min-w-[12rem]">
           <Button onClick={handleApprove}>Approve</Button>
-          <Button color="Fade" onClick={handleReject}>Reject</Button>
+          <Button color="Fade" onClick={handleReject}>
+            Reject
+          </Button>
         </div>
       </div>
       <div className={`w-full overflow-x-auto ${className}`}>
-        <div className=" shadow-lg border border-border">
+        <div className="shadow-lg border border-border">
           <DndContext onDragEnd={handleDragEnd}>
             <table className="min-w-full">
               <colgroup>
@@ -619,12 +627,12 @@ function NyneOSTable<T extends EditableRowData>({
       </div>
       <div className="pt-3">
         <Pagination
-            table={table}
-            totalItems={totalItems}
-            currentPageItems={currentPageItems}
-            startIndex={startIndex}
-            endIndex={endIndex}
-          />
+          table={table}
+          totalItems={totalItems}
+          currentPageItems={currentPageItems}
+          startIndex={startIndex}
+          endIndex={endIndex}
+        />
       </div>
     </>
   );

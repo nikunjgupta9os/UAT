@@ -677,6 +677,7 @@ const TransactionTable: React.FC = () => {
             type="checkbox"
             checked={table.getIsAllRowsSelected()}
             onChange={table.getToggleAllRowsSelectedHandler()}
+            className="accent-primary w-4 h-4 bg-gray-100 border-gray-300 rounded focus:ring-primary-lt focus:ring-2"
           />
         ),
         cell: ({ row }) => (
@@ -684,6 +685,7 @@ const TransactionTable: React.FC = () => {
             type="checkbox"
             checked={row.getIsSelected()}
             onChange={row.getToggleSelectedHandler()}
+            className="accent-primary w-4 h-4 bg-gray-100 border-gray-300 rounded focus:ring-primary-lt focus:ring-2"
           />
         ),
         enableSorting: false,
@@ -783,7 +785,7 @@ const TransactionTable: React.FC = () => {
               : (getValue() as number);
 
           return (
-            <span className="font-medium font-semibold">
+            <span className="font-semibold">
               {value ? value.toFixed(4) : "—"}
             </span>
           );
@@ -976,13 +978,15 @@ const TransactionTable: React.FC = () => {
   };
 
   return (
-    <div className="w-full space-y-4 pt-6">
+    <div className="w-full space-y-4">
       <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Status Filter */}
-        <div className="flex flex-col space-y-2">
-          <label className="text-sm font-medium text-gray-700">Status</label>
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-secondary-text">
+            Status
+          </label>
           <select
-            className="border border-border rounded-md px-3 py-2 focus:outline-none bg-secondary-color-lt text-secondary-text"
+            className="border border-border rounded-md px-3 py-2 focus:outline-none bg-secondary-color text-secondary-text"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
@@ -993,22 +997,24 @@ const TransactionTable: React.FC = () => {
             ))}
           </select>
         </div>
+      </div>
 
-        <div></div>
-        <div></div>
-
-        <div className="flex items-center justify-end gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4">
+        <div className="col-span-1 md:col-span-4 flex items-center justify-end gap-4">
+          {/* Download Button */}
           <button
             type="button"
-            className="flex items-center justify-center border border-border rounded-lg px-2 h-10 text-sm transition hover:bg-primary-xl"
+            className="group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
             title="Download All Forwards"
             onClick={() => exportToExcel(filteredData, "Pending_Forwards")}
           >
-            <Download className="flex item-center justify-center text-primary" />
+            <Download className="flex item-center justify-center text-primary group-hover:text-white" />
           </button>
+
+          {/* Refresh Button */}
           <button
             type="button"
-            className="flex items-center justify-center border border-border rounded-lg w-10 h-10 transition hover:bg-primary-xl"
+            className="text-primary group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
             title="Refresh"
             onClick={handleRefresh}
           >
@@ -1021,13 +1027,15 @@ const TransactionTable: React.FC = () => {
               strokeLinecap="round"
               strokeLinejoin="round"
               viewBox="0 0 24 24"
-              className="text-primary"
+              className="accent-primary"
             >
               <path d="M23 4v6h-6" />
               <path d="M1 20v-6h6" />
               <path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10M1 14l5.36 5.36A9 9 0 0 0 20.49 15" />
             </svg>
           </button>
+
+          {/* Search Field */}
           <form
             className="relative flex items-center"
             onSubmit={(e) => e.preventDefault()}
@@ -1035,7 +1043,7 @@ const TransactionTable: React.FC = () => {
             <input
               type="text"
               placeholder="Search"
-              className="pl-4 pr-10 py-2 border border-border rounded-lg focus:outline-none bg-secondary-color-lt text-secondary-text-dark min-w-full"
+              className="w-full text-secondary-text bg-secondary-color px-3 py-2 border border-border rounded-lg shadow-sm focus:outline-none hover:border hover:border-primary"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -1064,7 +1072,7 @@ const TransactionTable: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex items-center justify-end">
+      <div className="flex items-center py-1.5 justify-end">
         <div className="flex items-center gap-2 min-w-[12rem]">
           {Visibility.approve && (
             <Button onClick={() => handleStatusUpdate("Approved")}>
@@ -1072,7 +1080,7 @@ const TransactionTable: React.FC = () => {
             </Button>
           )}
           {Visibility.reject && (
-            <Button onClick={() => handleStatusUpdate("Rejected")}>
+            <Button color="Fade" onClick={() => handleStatusUpdate("Rejected")}>
               Reject
             </Button>
           )}
@@ -1115,7 +1123,7 @@ const TransactionTable: React.FC = () => {
                         {isDraggable ? (
                           <Droppable id={header.column.id}>
                             <Draggable id={header.column.id}>
-                              <div className="cursor-move rounded py-1">
+                              <div className="cursor-move border-border text-header-color hover:bg-primary-lg rounded px-1 py-1 transition duration-150 ease-in-out">
                                 {flexRender(
                                   header.column.columnDef.header,
                                   header.getContext()
@@ -1394,13 +1402,13 @@ const TransactionTable: React.FC = () => {
       </div>
 
       {/* Add Pagination Component */}
-      <Pagination
+      <div className="pt-2"><Pagination
         table={table}
         totalItems={totalItems}
         currentPageItems={currentPageItems}
         startIndex={startIndex}
         endIndex={endIndex}
-      />
+      /></div>
     </div>
   );
 };
