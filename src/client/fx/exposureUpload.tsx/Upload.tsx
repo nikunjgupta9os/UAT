@@ -590,18 +590,7 @@ const UploadFile: React.FC = () => {
             // notify(`Converting ${file.name} to CSV format...`, "info");
           } catch (excelError) {
             errorCount++;
-            // console.error(
-            //   `Error converting Excel file ${file.name}:`,
-            //   excelError
-            // );
-            // notify(
-            //   `✗ Failed to convert Excel file ${file.name}: ${
-            //     excelError instanceof Error
-            //       ? excelError.message
-            //       : "Unknown error"
-            //   }`,
-            //   "error"
-            // );
+            
             continue;
           }
         } else if (file.file) {
@@ -615,18 +604,24 @@ const UploadFile: React.FC = () => {
         }
 
         const formData = new FormData();
-        const fieldName = selectedType === "PO" 
-          ? "input_purchase_orders" 
+        const fieldName = selectedType === "PO"
+          ? "input_purchase_orders"
           : selectedType === "LC"
           ? "input_letters_of_credit"
           : selectedType === "GRN"
           ? "input_grn_data"
+          : selectedType === "Creditor"
+          ? "input_creditors"
+          : selectedType === "Debtors"
+          ? "input_debitors"
           : "input_sales_orders";
         
         formData.append(
           fieldName,
           new File([blob], fileName, { type: "text/csv" }) // Always set type as CSV
         );
+
+        console.log(formData, "FormData for upload",fieldName);
 
         notify(`Uploading ${fileName}...`, "info");
 
@@ -704,18 +699,18 @@ const UploadFile: React.FC = () => {
     // Final summary
     if (successCount > 0 && errorCount === 0) {
       notify(
-        `🎉 All ${successCount} file(s) uploaded successfully!`,
+        `All ${successCount} file(s) uploaded successfully!`,
         "success"
       );
       setFiles([]);
       setPreviewStates({});
     } else if (successCount > 0) {
       notify(
-        `⚠️ ${successCount} file(s) uploaded successfully, ${errorCount} failed`,
+        `${successCount} file(s) uploaded successfully, ${errorCount} failed`,
         "warning"
       );
     } else if (errorCount > 0) {
-      notify(`❌ All ${errorCount} file(s) failed to upload`, "error");
+      notify(`All ${errorCount} file(s) failed to upload`, "error");
     }
   };
 
@@ -807,10 +802,12 @@ const UploadFile: React.FC = () => {
         "payment_block", "company_code", "business_area", "account", "pann",
         "gl_account", "document_date", "net_due_date", "posting_date", "document_type",
         "posting_key", "amount_in_doc_curr", "document_currency", "local_currency", "currency_2",
+        "bank_reference",
       ];
       sampleRow = [
         "N", "7000", "CHEN", "2000001", "PAN123456789", "400000", "15-01-2024",
         "30-01-2024", "15-01-2024", "KR", "31", "100000.00", "USD", "USD", "USD",
+        "BANKREF001",
       ];
     } else if (template.id === "debtors") {
       headers = [
@@ -818,11 +815,13 @@ const UploadFile: React.FC = () => {
         "document_type", "document_date", "posting_date", "special_gl_ind",
         "amount_in_local_currency", "amount_in_doc_curr", "document_currency", "text",
         "customer", "clearing_document", "gl_account", "currency_2", "company",
+        "bank_reference",
       ];
       sampleRow = [
         "REF001", "7000", "ASSIGN001", "7050000252", "30-01-2024", "DR", "15-01-2024",
         "15-01-2024", "A", "150000.00", "150000.00", "USD", "Customer payment received",
         "CUST001", "CLEAR001", "130000", "USD", "ABC Company Ltd",
+        "BANKREF002",
       ];
     } else {
       headers = [

@@ -46,12 +46,12 @@ const grnHeaders = [
   "special_gl_ind",
   "offsetting_account",
   "currency_2",
-  "company"
+  "company",
 ];
 
 const creditorHeaders = [
   "payment_block",
-  "company_code", 
+  "company_code",
   "business_area",
   "account",
   "pann",
@@ -64,7 +64,8 @@ const creditorHeaders = [
   "amount_in_doc_curr",
   "document_currency",
   "local_currency",
-  "currency_2"
+  "currency_2",
+  "bank_reference", // This must be present
 ];
 
 const debtorsHeaders = [
@@ -85,7 +86,8 @@ const debtorsHeaders = [
   "clearing_document",
   "gl_account",
   "currency_2",
-  "company"
+  "company",
+  "bank_reference", // This must be present
 ];
 
 export const templates = [
@@ -97,14 +99,14 @@ export const templates = [
   },
   {
     id: "lc",
-    name: "LC Template", 
+    name: "LC Template",
     type: "Excel",
     description: "Letter of Credit Template",
   },
   {
     id: "so",
     name: "SO Template",
-    type: "Excel", 
+    type: "Excel",
     description: "Sales Order Template",
   },
   {
@@ -126,8 +128,6 @@ export const templates = [
     description: "Debtors Management Template",
   },
 ];
-
-
 
 // Headers for each template type
 const poHeaders = [
@@ -158,9 +158,8 @@ const poHeaders = [
   "exchange_rate_date",
   "documenting",
   "profit_cost_center",
-  "entity3"
+  "entity3",
 ];
-
 
 const lcHeaders = [
   "system_lc_number",
@@ -174,7 +173,7 @@ const lcHeaders = [
   "amount",
   "issue_date",
   "expiry_date",
-  "linked_po_so_number"
+  "linked_po_so_number",
 ];
 
 const soHeaders = [
@@ -206,9 +205,8 @@ const soHeaders = [
   "delivery_date",
   "lc_indicator",
   "exchange_rate_preference",
-  "profit_cost_center"
+  "profit_cost_center",
 ];
-
 
 interface UploadedFile {
   id: string;
@@ -222,34 +220,38 @@ interface UploadedFile {
   hasMissingValues?: boolean;
   rowCount?: number;
   columnCount?: number;
-  file?: File; 
+  file?: File;
 }
 
 const parseExcel = (arrayBuffer: ArrayBuffer): string[][] => {
   try {
     // Read the workbook from array buffer
-    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-    
+    const workbook = XLSX.read(arrayBuffer, { type: "array" });
+
     // Get the first worksheet
     const firstSheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[firstSheetName];
-    
+
     // Convert worksheet to array of arrays
-    const data: any[][] = XLSX.utils.sheet_to_json(worksheet, { 
+    const data: any[][] = XLSX.utils.sheet_to_json(worksheet, {
       header: 1, // Use array of arrays format
-      defval: '', // Default value for empty cells
-      raw: false // Convert all values to strings
+      defval: "", // Default value for empty cells
+      raw: false, // Convert all values to strings
     });
-    
+
     // Filter out completely empty rows and convert all values to strings
     const filteredData = data
-      .filter(row => row.some(cell => cell !== '' && cell !== null && cell !== undefined))
-      .map(row => row.map(cell => String(cell || '').trim()));
-    
+      .filter((row) =>
+        row.some((cell) => cell !== "" && cell !== null && cell !== undefined)
+      )
+      .map((row) => row.map((cell) => String(cell || "").trim()));
+
     return filteredData;
   } catch (error) {
-    console.error('Error parsing Excel file:', error);
-    throw new Error('Failed to parse Excel file. Please ensure it\'s a valid Excel file.');
+    console.error("Error parsing Excel file:", error);
+    throw new Error(
+      "Failed to parse Excel file. Please ensure it's a valid Excel file."
+    );
   }
 };
 
@@ -258,7 +260,7 @@ const getExpectedHeaders = (templateType?: string): string[] => {
   switch (templateType) {
     case "po":
       return poHeaders;
-    case "lc": 
+    case "lc":
       return lcHeaders;
     case "so":
       return soHeaders;
@@ -280,32 +282,32 @@ const getRequiredFields = (templateType?: string): string[] => {
       return [
         "company_code",
         "controlling_area",
-        "entity", 
+        "entity",
         "document_no",
         "reference_no",
         "vendor_code",
         "vendor_name",
-        "currency_code"
+        "currency_code",
       ];
     case "lc":
       return [
         "system_lc_number",
-        "applicant_name", 
+        "applicant_name",
         "beneficiary_name",
         "issuing_bank",
         "currency",
-        "amount"
+        "amount",
       ];
     case "so":
       return [
         "company_code",
         "controlling_area",
         "entity",
-        "document_no", 
+        "document_no",
         "reference_no",
         "customer_code",
         "customer_name",
-        "currency_code"
+        "currency_code",
       ];
     case "grn":
       return [
@@ -320,7 +322,7 @@ const getRequiredFields = (templateType?: string): string[] => {
         "reference",
         "amount_in_doc_curr",
         "document_currency",
-        "amount_in_local_currency"
+        "amount_in_local_currency",
       ];
     case "creditor":
       return [
@@ -332,7 +334,7 @@ const getRequiredFields = (templateType?: string): string[] => {
         "document_type",
         "posting_key",
         "amount_in_doc_curr",
-        "document_currency"
+        "document_currency",
       ];
     case "debtors":
       return [
@@ -344,18 +346,14 @@ const getRequiredFields = (templateType?: string): string[] => {
         "customer",
         "amount_in_doc_curr",
         "document_currency",
-        "amount_in_local_currency"
+        "amount_in_local_currency",
       ];
     default:
       return [
         "company_code",
-        "controlling_area", 
-        "entity",
-        "document_no",
-        "reference_no", 
-        "customer_code",
-        "customer_name",
-        "currency_code"
+        "bank_reference",
+        "amount_in_doc_curr",
+        "document_currency",
       ];
   }
 };
@@ -374,72 +372,78 @@ const validateColumns = (
 ) => {
   if (data.length === 0) {
     ifValidationErrors.push({
-      description: "File appears to be empty or has no readable data"
+      description: "File appears to be empty or has no readable data",
     });
     return;
   }
 
-  const headers = data[0].map((h) => String(h || '').trim().toLowerCase());
+  const headers = data[0].map((h) =>
+    String(h || "")
+      .trim()
+      .toLowerCase()
+  );
   const expectedHeaders = getExpectedHeaders(templateType);
-  
+
   // Check for completely empty header row
-  if (headers.every(h => h === '')) {
+  if (headers.every((h) => h === "")) {
     ifValidationErrors.push({
-      description: "Header row appears to be empty"
+      description: "Header row appears to be empty",
     });
     return;
   }
-  
+
   const missingHeaders = expectedHeaders.filter(
     (h) => !headers.includes(h.toLowerCase())
   );
-  
+
   if (missingHeaders.length > 0) {
     ifValidationErrors.push({
-      description: `Missing required headers: ${missingHeaders.join(", ")}`
+      description: `Missing required headers: ${missingHeaders.join(", ")}`,
     });
   }
 
   // Check for duplicate headers
-  const duplicateHeaders = headers.filter((header, index) => 
-    header !== '' && headers.indexOf(header) !== index
+  const duplicateHeaders = headers.filter(
+    (header, index) => header !== "" && headers.indexOf(header) !== index
   );
-  
+
   if (duplicateHeaders.length > 0) {
     ifValidationErrors.push({
-      description: `Duplicate headers found: ${duplicateHeaders.join(", ")}`
+      description: `Duplicate headers found: ${duplicateHeaders.join(", ")}`,
     });
   }
 };
 
 // Helper function to validate dd-mm-yyyy date format
 const isValidDateFormat = (dateString: string): boolean => {
-  if (!dateString || dateString.trim() === '') return true; // Empty dates are allowed
-  
+  if (!dateString || dateString.trim() === "") return true; // Empty dates are allowed
+
   const dateRegex = /^(\d{2})-(\d{2})-(\d{4})$/;
   const match = dateString.match(dateRegex);
-  
+
   if (!match) return false;
-  
+
   const day = parseInt(match[1], 10);
   const month = parseInt(match[2], 10);
   const year = parseInt(match[3], 10);
-  
+
   // Basic range checks
   if (month < 1 || month > 12) return false;
   if (day < 1 || day > 31) return false;
   if (year < 1900 || year > 2100) return false;
-  
+
   // Create date object and check if it's valid
   const date = new Date(year, month - 1, day);
-  return date.getFullYear() === year && 
-         date.getMonth() === month - 1 && 
-         date.getDate() === day;
+  return (
+    date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day
+  );
 };
 
 // Helper function to check if a value is a valid number
 const isValidNumber = (value: string): boolean => {
-  if (!value || value.trim() === '') return true; // Empty numbers are allowed
+  if (!value || value.trim() === "") return true; // Empty numbers are allowed
   const num = Number(value);
   return !isNaN(num) && isFinite(num);
 };
@@ -451,43 +455,49 @@ const validateRow = (
   templateType?: string
 ) => {
   if (data.length === 0) return;
-  
-  const headers = data[0].map((h) => String(h || '').trim().toLowerCase());
+
+  const headers = data[0].map((h) =>
+    String(h || "")
+      .trim()
+      .toLowerCase()
+  );
   const dataRows = data.slice(1);
   const requiredFields = getRequiredFields(templateType);
-  
+
   dataRows.forEach((row, index) => {
     // Convert all row values to strings and trim them
-    const cleanRow = row.map(cell => String(cell || '').trim());
-    
+    const cleanRow = row.map((cell) => String(cell || "").trim());
+
     if (cleanRow.length !== headers.length) {
       ifValidationErrors.push({
-        description: `Row ${index + 2} has ${cleanRow.length} columns, expected ${headers.length}`,
+        description: `Row ${index + 2} has ${
+          cleanRow.length
+        } columns, expected ${headers.length}`,
         row: index + 2,
       });
       return;
     }
 
     // Skip completely empty rows
-    if (cleanRow.every(cell => cell === '')) {
+    if (cleanRow.every((cell) => cell === "")) {
       return;
     }
 
     const rowObj: Record<string, string> = {};
     headers.forEach((header, i) => {
-      rowObj[header] = cleanRow[i] || '';
+      rowObj[header] = cleanRow[i] || "";
     });
 
     // Check required fields based on template type
     requiredFields.forEach((field) => {
       const fieldValue = rowObj[field.toLowerCase()];
-      if (!fieldValue || fieldValue.trim() === '') {
+      if (!fieldValue || fieldValue.trim() === "") {
         hasMissingValues = true;
         ifValidationErrors.push({
           description: `Row ${index + 2}: '${field}' is required`,
           row: index + 2,
           column: headers.indexOf(field.toLowerCase()) + 1,
-          currentValue: fieldValue
+          currentValue: fieldValue,
         });
       }
     });
@@ -495,15 +505,21 @@ const validateRow = (
     // Template-specific validations
     if (templateType === "debtors") {
       // Validate numeric fields for Debtors
-      const numericFields = ["amount_in_local_currency", "amount_in_doc_curr", "gl_account"];
+      const numericFields = [
+        "amount_in_local_currency",
+        "amount_in_doc_curr",
+        "gl_account",
+      ];
       numericFields.forEach((numField) => {
         const value = rowObj[numField];
         if (value && value !== "" && !isValidNumber(value.replace(/,/g, ""))) {
           ifValidationErrors.push({
-            description: `Row ${index + 2}: '${numField}' must be a valid number`,
+            description: `Row ${
+              index + 2
+            }: '${numField}' must be a valid number`,
             row: index + 2,
             column: headers.indexOf(numField) + 1,
-            currentValue: value
+            currentValue: value,
           });
         }
       });
@@ -514,10 +530,12 @@ const validateRow = (
         const value = rowObj[dateField];
         if (value && value !== "" && !isValidDateFormat(value)) {
           ifValidationErrors.push({
-            description: `Row ${index + 2}: '${dateField}' must be a valid date in DD-MM-YYYY format`,
+            description: `Row ${
+              index + 2
+            }: '${dateField}' must be a valid date in DD-MM-YYYY format`,
             row: index + 2,
             column: headers.indexOf(dateField) + 1,
-            currentValue: value
+            currentValue: value,
           });
         }
       });
@@ -528,10 +546,12 @@ const validateRow = (
         const value = rowObj[currencyField];
         if (value && value !== "" && value.length !== 3) {
           ifValidationErrors.push({
-            description: `Row ${index + 2}: '${currencyField}' must be a 3-character currency code (e.g., USD, EUR, INR)`,
+            description: `Row ${
+              index + 2
+            }: '${currencyField}' must be a 3-character currency code (e.g., USD, EUR, INR)`,
             row: index + 2,
             column: headers.indexOf(currencyField) + 1,
-            currentValue: value
+            currentValue: value,
           });
         }
       });
@@ -540,34 +560,55 @@ const validateRow = (
       const companyCode = rowObj["company_code"];
       if (companyCode && companyCode.length !== 4) {
         ifValidationErrors.push({
-          description: `Row ${index + 2}: 'company_code' should be 4 characters`,
+          description: `Row ${
+            index + 2
+          }: 'company_code' should be 4 characters`,
           row: index + 2,
           column: headers.indexOf("company_code") + 1,
-          currentValue: companyCode
+          currentValue: companyCode,
         });
       }
 
       // Validate document type for Debtors
-      const validDocTypes = ["dr", "dz", "dg", "dn", "invoice", "credit_memo", "payment"];
-      const docType = rowObj["document_type"];
-      if (docType && !validDocTypes.includes(docType.toLowerCase())) {
-        ifValidationErrors.push({
-          description: `Row ${index + 2}: 'document_type' must be one of: ${validDocTypes.join(", ").toUpperCase()}`,
-          row: index + 2,
-          column: headers.indexOf("document_type") + 1,
-          currentValue: docType
-        });
-      }
+      // const validDocTypes = ["dr", "dz", "dg", "dn", "invoice", "credit_memo", "payment"];
+      // const docType = rowObj["document_type"];
+      // if (docType && !validDocTypes.includes(docType.toLowerCase())) {
+      //   ifValidationErrors.push({
+      //     description: `Row ${index + 2}: 'document_type' must be one of: ${validDocTypes.join(", ").toUpperCase()}`,
+      //     row: index + 2,
+      //     column: headers.indexOf("document_type") + 1,
+      //     currentValue: docType
+      //   });
+      // }
 
       // Validate special G/L indicator (should be valid values)
-      const validSpecialGLInds = ["a", "b", "c", "d", "f", "k", "p", "v", "w", ""];
+      const validSpecialGLInds = [
+        "a",
+        "b",
+        "c",
+        "d",
+        "f",
+        "k",
+        "p",
+        "v",
+        "w",
+        "",
+      ];
       const specialGLInd = rowObj["special_gl_ind"];
-      if (specialGLInd && !validSpecialGLInds.includes(specialGLInd.toLowerCase())) {
+      if (
+        specialGLInd &&
+        !validSpecialGLInds.includes(specialGLInd.toLowerCase())
+      ) {
         ifValidationErrors.push({
-          description: `Row ${index + 2}: 'special_gl_ind' must be one of: ${validSpecialGLInds.filter(x => x !== "").join(", ").toUpperCase()} or empty`,
+          description: `Row ${
+            index + 2
+          }: 'special_gl_ind' must be one of: ${validSpecialGLInds
+            .filter((x) => x !== "")
+            .join(", ")
+            .toUpperCase()} or empty`,
           row: index + 2,
           column: headers.indexOf("special_gl_ind") + 1,
-          currentValue: specialGLInd
+          currentValue: specialGLInd,
         });
       }
 
@@ -575,35 +616,45 @@ const validateRow = (
       const customer = rowObj["customer"];
       if (customer && customer.trim() === "") {
         ifValidationErrors.push({
-          description: `Row ${index + 2}: 'customer' should not be empty when provided`,
+          description: `Row ${
+            index + 2
+          }: 'customer' should not be empty when provided`,
           row: index + 2,
           column: headers.indexOf("customer") + 1,
-          currentValue: customer
+          currentValue: customer,
         });
       }
 
       // Validate reference format (should be alphanumeric)
-      const reference = rowObj["reference"];
-      if (reference && !/^[a-zA-Z0-9_-]*$/.test(reference)) {
-        ifValidationErrors.push({
-          description: `Row ${index + 2}: 'reference' should contain only alphanumeric characters, hyphens, and underscores`,
-          row: index + 2,
-          column: headers.indexOf("reference") + 1,
-          currentValue: reference
-        });
-      }
-
+      // const reference = rowObj["reference"];
+      // if (reference && !/^[a-zA-Z0-9_-]*$/.test(reference)) {
+      //   ifValidationErrors.push({
+      //     description: `Row ${
+      //       index + 2
+      //     }: 'reference' should contain only alphanumeric characters, hyphens, and underscores`,
+      //     row: index + 2,
+      //     column: headers.indexOf("reference") + 1,
+      //     currentValue: reference,
+      //   });
+      // }
     } else if (templateType === "creditor") {
       // Validate numeric fields for Creditor
-      const numericFields = ["account", "gl_account", "posting_key", "amount_in_doc_curr"];
+      const numericFields = [
+        // "account",
+        "gl_account",
+        "posting_key",
+        "amount_in_doc_curr",
+      ];
       numericFields.forEach((numField) => {
         const value = rowObj[numField];
         if (value && value !== "" && !isValidNumber(value.replace(/,/g, ""))) {
           ifValidationErrors.push({
-            description: `Row ${index + 2}: '${numField}' must be a valid number`,
+            description: `Row ${
+              index + 2
+            }: '${numField}' must be a valid number`,
             row: index + 2,
             column: headers.indexOf(numField) + 1,
-            currentValue: value
+            currentValue: value,
           });
         }
       });
@@ -614,24 +665,32 @@ const validateRow = (
         const value = rowObj[dateField];
         if (value && value !== "" && !isValidDateFormat(value)) {
           ifValidationErrors.push({
-            description: `Row ${index + 2}: '${dateField}' must be a valid date in DD-MM-YYYY format`,
+            description: `Row ${
+              index + 2
+            }: '${dateField}' must be a valid date in DD-MM-YYYY format`,
             row: index + 2,
             column: headers.indexOf(dateField) + 1,
-            currentValue: value
+            currentValue: value,
           });
         }
       });
 
       // Validate currency codes for Creditor (should be 3 characters)
-      const currencyFields = ["document_currency", "local_currency", "currency_2"];
+      const currencyFields = [
+        "document_currency",
+        "local_currency",
+        "currency_2",
+      ];
       currencyFields.forEach((currencyField) => {
         const value = rowObj[currencyField];
         if (value && value !== "" && value.length !== 3) {
           ifValidationErrors.push({
-            description: `Row ${index + 2}: '${currencyField}' must be a 3-character currency code (e.g., USD, EUR, INR)`,
+            description: `Row ${
+              index + 2
+            }: '${currencyField}' must be a 3-character currency code (e.g., USD, EUR, INR)`,
             row: index + 2,
             column: headers.indexOf(currencyField) + 1,
-            currentValue: value
+            currentValue: value,
           });
         }
       });
@@ -640,87 +699,112 @@ const validateRow = (
       const companyCode = rowObj["company_code"];
       if (companyCode && companyCode.length !== 4) {
         ifValidationErrors.push({
-          description: `Row ${index + 2}: 'company_code' should be 4 characters`,
+          description: `Row ${
+            index + 2
+          }: 'company_code' should be 4 characters`,
           row: index + 2,
           column: headers.indexOf("company_code") + 1,
-          currentValue: companyCode
+          currentValue: companyCode,
         });
       }
 
       // Validate payment block (Y/N)
-      const paymentBlock = rowObj["payment_block"];
-      if (paymentBlock && !["y", "n", "yes", "no", ""].includes(paymentBlock.toLowerCase())) {
-        ifValidationErrors.push({
-          description: `Row ${index + 2}: 'payment_block' must be 'Y' or 'N'`,
-          row: index + 2,
-          column: headers.indexOf("payment_block") + 1,
-          currentValue: paymentBlock
-        });
-      }
+      // const paymentBlock = rowObj["payment_block"];
+      // if (
+      //   paymentBlock &&
+      //   !["y", "n", "yes", "no", ""].includes(paymentBlock.toLowerCase())
+      // ) {
+      //   ifValidationErrors.push({
+      //     description: `Row ${index + 2}: 'payment_block' must be 'Y' or 'N'`,
+      //     row: index + 2,
+      //     column: headers.indexOf("payment_block") + 1,
+      //     currentValue: paymentBlock,
+      //   });
+      // }
 
-      // Validate document type for Creditor
-      const validDocTypes = ["kr", "kz", "kg", "kn", "invoice", "credit_memo"];
-      const docType = rowObj["document_type"];
-      if (docType && !validDocTypes.includes(docType.toLowerCase())) {
-        ifValidationErrors.push({
-          description: `Row ${index + 2}: 'document_type' must be one of: ${validDocTypes.join(", ").toUpperCase()}`,
-          row: index + 2,
-          column: headers.indexOf("document_type") + 1,
-          currentValue: docType
-        });
-      }
+      // // Validate document type for Creditor
+      // const validDocTypes = ["kr", "kz", "kg", "kn", "invoice", "credit_memo"];
+      // const docType = rowObj["document_type"];
+      // if (docType && !validDocTypes.includes(docType.toLowerCase())) {
+      //   ifValidationErrors.push({
+      //     description: `Row ${index + 2}: 'document_type' must be one of: ${validDocTypes.join(", ").toUpperCase()}`,
+      //     row: index + 2,
+      //     column: headers.indexOf("document_type") + 1,
+      //     currentValue: docType
+      //   });
+      // }
 
       // Validate posting key (should be 2 digits)
       const postingKey = rowObj["posting_key"];
-      if (postingKey && (postingKey.length !== 2 || !/^\d{2}$/.test(postingKey))) {
+      if (
+        postingKey &&
+        (postingKey.length !== 2 || !/^\d{2}$/.test(postingKey))
+      ) {
         ifValidationErrors.push({
-          description: `Row ${index + 2}: 'posting_key' must be a 2-digit number (e.g., 31, 40)`,
+          description: `Row ${
+            index + 2
+          }: 'posting_key' must be a 2-digit number (e.g., 31, 40)`,
           row: index + 2,
           column: headers.indexOf("posting_key") + 1,
-          currentValue: postingKey
+          currentValue: postingKey,
         });
       }
-
     } else if (templateType === "po") {
       // Validate LC indicator field (Y/N) for PO template
       const lcIndicator = rowObj["lc_indicator"];
-      if (lcIndicator && !["y", "n", "yes", "no"].includes(lcIndicator.toLowerCase())) {
+      if (
+        lcIndicator &&
+        !["y", "n", "yes", "no"].includes(lcIndicator.toLowerCase())
+      ) {
         ifValidationErrors.push({
           description: `Row ${index + 2}: 'lc_indicator' must be 'Y' or 'N'`,
           row: index + 2,
           column: headers.indexOf("lc_indicator") + 1,
-          currentValue: lcIndicator
+          currentValue: lcIndicator,
         });
       }
 
       // Validate numeric fields for PO
-      const numericFields = ["uom_quantity", "net_price", "net_value", "exchange_rate", "payment_to_vendor"];
+      const numericFields = [
+        "uom_quantity",
+        "net_price",
+        "net_value",
+        "exchange_rate",
+        "payment_to_vendor",
+      ];
       numericFields.forEach((numField) => {
         const value = rowObj[numField];
         if (value && value !== "" && !isValidNumber(value)) {
           ifValidationErrors.push({
-            description: `Row ${index + 2}: '${numField}' must be a valid number`,
+            description: `Row ${
+              index + 2
+            }: '${numField}' must be a valid number`,
             row: index + 2,
             column: headers.indexOf(numField) + 1,
-            currentValue: value
+            currentValue: value,
           });
         }
       });
 
       // Validate date fields for PO (dd-mm-yyyy format)
-      const dateFields = ["contract_date", "reference_date", "exchange_rate_date"];
+      const dateFields = [
+        "contract_date",
+        "reference_date",
+        "exchange_rate_date",
+      ];
       dateFields.forEach((dateField) => {
         const value = rowObj[dateField];
         if (value && value !== "" && !isValidDateFormat(value)) {
           ifValidationErrors.push({
-            description: `Row ${index + 2}: '${dateField}' must be a valid date in DD-MM-YYYY format`,
+            description: `Row ${
+              index + 2
+            }: '${dateField}' must be a valid date in DD-MM-YYYY format`,
             row: index + 2,
             column: headers.indexOf(dateField) + 1,
-            currentValue: value
+            currentValue: value,
           });
         }
       });
-
     } else if (templateType === "lc") {
       // Validate amount field for LC
       const amount = rowObj["amount"];
@@ -729,7 +813,7 @@ const validateRow = (
           description: `Row ${index + 2}: 'amount' must be a valid number`,
           row: index + 2,
           column: headers.indexOf("amount") + 1,
-          currentValue: amount
+          currentValue: amount,
         });
       }
 
@@ -739,23 +823,34 @@ const validateRow = (
         const value = rowObj[dateField];
         if (value && value !== "" && !isValidDateFormat(value)) {
           ifValidationErrors.push({
-            description: `Row ${index + 2}: '${dateField}' must be a valid date in DD-MM-YYYY format`,
+            description: `Row ${
+              index + 2
+            }: '${dateField}' must be a valid date in DD-MM-YYYY format`,
             row: index + 2,
             column: headers.indexOf(dateField) + 1,
-            currentValue: value
+            currentValue: value,
           });
         }
       });
 
       // Validate LC type
-      const validLcTypes = ["commercial", "standby", "documentary", "revolving"];
+      const validLcTypes = [
+        "commercial",
+        "standby",
+        "documentary",
+        "revolving",
+      ];
       const lcType = rowObj["lc_type"];
       if (lcType && !validLcTypes.includes(lcType.toLowerCase())) {
         ifValidationErrors.push({
-          description: `Row ${index + 2}: 'lc_type' must be one of: ${validLcTypes.join(", ").toUpperCase()}`,
+          description: `Row ${
+            index + 2
+          }: 'lc_type' must be one of: ${validLcTypes
+            .join(", ")
+            .toUpperCase()}`,
           row: index + 2,
           column: headers.indexOf("lc_type") + 1,
-          currentValue: lcType
+          currentValue: lcType,
         });
       }
 
@@ -763,22 +858,26 @@ const validateRow = (
       const systemLcNumber = rowObj["system_lc_number"];
       if (systemLcNumber && !systemLcNumber.toLowerCase().startsWith("lc")) {
         ifValidationErrors.push({
-          description: `Row ${index + 2}: 'system_lc_number' should start with 'LC'`,
+          description: `Row ${
+            index + 2
+          }: 'system_lc_number' should start with 'LC'`,
           row: index + 2,
           column: headers.indexOf("system_lc_number") + 1,
-          currentValue: systemLcNumber
+          currentValue: systemLcNumber,
         });
       }
-
     } else if (templateType === "so") {
-      // Validate LC indicator field (Y/N) for SO template  
+      // Validate LC indicator field (Y/N) for SO template
       const lcIndicator = rowObj["lc_indicator"];
-      if (lcIndicator && !["y", "n", "yes", "no"].includes(lcIndicator.toLowerCase())) {
+      if (
+        lcIndicator &&
+        !["y", "n", "yes", "no"].includes(lcIndicator.toLowerCase())
+      ) {
         ifValidationErrors.push({
           description: `Row ${index + 2}: 'lc_indicator' must be 'Y' or 'N'`,
           row: index + 2,
           column: headers.indexOf("lc_indicator") + 1,
-          currentValue: lcIndicator
+          currentValue: lcIndicator,
         });
       }
 
@@ -787,10 +886,12 @@ const validateRow = (
       const docType = rowObj["document_type"];
       if (docType && !validDocTypes.includes(docType.toLowerCase())) {
         ifValidationErrors.push({
-          description: `Row ${index + 2}: 'document_type' should be 'SO' for Sales Order template`,
+          description: `Row ${
+            index + 2
+          }: 'document_type' should be 'SO' for Sales Order template`,
           row: index + 2,
           column: headers.indexOf("document_type") + 1,
-          currentValue: docType
+          currentValue: docType,
         });
       }
 
@@ -800,50 +901,79 @@ const validateRow = (
         const value = rowObj[dateField];
         if (value && value !== "" && !isValidDateFormat(value)) {
           ifValidationErrors.push({
-            description: `Row ${index + 2}: '${dateField}' must be a valid date in DD-MM-YYYY format`,
+            description: `Row ${
+              index + 2
+            }: '${dateField}' must be a valid date in DD-MM-YYYY format`,
             row: index + 2,
             column: headers.indexOf(dateField) + 1,
-            currentValue: value
+            currentValue: value,
           });
         }
       });
 
       // Validate numeric fields for SO
-      const numericFields = ["uom_quantity", "net_price", "net_value", "total_invoice_value"];
+      const numericFields = [
+        "uom_quantity",
+        "net_price",
+        "net_value",
+        "total_invoice_value",
+      ];
       numericFields.forEach((numField) => {
         const value = rowObj[numField];
         if (value && value !== "" && !isValidNumber(value)) {
           ifValidationErrors.push({
-            description: `Row ${index + 2}: '${numField}' must be a valid number`,
+            description: `Row ${
+              index + 2
+            }: '${numField}' must be a valid number`,
             row: index + 2,
             column: headers.indexOf(numField) + 1,
-            currentValue: value
+            currentValue: value,
           });
         }
       });
 
       // Validate inco terms for SO
-      const validIncoTerms = ["fob", "cif", "cfr", "exw", "ddp", "dap", "fca", "cpt", "cip"];
+      const validIncoTerms = [
+        "fob",
+        "cif",
+        "cfr",
+        "exw",
+        "ddp",
+        "dap",
+        "fca",
+        "cpt",
+        "cip",
+      ];
       const incoTerms = rowObj["inco_terms"];
       if (incoTerms && !validIncoTerms.includes(incoTerms.toLowerCase())) {
         ifValidationErrors.push({
-          description: `Row ${index + 2}: 'inco_terms' must be one of: ${validIncoTerms.join(", ").toUpperCase()}`,
+          description: `Row ${
+            index + 2
+          }: 'inco_terms' must be one of: ${validIncoTerms
+            .join(", ")
+            .toUpperCase()}`,
           row: index + 2,
           column: headers.indexOf("inco_terms") + 1,
-          currentValue: incoTerms
+          currentValue: incoTerms,
         });
       }
     } else if (templateType === "grn") {
       // Validate numeric fields for GRN
-      const numericFields = ["account", "amount_in_doc_curr", "amount_in_local_currency"];
+      const numericFields = [
+        "account",
+        "amount_in_doc_curr",
+        "amount_in_local_currency",
+      ];
       numericFields.forEach((numField) => {
         const value = rowObj[numField];
         if (value && value !== "" && !isValidNumber(value.replace(/,/g, ""))) {
           ifValidationErrors.push({
-            description: `Row ${index + 2}: '${numField}' must be a valid number`,
+            description: `Row ${
+              index + 2
+            }: '${numField}' must be a valid number`,
             row: index + 2,
             column: headers.indexOf(numField) + 1,
-            currentValue: value
+            currentValue: value,
           });
         }
       });
@@ -854,10 +984,12 @@ const validateRow = (
         const value = rowObj[dateField];
         if (value && value !== "" && !isValidDateFormat(value)) {
           ifValidationErrors.push({
-            description: `Row ${index + 2}: '${dateField}' must be a valid date in DD-MM-YYYY format`,
+            description: `Row ${
+              index + 2
+            }: '${dateField}' must be a valid date in DD-MM-YYYY format`,
             row: index + 2,
             column: headers.indexOf(dateField) + 1,
-            currentValue: value
+            currentValue: value,
           });
         }
       });
@@ -868,10 +1000,12 @@ const validateRow = (
         const value = rowObj[currencyField];
         if (value && value !== "" && value.length !== 3) {
           ifValidationErrors.push({
-            description: `Row ${index + 2}: '${currencyField}' must be a 3-character currency code (e.g., USD, EUR, INR)`,
+            description: `Row ${
+              index + 2
+            }: '${currencyField}' must be a 3-character currency code (e.g., USD, EUR, INR)`,
             row: index + 2,
             column: headers.indexOf(currencyField) + 1,
-            currentValue: value
+            currentValue: value,
           });
         }
       });
@@ -880,24 +1014,35 @@ const validateRow = (
       const companyCode = rowObj["company_code"];
       if (companyCode && companyCode.length !== 4) {
         ifValidationErrors.push({
-          description: `Row ${index + 2}: 'company_code' should be 4 characters`,
+          description: `Row ${
+            index + 2
+          }: 'company_code' should be 4 characters`,
           row: index + 2,
           column: headers.indexOf("company_code") + 1,
-          currentValue: companyCode
+          currentValue: companyCode,
         });
       }
     }
 
     // Common validations for all templates
-    // Validate currency code (should be 3 characters) 
-    const currencyCode = rowObj["currency_code"] || rowObj["currency"] || rowObj["document_currency"];
+    // Validate currency code (should be 3 characters)
+    const currencyCode =
+      rowObj["currency_code"] ||
+      rowObj["currency"] ||
+      rowObj["document_currency"];
     if (currencyCode && currencyCode.length !== 3) {
-      const fieldName = rowObj["currency_code"] ? "currency_code" : rowObj["currency"] ? "currency" : "document_currency";
+      const fieldName = rowObj["currency_code"]
+        ? "currency_code"
+        : rowObj["currency"]
+        ? "currency"
+        : "document_currency";
       ifValidationErrors.push({
-        description: `Row ${index + 2}: '${fieldName}' must be a 3-character currency code (e.g., USD, EUR, INR)`,
+        description: `Row ${
+          index + 2
+        }: '${fieldName}' must be a 3-character currency code (e.g., USD, EUR, INR)`,
         row: index + 2,
         column: headers.indexOf(fieldName) + 1,
-        currentValue: currencyCode
+        currentValue: currencyCode,
       });
     }
   });
@@ -934,7 +1079,7 @@ export const validateFileContent = (
             rowCount: 0,
             columnCount: 0,
             hasHeaders: false,
-            hasMissingValues: false
+            hasMissingValues: false,
           });
           return;
         }
@@ -1005,7 +1150,8 @@ export const validateFileContent = (
             status: "error",
             validationErrors: [
               {
-                description: "Unsupported file format. Only CSV and Excel files are supported.",
+                description:
+                  "Unsupported file format. Only CSV and Excel files are supported.",
               },
             ],
             error: "Unsupported format",
@@ -1020,7 +1166,9 @@ export const validateFileContent = (
           status: "error",
           validationErrors: [
             {
-              description: `Failed to parse file: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              description: `Failed to parse file: ${
+                error instanceof Error ? error.message : "Unknown error"
+              }`,
             },
           ],
           error: "Parsing failed",
@@ -1110,7 +1258,7 @@ export const validatePreviewData = (
     // Create row object for easier validation
     const rowObj: Record<string, string> = {};
     previewHeaders.forEach((header, i) => {
-      rowObj[header.toLowerCase()] = (row[i] || '').toString().trim();
+      rowObj[header.toLowerCase()] = (row[i] || "").toString().trim();
     });
 
     previewHeaders.forEach((header, colIndex) => {
@@ -1122,20 +1270,28 @@ export const validatePreviewData = (
           description: `${header} is required`,
           row: rowIndex + 1,
           column: colIndex + 1,
-          currentValue: value
+          currentValue: value,
         });
       }
 
       // Template-specific validations
       if (templateType === "debtors") {
         // Number validation for Debtors
-        const numericFields = ["amount_in_local_currency", "amount_in_doc_curr", "gl_account"];
-        if (numericFields.includes(header) && value && isNaN(Number(value.replace(/,/g, "")))) {
+        const numericFields = [
+          "amount_in_local_currency",
+          "amount_in_doc_curr",
+          "gl_account",
+        ];
+        if (
+          numericFields.includes(header) &&
+          value &&
+          isNaN(Number(value.replace(/,/g, "")))
+        ) {
           validationErrors.push({
             description: `${header} must be a number`,
             row: rowIndex + 1,
             column: colIndex + 1,
-            currentValue: value
+            currentValue: value,
           });
         }
 
@@ -1147,7 +1303,7 @@ export const validatePreviewData = (
               description: `${header} must be valid date in DD-MM-YYYY format`,
               row: rowIndex + 1,
               column: colIndex + 1,
-              currentValue: value
+              currentValue: value,
             });
           }
         }
@@ -1159,7 +1315,7 @@ export const validatePreviewData = (
             description: `${header} must be 3 characters`,
             row: rowIndex + 1,
             column: colIndex + 1,
-            currentValue: value
+            currentValue: value,
           });
         }
 
@@ -1169,42 +1325,64 @@ export const validatePreviewData = (
             description: "company_code should be 4 characters",
             row: rowIndex + 1,
             column: colIndex + 1,
-            currentValue: value
+            currentValue: value,
           });
         }
 
-        // Document type validation for Debtors
-        const validDocTypes = ["dr", "dz", "dg", "dn", "invoice", "credit_memo", "payment"];
-        if (header === "document_type" && value && !validDocTypes.includes(value.toLowerCase())) {
-          validationErrors.push({
-            description: `document_type must be one of: ${validDocTypes.join(", ").toUpperCase()}`,
-            row: rowIndex + 1,
-            column: colIndex + 1,
-            currentValue: value
-          });
-        }
+        // // Document type validation for Debtors
+        // const validDocTypes = ["dr", "dz", "dg", "dn", "invoice", "credit_memo", "payment"];
+        // if (header === "document_type" && value && !validDocTypes.includes(value.toLowerCase())) {
+        //   validationErrors.push({
+        //     description: `document_type must be one of: ${validDocTypes.join(", ").toUpperCase()}`,
+        //     row: rowIndex + 1,
+        //     column: colIndex + 1,
+        //     currentValue: value
+        //   });
+        // }
 
         // Special G/L indicator validation
-        const validSpecialGLInds = ["a", "b", "c", "d", "f", "k", "p", "v", "w", ""];
-        if (header === "special_gl_ind" && value && !validSpecialGLInds.includes(value.toLowerCase())) {
+        const validSpecialGLInds = [
+          "a",
+          "b",
+          "c",
+          "d",
+          "f",
+          "k",
+          "p",
+          "v",
+          "w",
+          "",
+        ];
+        if (
+          header === "special_gl_ind" &&
+          value &&
+          !validSpecialGLInds.includes(value.toLowerCase())
+        ) {
           validationErrors.push({
-            description: `special_gl_ind must be one of: ${validSpecialGLInds.filter(x => x !== "").join(", ").toUpperCase()} or empty`,
+            description: `special_gl_ind must be one of: ${validSpecialGLInds
+              .filter((x) => x !== "")
+              .join(", ")
+              .toUpperCase()} or empty`,
             row: rowIndex + 1,
             column: colIndex + 1,
-            currentValue: value
+            currentValue: value,
           });
         }
 
         // Reference validation
-        if (header === "reference" && value && !/^[a-zA-Z0-9_-]*$/.test(value)) {
+        if (
+          header === "reference" &&
+          value &&
+          !/^[a-zA-Z0-9_-]*$/.test(value)
+        ) {
           validationErrors.push({
-            description: "reference should contain only alphanumeric characters, hyphens, and underscores",
+            description:
+              "reference should contain only alphanumeric characters, hyphens, and underscores",
             row: rowIndex + 1,
             column: colIndex + 1,
-            currentValue: value
+            currentValue: value,
           });
         }
-
       } else if (templateType === "creditor") {
         // ...existing creditor validations...
       } else if (templateType === "po") {
@@ -1219,12 +1397,18 @@ export const validatePreviewData = (
 
       // Common validations for all templates
       // Currency code validation
-      if ((header === "currency_code" || header === "currency" || header === "document_currency") && value && value.length !== 3) {
+      if (
+        (header === "currency_code" ||
+          header === "currency" ||
+          header === "document_currency") &&
+        value &&
+        value.length !== 3
+      ) {
         validationErrors.push({
           description: "currency must be 3 characters",
           row: rowIndex + 1,
           column: colIndex + 1,
-          currentValue: value
+          currentValue: value,
         });
       }
     });
@@ -1232,7 +1416,6 @@ export const validatePreviewData = (
 
   return validationErrors;
 };
-
 
 import * as XLSX from "xlsx";
 
@@ -1244,40 +1427,147 @@ export const handleDownload = (template: any) => {
 
   if (template.id === "po") {
     sampleRow = [
-      "COMP001", "CA01", "ENT01", "ENT1_001", "ENT2_001", "DOC001", "Y", "2024",
-      "15-01-2024", "REF001", "10-01-2024", "VEN001", "Vendor ABC Ltd", "CIF", "USD",
-      "NET30", "FOB", "Mumbai Port", "1000000", "PCS", "100", "50.00", "5000.00",
-      "1.0", "15-01-2024", "DOC_001", "CC001", "ENT3_001"
+      "COMP001",
+      "CA01",
+      "ENT01",
+      "ENT1_001",
+      "ENT2_001",
+      "DOC001",
+      "Y",
+      "2024",
+      "15-01-2024",
+      "REF001",
+      "10-01-2024",
+      "VEN001",
+      "Vendor ABC Ltd",
+      "CIF",
+      "USD",
+      "NET30",
+      "FOB",
+      "Mumbai Port",
+      "1000000",
+      "PCS",
+      "100",
+      "50.00",
+      "5000.00",
+      "1.0",
+      "15-01-2024",
+      "DOC_001",
+      "CC001",
+      "ENT3_001",
     ];
   } else if (template.id === "lc") {
     sampleRow = [
-      "LC001", "BANK001", "REF001", "COMMERCIAL", "ABC Company Ltd",
-      "XYZ Supplier Inc", "Standard Bank", "USD", "100000",
-      "15-01-2024", "15-06-2024", "PO001"
+      "LC001",
+      "BANK001",
+      "REF001",
+      "COMMERCIAL",
+      "ABC Company Ltd",
+      "XYZ Supplier Inc",
+      "Standard Bank",
+      "USD",
+      "100000",
+      "15-01-2024",
+      "15-06-2024",
+      "PO001",
     ];
   } else if (template.id === "so") {
     sampleRow = [
-      "COMP001", "CA01", "ENT01", "ENT1_001", "ENT2_001", "ENT3_001", "DOC001", "SO",
-      "15-01-2024", "REF001", "10-01-2024", "CUST001", "Customer ABC Ltd", "USD",
-      "CIF", "NET30", "FOB", "1000000", "LOT001", "Steel Products", "PCS", "100",
-      "50.00", "5000.00", "Quality products", "15-02-2024", "Y", "FIXED", "CC001"
+      "COMP001",
+      "CA01",
+      "ENT01",
+      "ENT1_001",
+      "ENT2_001",
+      "ENT3_001",
+      "DOC001",
+      "SO",
+      "15-01-2024",
+      "REF001",
+      "10-01-2024",
+      "CUST001",
+      "Customer ABC Ltd",
+      "USD",
+      "CIF",
+      "NET30",
+      "FOB",
+      "1000000",
+      "LOT001",
+      "Steel Products",
+      "PCS",
+      "100",
+      "50.00",
+      "5000.00",
+      "Quality products",
+      "15-02-2024",
+      "Y",
+      "FIXED",
+      "CC001",
     ];
   } else if (template.id === "creditor") {
     sampleRow = [
-      "N", "7000", "CHEN", "2000001", "PAN123456789", "400000", "15-01-2024",
-      "30-01-2024", "15-01-2024", "KR", "31", "100000.00", "USD", "USD", "USD"
+      "N", // payment_block
+      "7000", // company_code
+      "CHEN", // business_area
+      "2000001", // account
+      "PAN123456789", // pann
+      "400000", // gl_account
+      "15-01-2024", // document_date
+      "30-01-2024", // net_due_date
+      "15-01-2024", // posting_date
+      "KR", // document_type
+      "31", // posting_key
+      "100000.00", // amount_in_doc_curr
+      "USD", // document_currency
+      "USD", // local_currency
+      "USD", // currency_2
+      "BANKREF123", // bank_reference
     ];
   } else if (template.id === "debtors") {
     sampleRow = [
-      "REF001", "7000", "ASSIGN001", "7050000252", "30-01-2024", "DR", "15-01-2024",
-      "15-01-2024", "A", "150000.00", "150000.00", "USD", "Customer payment received",
-      "CUST001", "CLEAR001", "130000", "USD", "ABC Company Ltd"
+      "REF001", // reference
+      "7000", // company_code
+      "ASSIGN001", // assignment
+      "7050000252", // document_number
+      "30-01-2024", // net_due_date
+      "DR", // document_type
+      "15-01-2024", // document_date
+      "15-01-2024", // posting_date
+      "A", // special_gl_ind
+      "150000.00", // amount_in_local_currency
+      "150000.00", // amount_in_doc_curr
+      "USD", // document_currency
+      "Customer payment received", // text
+      "CUST001", // customer
+      "CLEAR001", // clearing_document
+      "130000", // gl_account
+      "USD", // currency_2
+      "ABC Company Ltd", // company
+      "BANKREF456", // bank_reference
     ];
-  } else { // grn template
+  } else {
+    // grn template
     sampleRow = [
-      "1000", "COMP001", "BA01", "GR", "CUST001", "ASSIGN001", "DOC001", "15-01-2024",
-      "15-01-2024", "VEN001", "REF001", "1000", "USD", "750000", "Goods Receipt",
-      "CLEAR001", "15-01-2024", "S", "1000", "USD", "COMP001"
+      "1000",
+      "COMP001",
+      "BA01",
+      "GR",
+      "CUST001",
+      "ASSIGN001",
+      "DOC001",
+      "15-01-2024",
+      "15-01-2024",
+      "VEN001",
+      "REF001",
+      "1000",
+      "USD",
+      "750000",
+      "Goods Receipt",
+      "CLEAR001",
+      "15-01-2024",
+      "S",
+      "1000",
+      "USD",
+      "COMP001",
     ];
   }
 
@@ -1294,9 +1584,9 @@ export const handleDownload = (template: any) => {
 //   // Get headers based on template type
 //   const expectedHeaders = getExpectedHeaders(template.id);
 //   const headers = expectedHeaders.join(",");
-  
+
 //   let sampleRow: string[];
-  
+
 //   if (template.id === "po") {
 //     sampleRow = [
 //       "COMP001", "CA01", "ENT01", "ENT1_001", "ENT2_001", "DOC001", "Y", "2024",
