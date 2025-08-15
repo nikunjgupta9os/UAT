@@ -123,6 +123,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     subItems: [
       { label: "MTM Calculator", path: "/mtm-calculator", icon: <Calculator /> },
       { label: "MTM Rates Input", path: "/mtm-rate-input", icon: <ChevronsLeftRightEllipsis /> },
+      { label: "MTM Uploader", path: "/mtm-upload", icon: <Upload /> },
     ],
   },
   
