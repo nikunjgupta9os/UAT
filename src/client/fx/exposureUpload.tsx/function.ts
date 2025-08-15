@@ -1010,19 +1010,19 @@ const validateRow = (
         }
       });
 
-      // Validate company code format for GRN
-      const companyCode = rowObj["company_code"];
-      if (companyCode && companyCode.length !== 4) {
-        ifValidationErrors.push({
-          description: `Row ${
-            index + 2
-          }: 'company_code' should be 4 characters`,
-          row: index + 2,
-          column: headers.indexOf("company_code") + 1,
-          currentValue: companyCode,
-        });
-      }
-    }
+    //   // Validate company code format for GRN
+    //   const companyCode = rowObj["company_code"];
+    //   if (companyCode && companyCode.length !== 4) {
+    //     ifValidationErrors.push({
+    //       description: `Row ${
+    //         index + 2
+    //       }: 'company_code' should be 4 characters`,
+    //       row: index + 2,
+    //       column: headers.indexOf("company_code") + 1,
+    //       currentValue: companyCode,
+    //     });
+    //   }
+    // }
 
     // Common validations for all templates
     // Validate currency code (should be 3 characters)
