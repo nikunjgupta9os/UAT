@@ -1,7 +1,7 @@
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 export const mtmDisplayHeaders = [
-  "Forward ID",
+  "Internal Reference ID",
   "Deal Date",
   "Maturity Date",
   "Currency Pair",
@@ -11,7 +11,7 @@ export const mtmDisplayHeaders = [
   "MTM Rate",
   "MTM Value",
   "Days to Maturity",
-  "Status",
+  "Entity",
 ];
 
 // Backend headers (for CSV upload/download)
@@ -31,7 +31,7 @@ export const mtmBackendHeaders = [
 
 // Sample row for template
 const mtmSampleRow = [
-  "FWD123",
+  "INTREF001",
   "2025-08-01",
   "2025-12-31",
   "USD/INR",
@@ -41,7 +41,7 @@ const mtmSampleRow = [
   "84.00",
   "500000",
   "120",
-  "Open",
+  "EntityA",
 ];
 
 export const templates = [
