@@ -148,20 +148,24 @@ const AvailableForward: React.FC<TableProps> = ({
     if (tableContainerRef.current) {
       // Prevent any unwanted scroll behavior
       const container = tableContainerRef.current;
-      container.style.overscrollBehavior = 'contain';
-      container.style.scrollBehavior = 'smooth';
-      
+      container.style.overscrollBehavior = "contain";
+      container.style.scrollBehavior = "smooth";
+
       // Prevent scroll events from bubbling up
       const preventScrollBubble = (e: Event) => {
         e.stopPropagation();
       };
-      
-      container.addEventListener('scroll', preventScrollBubble, { passive: false });
-      container.addEventListener('wheel', preventScrollBubble, { passive: false });
-      
+
+      container.addEventListener("scroll", preventScrollBubble, {
+        passive: false,
+      });
+      container.addEventListener("wheel", preventScrollBubble, {
+        passive: false,
+      });
+
       return () => {
-        container.removeEventListener('scroll', preventScrollBubble);
-        container.removeEventListener('wheel', preventScrollBubble);
+        container.removeEventListener("scroll", preventScrollBubble);
+        container.removeEventListener("wheel", preventScrollBubble);
       };
     }
   }, []);
@@ -272,6 +276,8 @@ const AvailableForward: React.FC<TableProps> = ({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              setIsEditing(false);
+              setIsSaving(false);
               const newExpandedId = expandedRowId === row.id ? null : row.id;
               setExpandedRowId(newExpandedId);
               if (newExpandedId) {
@@ -281,22 +287,27 @@ const AvailableForward: React.FC<TableProps> = ({
                   if (rowElement && tableContainerRef.current) {
                     // Use the table container ref for reliable scrolling
                     const tableContainer = tableContainerRef.current;
-                    
+
                     // Get the row's position relative to the container
                     const rowTop = rowElement.offsetTop;
-                    
+
                     // Get the header height to calculate the exact position below it
-                    const headerElement = tableContainer.querySelector('thead');
-                    const headerHeight = headerElement ? headerElement.offsetHeight : 0;
-                    
+                    const headerElement = tableContainer.querySelector("thead");
+                    const headerHeight = headerElement
+                      ? headerElement.offsetHeight
+                      : 0;
+
                     // Calculate the target scroll position to place the row right below the header
                     // We want the row to appear exactly below the sticky header
-                    const targetScrollTop = Math.max(0, rowTop - headerHeight - 2); // 2px for perfect visual spacing
-                    
+                    const targetScrollTop = Math.max(
+                      0,
+                      rowTop - headerHeight - 2
+                    ); // 2px for perfect visual spacing
+
                     // Smooth scroll within the container only
                     tableContainer.scrollTo({
                       top: targetScrollTop,
-                      behavior: 'smooth'
+                      behavior: "smooth",
                     });
                   }
                 }, 50); // 50ms delay to ensure DOM updates
@@ -467,10 +478,10 @@ const AvailableForward: React.FC<TableProps> = ({
         Avaliable Forward
       </h2>
 
-      <div 
-        ref={tableContainerRef} 
+      <div
+        ref={tableContainerRef}
         className="shadow-lg border border-border rounded-lg max-h-[500px] overflow-auto scroll-smooth relative"
-        style={{ scrollBehavior: 'smooth' }}
+        style={{ scrollBehavior: "smooth" }}
       >
         <DndContext
           onDragEnd={handleDragEnd}
@@ -495,7 +506,7 @@ const AvailableForward: React.FC<TableProps> = ({
                           <Droppable id={header.column.id}>
                             <Draggable id={header.column.id}>
                               <div className="cursor-move border-border text-header-color hover:bg-primary-lg rounded px-1 py-1 transition duration-150 ease-in-out">
-                                    {flexRender(
+                                {flexRender(
                                   header.column.columnDef.header,
                                   header.getContext()
                                 )}
@@ -557,7 +568,9 @@ const AvailableForward: React.FC<TableProps> = ({
                           ? "bg-primary-md"
                           : "bg-secondary-color-lt"
                       } ${
-                        expandedRowId === row.id ? "ring-2 ring-primary ring-opacity-50 shadow-md" : ""
+                        expandedRowId === row.id
+                          ? "ring-2 ring-primary ring-opacity-50 shadow-md"
+                          : ""
                       }`}
                     >
                       {row.getVisibleCells().map((cell) => (

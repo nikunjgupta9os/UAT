@@ -11,6 +11,7 @@ import {
   useReactTable,
   type ColumnDef,
 } from "@tanstack/react-table";
+import { set } from "date-fns";
 
 type AvailableForwardsData = {
   bu: string;
@@ -229,9 +230,12 @@ const UnlinkedExposure: React.FC<TableProps> = ({
   const handleExpandClick = (rowId: string) => {
     const newExpandedId = expandedRowId === rowId ? null : rowId;
     setExpandedRowId(newExpandedId);
+    setIsEditing(false);
+    setIsSaving(false);
 
     if (newExpandedId) {
       const rowElement = rowRefs.current[rowId];
+
       if (rowElement && tableContainerRef.current) {
         // Use the table container ref for reliable scrolling
         const tableContainer = tableContainerRef.current;
@@ -651,6 +655,7 @@ const UnlinkedExposure: React.FC<TableProps> = ({
                                     } else {
                                       setEditValues(row.original);
                                       setIsEditing(true);
+                                      setIsSaving(false);
                                     }
                                   }}
                                   className="bg-primary text-white px-4 py-1 rounded shadow hover:bg-primary-dark disabled:opacity-60"
