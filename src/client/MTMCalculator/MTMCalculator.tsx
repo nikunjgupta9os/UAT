@@ -1,8 +1,8 @@
-
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Layout from "../common/Layout";
 import CustomSelect from "../common/SearchSelect";
 import Button from "../ui/Button";
+import { exportToExcel } from "../ui/exportToExcel";
 import Pagination from "../ui/Pagination";
 
 import {
@@ -26,18 +26,21 @@ interface RateData {
 }
 
 interface ForwardTableColumns {
-  bank: string;
-  forwardId: string;
-  dealDate: string;
-  maturityDate: string;
-  currencyPair: string;
-  buySell: string;
-  notionalAmt: number;
-  contractRate: number;
-  mtmRate?: number;
-  mtmValue?: number;
-  daysToMaturity?: number;
-  status: "Outstanding" | "Settled" | "Active";
+  mtm_id: string;
+  booking_id: string; // intentionally hidden
+  deal_date: string;
+  maturity_date: string;
+  currency_pair: string;
+  buy_sell: string;
+  notional_amount: string;
+  contract_rate: string;
+  mtm_rate: string;
+  mtm_value: string;
+  days_to_maturity: number;
+  status: string;
+  calculated_at: string;
+  internal_reference_id: string;
+  entity: string;
 }
 
 const mockRateData: RateData[] = [
@@ -123,7 +126,9 @@ const dealOption = [
 const DateInput = ({ label, value, onChange }) => {
   return (
     <div className="flex flex-col">
-      <label className="text-sm font-medium text-secondary-text-dark mb-1">{label}</label>
+      <label className="text-sm font-medium text-secondary-text-dark mb-1">
+        {label}
+      </label>
       <input
         type="date"
         value={value}
@@ -147,12 +152,13 @@ const getMTMRate = (
   calculationDate: string,
   rateData: RateData[]
 ): number | undefined => {
-  const days = getDaysToMaturity(row.maturityDate, calculationDate);
+  const days = getDaysToMaturity(row.maturity_date, calculationDate);
   const tenor = getTenorForDays(days);
-  const bankRates = rateData.find((b) => b.bank === row.bank);
+  // No 'bank' field in ForwardTableColumns anymore; fallback to entity for matching
+  const bankRates = rateData.find((b) => b.bank === row.entity);
   if (!bankRates) return undefined;
   const pairRates = bankRates.currencyPairs.find(
-    (p) => p.currencyPair === row.currencyPair
+    (p) => p.currencyPair === row.currency_pair
   );
   if (!pairRates) return undefined;
   // Try to find the exact tenor, else fallback to the highest available
@@ -162,7 +168,7 @@ const getMTMRate = (
     rateObj = pairRates.rates[pairRates.rates.length - 1];
   }
   if (!rateObj) return undefined;
-  if (row.buySell.toLowerCase() === "buy") {
+  if (row.buy_sell.toLowerCase() === "buy") {
     return rateObj.bidRate;
   } else {
     return rateObj.offerRate;
@@ -180,164 +186,180 @@ export function getDaysToMaturity(
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
 
-const mockForwardTableColumns: ForwardTableColumns[] = [
-  {
-    bank: "Axis Bank",
-    forwardId: "FX1001",
-    dealDate: "2024-12-15",
-    maturityDate: "2025-08-15",
-    currencyPair: "USD/INR",
-    buySell: "Buy",
-    notionalAmt: 1000000,
-    contractRate: 83.25,
-    status: "Outstanding",
-  },
-  {
-    bank: "Axis Bank",
-    forwardId: "FX1002",
-    dealDate: "2025-01-20",
-    maturityDate: "2025-08-31",
-    currencyPair: "USD/INR",
-    buySell: "Sell",
-    notionalAmt: 500000,
-    contractRate: 83.7,
-    status: "Outstanding",
-  },
-  {
-    bank: "Axis Bank",
-    forwardId: "FX1003",
-    dealDate: "2025-02-10",
-    maturityDate: "2025-09-25",
-    currencyPair: "EUR/USD",
-    buySell: "Buy",
-    notionalAmt: 250000,
-    contractRate: 1.085,
-    status: "Outstanding",
-  },
-  {
-    bank: "HDFC Bank",
-    forwardId: "FX1004",
-    dealDate: "2025-03-05",
-    maturityDate: "2025-11-30",
-    currencyPair: "USD/INR",
-    buySell: "Buy",
-    notionalAmt: 750000,
-    contractRate: 83.8,
-    status: "Outstanding",
-  },
-];
 
 const AvailableForwards: React.FC<{
   data: ForwardTableColumns[];
   calculationDate: string;
   showSummary: boolean;
   pagination: { pageIndex: number; pageSize: number };
-  setPagination: React.Dispatch<React.SetStateAction<{ pageIndex: number; pageSize: number }>>;
+  setPagination: React.Dispatch<
+    React.SetStateAction<{ pageIndex: number; pageSize: number }>
+  >;
 }> = ({ data, calculationDate, showSummary, pagination, setPagination }) => {
   const [columnOrder, setColumnOrder] = useState<string[]>([
-    "forwardId",
-    "dealDate",
-    "maturityDate",
-    "currencyPair",
-    "buySell",
-    "notionalAmt",
-    "contractRate",
-    "mtmRate",
-    "mtmValue",
-    "daysToMaturity",
+    "mtm_id",
+    "internal_reference_id",
+    "entity",
+    "deal_date",
+    "maturity_date",
+    "currency_pair",
+    "buy_sell",
+    "notional_amount",
+    "contract_rate",
+    "mtm_rate",
+    "mtm_value",
+    "days_to_maturity",
     "status",
+    "calculated_at",
   ]);
 
   const columns = useMemo<ColumnDef<ForwardTableColumns>[]>(
     () => [
-
       {
-        accessorKey: "forwardId",
-        header: "Forward ID",
+        accessorKey: "mtm_id",
+        header: "MTM ID",
         cell: ({ getValue }) => <span>{getValue() as string}</span>,
+        enableHiding: false,
+      },
+      // booking_id intentionally hidden
+      {
+        accessorKey: "internal_reference_id",
+        header: "Internal Ref ID",
+        cell: ({ getValue }) => <span>{getValue() as string}</span>,
+        enableHiding: false,
       },
       {
-        accessorKey: "dealDate",
+        accessorKey: "entity",
+        header: "Entity",
+        cell: ({ getValue }) => <span>{getValue() as string}</span>,
+        enableHiding: false,
+      },
+      {
+        accessorKey: "deal_date",
         header: "Deal Date",
-        cell: ({ getValue }) => <span>{getValue() as string}</span>,
+        cell: ({ getValue }) => (
+          <span>{(getValue() as string)?.split("T")[0]}</span>
+        ),
+        enableHiding: false,
       },
       {
-        accessorKey: "maturityDate",
+        accessorKey: "maturity_date",
         header: "Maturity Date",
-        cell: ({ getValue }) => <span>{getValue() as string}</span>,
+        cell: ({ getValue }) => (
+          <span>{(getValue() as string)?.split("T")[0]}</span>
+        ),
+        enableHiding: false,
       },
       {
-        accessorKey: "currencyPair",
+        accessorKey: "currency_pair",
         header: "Currency Pair",
         cell: ({ getValue }) => <span>{getValue() as string}</span>,
+        enableHiding: false,
       },
       {
-        accessorKey: "buySell",
+        accessorKey: "buy_sell",
         header: "Buy/Sell",
         cell: ({ getValue }) => <span>{getValue() as string}</span>,
+        enableHiding: false,
       },
       {
-        accessorKey: "notionalAmt",
+        accessorKey: "notional_amount",
         header: "Notional Amount",
-        cell: ({ getValue }) => <span>{getValue() as number}</span>,
+        cell: ({ getValue }) => (
+          <span>{Number(getValue()).toLocaleString()}</span>
+        ),
+        enableHiding: false,
       },
       {
-        accessorKey: "contractRate",
+        accessorKey: "contract_rate",
         header: "Contract Rate",
-        cell: ({ getValue }) => <span>{getValue() as number}</span>,
+        cell: ({ getValue }) => <span>{getValue() as string}</span>,
+        enableHiding: false,
       },
       {
-        accessorKey: "mtmRate",
+        accessorKey: "mtm_rate",
         header: "MTM Rate",
-        cell: ({ row }) => {
-          const rate = getMTMRate(row.original, calculationDate, mockRateData);
-          return rate !== undefined ? rate.toFixed(4) : "-";
-        },
+        cell: ({ getValue }) => <span>{getValue() as string}</span>,
+        enableHiding: false,
       },
       {
-        accessorKey: "mtmValue",
+        accessorKey: "mtm_value",
         header: "MTM Value",
-        cell: ({ row }) => {
-          const mtmRate = getMTMRate(
-            row.original,
-            calculationDate,
-            mockRateData
-          );
-          const notional = row.original.notionalAmt;
-          const contract = row.original.contractRate;
-          if (mtmRate === undefined) return "-";
-          const value = notional * mtmRate - notional * contract;
-          const currency = row.original.currencyPair.split("/")[1] || "";
-          const color =
-            value > 0 ? "text-green-600" : value < 0 ? "text-red-600" : "";
+        cell: ({ getValue }) => {
+          const value = Number(getValue());
+          const color = value > 0 ? "text-green-600" : value < 0 ? "text-red-600" : "";
           return (
             <span className={`font-semibold ${color}`}>
               {value.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
-              })}{" "}
-              {currency}
+              })}
             </span>
           );
         },
+        enableHiding: false,
       },
       {
-        accessorKey: "daysToMaturity",
+        accessorKey: "days_to_maturity",
         header: "Days to Maturity",
-        cell: ({ row }) => {
-          const maturityDate = row.original.maturityDate;
-          const days = getDaysToMaturity(maturityDate, calculationDate);
-          return <span>{days} days</span>;
-        },
+        cell: ({ getValue }) => <span>{String(getValue())} days</span>,
+        enableHiding: false,
       },
       {
         accessorKey: "status",
         header: "Status",
-        cell: ({ getValue }) => <span>{getValue() as string}</span>,
+        cell: ({ getValue }) => {
+          const rawStatus = String(getValue() ?? "");
+          const status = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1).toLowerCase();
+          const statusColors: Record<string, string> = {
+            Open: "bg-green-100 text-green-800",
+            Closed: "bg-gray-100 text-gray-800",
+            Pending: "bg-yellow-100 text-yellow-800",
+            Approved: "bg-blue-100 text-blue-800",
+            Rejected: "bg-red-100 text-red-800",
+          };
+          const colorClass = statusColors[status] || "bg-gray-100 text-secondary-text-dark";
+          return (
+            <div className="flex justify-start w-full">
+              <span className={`px-2 py-1 text-xs font-medium rounded-full ${colorClass}`}>
+                {status}
+              </span>
+            </div>
+          );
+        },
+        enableHiding: false,
+      },
+      {
+        accessorKey: "calculated_at",
+        header: "Calculated At",
+        cell: ({ getValue }) => (
+          <span>
+            {(getValue() as string)?.replace("T", " ").replace(":00.000Z", "")}
+          </span>
+        ),
+        enableHiding: false,
       },
     ],
     [calculationDate]
   );
+  const defaultVisibility: Record<string, boolean> = {
+    mtm_id: false,
+    internal_reference_id: true,
+    entity: true,
+    deal_date: true,
+    maturity_date: true,
+    currency_pair: true,
+    buy_sell: true,
+    notional_amount: true,
+    contract_rate: true,
+    mtm_rate: true,
+    mtm_value: true,
+    days_to_maturity: true,
+    status: true,
+    calculated_at: false,
+  };
+
+  const [columnVisibility, setColumnVisibility] = useState(defaultVisibility);
 
   const table = useReactTable({
     data,
@@ -346,157 +368,156 @@ const AvailableForwards: React.FC<{
     onColumnOrderChange: setColumnOrder,
     getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: setPagination,
+    onColumnVisibilityChange: setColumnVisibility,
     state: {
       columnOrder,
       pagination,
+      columnVisibility,
     },
   });
 
   const conversionRates: Record<string, number> = {
-  INR: 1,
-  USD: 83.5,
-  EUR: 90,
-  GBP: 105.2,      
-  JPY: 0.58,       
-  AUD: 55.3,       
-  CAD: 61.7,       
-  CHF: 95.8,       
-  SGD: 62.5,       
-  HKD: 10.7,        
-  CNY: 11.5,       
-  AED: 22.7,
+    INR: 1,
+    USD: 83.5,
+    EUR: 90,
+    GBP: 105.2,
+    JPY: 0.58,
+    AUD: 55.3,
+    CAD: 61.7,
+    CHF: 95.8,
+    SGD: 62.5,
+    HKD: 10.7,
+    CNY: 11.5,
+    AED: 22.7,
   };
 
-  const totalMTMValueINR = table.getRowModel().rows.reduce((sum, row) => {
-    const mtmRate = getMTMRate(row.original, calculationDate, mockRateData);
-    const notional = row.original.notionalAmt;
-    const contract = row.original.contractRate;
-    if (mtmRate === undefined) return sum;
-    const value = notional * mtmRate - notional * contract;
-    const currency = row.original.currencyPair.split("/")[1] || "INR";
-    const inrValue = value * (conversionRates[currency] || 1);
-    return sum + inrValue;
+  // Sum of all MTM values (as numbers)
+  const totalMTMValue = table.getRowModel().rows.reduce((sum, row) => {
+    const val = Number(row.original.mtm_value);
+    return sum + (isNaN(val) ? 0 : val);
   }, 0);
   return (
     <>
     <div className="shadow-lg border border-border">
-      <table className="min-w-[800px] w-full table-auto">
-        <colgroup>
-          {table.getVisibleLeafColumns().map((col) => (
-            <col key={col.id} className="font-medium min-w-full" />
-          ))}
-        </colgroup>
-        <thead className="bg-secondary-color rounded-xl">
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                return (
-                  <th
-                    key={header.id}
-                    className="px-6 py-4 text-left text-sm font-semibold text-header-color uppercase tracking-wider border-b border-border"
-                    style={{ width: header.getSize() }}
-                  >
-                    <div className="px-1">
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                    </div>
-                  </th>
-                );
-              })}
-            </tr>
-          ))}
-        </thead>
-        <tbody className="divide-y">
-          {table.getRowModel().rows.length === 0 ? (
-            <tr>
-              <td
-                colSpan={columns.length}
-                className="px-6 py-12 text-left text-primary"
-              >
-                <div className="flex flex-col items-center">
-                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                    <svg
-                      className="w-6 h-6 text-primary"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+        <table className="min-w-[800px] w-full table-auto">
+          <colgroup>
+            {table.getVisibleLeafColumns().map((col) => (
+              <col key={col.id} className="font-medium min-w-full" />
+            ))}
+          </colgroup>
+          <thead className="bg-secondary-color rounded-xl">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <th
+                      key={header.id}
+                      className="px-6 py-4 text-left text-sm font-semibold text-header-color uppercase tracking-wider border-b border-border"
+                      style={{ width: header.getSize() }}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                  </div>
-                  <p className="text-xl font-medium text-primary mb-1">
-                    No Data available
-                  </p>
-                  <p className="text-md font-medium text-primary">
-                    There are no data to display at the moment.
-                  </p>
-                </div>
-              </td>
-            </tr>
-          ) : (
-            table.getRowModel().rows.map((row) => (
-              <tr
-                key={row.id}
-                className={
-                  row.index % 2 === 0
-                    ? "bg-primary-md"
-                    : "bg-secondary-color-lt"
-                }
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td
-                    key={cell.id}
-                    className="px-6 py-4 text-secondary-text-dark font-normal whitespace-nowrap text-sm border-b border-border"
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))
-          )}
-        </tbody>
-        {showSummary && (
-          <tfoot className="bg-gray-50 font-semibold text-primary text-sm border-t border-border">
-            <tr>
-              {table.getVisibleLeafColumns().map((col) => {
-                let content = null;
-                if (col.id === "mtmValue") {
-                  content = (
-                    <span
-                      className={
-                        totalMTMValueINR > 0
-                          ? "text-green-600 font-bold"
-                          : totalMTMValueINR < 0
-                          ? "text-red-600 font-bold"
-                          : "font-bold"
-                      }
-                    >
-                      {totalMTMValueINR > 0 ? "+" : totalMTMValueINR < 0 ? "-" : ""} {Math.abs(totalMTMValueINR).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} INR
-                    </span>
+                      <div className="px-1">
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                      </div>
+                    </th>
                   );
-                } else if (col.id === "forwardId") {
-                  content = `Total Contracts: ${table.getRowModel().rows.length}`;
-                }
-                return (
-                  <td key={col.id} className="px-6 py-2 text-start">
-                    {content}
-                  </td>
-                );
-              })}
-            </tr>
-          </tfoot>
-        )}
-      </table>
-      
-    </div>
-    <Pagination
+                })}
+              </tr>
+            ))}
+          </thead>
+          <tbody className="divide-y">
+            {table.getRowModel().rows.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={columns.length}
+                  className="px-6 py-12 text-left text-primary"
+                >
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                      <svg
+                        className="w-6 h-6 text-primary"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-xl font-medium text-primary mb-1">
+                      No Data available
+                    </p>
+                    <p className="text-md font-medium text-primary">
+                      There are no data to display at the moment.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              table.getRowModel().rows.map((row) => (
+                <tr
+                  key={row.id}
+                  className={
+                    row.index % 2 === 0
+                      ? "bg-primary-md"
+                      : "bg-secondary-color-lt"
+                  }
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <td
+                      key={cell.id}
+                      className="px-6 py-4 text-secondary-text-dark font-normal whitespace-nowrap text-sm border-b border-border"
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
+          </tbody>
+          {showSummary && (
+            <tfoot className="bg-gray-50 font-semibold text-primary text-sm border-t border-border">
+              <tr>
+                {table.getVisibleLeafColumns().map((col) => {
+                  let content = null;
+                  if (col.id === "mtm_value") {
+                    content = (
+                      <span
+                        className={
+                          totalMTMValue > 0
+                            ? "text-green-600 font-bold"
+                            : totalMTMValue < 0
+                            ? "text-red-600 font-bold"
+                            : "font-bold"
+                        }
+                      >
+                        {totalMTMValue > 0 ? "+" : totalMTMValue < 0 ? "-" : ""} {Math.abs(totalMTMValue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    );
+                  } else if (col.id === "mtm_id") {
+                    content = `Total Contracts: ${table.getRowModel().rows.length}`;
+                  }
+                  return (
+                    <td key={col.id} className="px-6 py-2 text-start">
+                      {content}
+                    </td>
+                  );
+                })}
+              </tr>
+            </tfoot>
+          )}
+        </table>
+      </div>
+      <Pagination
         table={table}
         totalItems={data.length}
         currentPageItems={table.getRowModel().rows.length}
@@ -511,6 +532,20 @@ const AvailableForwards: React.FC<{
 };
 
 const MTMCalculator = () => {
+  const [mtmRows, setMtmRows] = React.useState<ForwardTableColumns[]>([]);
+  const [mtmLoading, setMtmLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    setMtmLoading(true);
+    fetch("https://backend-slqi.onrender.com/api/mtm")
+      .then((res) => res.json())
+      .then((data) => {
+        setMtmRows(Array.isArray(data.data) ? data.data : []);
+      })
+      .catch(() => setMtmRows([]))
+      .finally(() => setMtmLoading(false));
+  }, []);
+
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: 10,
@@ -525,23 +560,22 @@ const MTMCalculator = () => {
   const [showSummary, setShowSummary] = useState(false);
 
   const filteredData = useMemo(() => {
-    return mockForwardTableColumns.filter((row) => {
+    return mtmRows.filter((row) => {
       const matchBank =
         selectedType === "" ||
         selectedType === "all" ||
-        row.bank === selectedType;
+        row.entity === selectedType;
       const matchCurrency =
         selectedEntity === "" ||
         selectedEntity === "all" ||
-        row.currencyPair === selectedEntity;
+        row.currency_pair === selectedEntity;
       const matchStatus =
         selectDeal === "" ||
         selectDeal === "all" ||
-        row.status.toLowerCase() === selectDeal.toLowerCase();
-
+        (row.status && row.status.toLowerCase() === selectDeal.toLowerCase());
       return matchBank && matchCurrency && matchStatus;
     });
-  }, [selectedType, selectedEntity, selectDeal]);
+  }, [mtmRows, selectedType, selectedEntity, selectDeal]);
 
   return (
     <Layout title="MTM Calculator">
@@ -594,11 +628,13 @@ const MTMCalculator = () => {
         </div>
 
         <div className="flex items-center justify-end pt-4 gap-2">
-          <div className="w-15rem">
-            <Button color="Fade">Export Results</Button>
-          </div>
+          
           <div className="w-15rem">
             <Button color="Fade">Save MTM Report</Button>
+          </div>
+
+          <div className="w-15rem">
+            <Button onClick={() => exportToExcel(filteredData, "MTM_Results")}>Export Results</Button>
           </div>
 
           <div className="w-15rem">

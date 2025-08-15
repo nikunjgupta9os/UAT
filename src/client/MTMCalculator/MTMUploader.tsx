@@ -1,4 +1,4 @@
-  import React from "react";
+import React from "react";
 import Button from "../ui/Button.tsx";
 import {
   templates,
@@ -385,6 +385,98 @@ const FxUploader: React.FC = () => {
     }
   };
 
+  const handleMTMUpload = async () => {
+    const validFiles = files.filter(
+      (file) =>
+        file.status === "success" &&
+        (!file.validationErrors || file.validationErrors.length === 0)
+    );
+
+    if (validFiles.length === 0) {
+      notify("No valid files to upload.", "warning");
+      return;
+    }
+
+    try {
+      for (const file of validFiles) {
+        let blob: Blob | File | undefined;
+        let fileName: string;
+
+        // Check if file has edited preview data
+        if ((file as any).previewEdited && (file as any).previewHeaders && (file as any).previewData) {
+          blob = convertToCSVBlob((file as any).previewHeaders, (file as any).previewData);
+          fileName = `${file.name.replace(/\.csv$/, '')}_modified.csv`;
+        } else if (file.file) {
+          blob = file.file;
+          fileName = file.name;
+        } else {
+          continue;
+        }
+
+        const formData = new FormData();
+        formData.append(
+          "files",
+          new File([blob], fileName, { type: "text/csv" })
+        );
+        formData.append("skipDuplicates", "true");
+
+        const response = await axios.post(
+          "https://backend-slqi.onrender.com/api/mtm/upload",
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+
+        if (response.data.success && response.data.results) {
+          const results = response.data.results;
+          let allSucceeded = true;
+
+          results.forEach((result) => {
+            if (result.errors?.length > 0 || result.invalidRows?.length > 0) {
+              allSucceeded = false;
+              const errorMessage =
+                result.errors?.join(", ") ||
+                `Invalid rows: ${result.invalidRows?.join(", ")}`;
+              notify(
+                `Upload partially failed for ${result.filename}: ${errorMessage}`,
+                "error"
+              );
+            } else {
+              notify(`Upload successful for ${result.filename} (${result.inserted || 0} records)`, "success");
+            }
+          });
+
+          if (allSucceeded) {
+            setPreviewStates({});
+            setFiles([]);
+          }
+        } else {
+          notify("Upload failed: " + (response.data.message || "Unknown error"), "error");
+          setFiles((prev) =>
+            prev.map((f) =>
+              f.id === file.id
+                ? { ...f, status: "error", error: response.data.message || "Upload failed" }
+                : f
+            )
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Error uploading files:", error);
+      setFiles((prev) =>
+        prev.map((f) => ({
+          ...f,
+          status: "error",
+          error: "Upload failed",
+        }))
+      );
+      notify("Error uploading files. Please try again.", "error");
+    }
+  };
+
   const handleSavePreview = (fileId: string) => {
     // Save the edited preview data to the file state
     setFiles((prevFiles) =>
@@ -551,7 +643,7 @@ const FxUploader: React.FC = () => {
                 <span className="text-white">Import Data</span>
               </Button>
 
-              <Button onClick={handleSetManually}>
+              <Button onClick={handleMTMUpload}>
                 <span className="text-white">Submit</span>
               </Button>
             </div>

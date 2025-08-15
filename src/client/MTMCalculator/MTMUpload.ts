@@ -9,7 +9,7 @@ export const mtmDisplayHeaders = [
   "Notional Amount",
   "Contract Rate",
   "MTM Rate",
-  "Days to Maturity",
+  // "Days to Maturity",
   "Entity",
 ];
 
@@ -23,23 +23,21 @@ export const mtmBackendHeaders = [
   "notional_amount",
   "contract_rate",
   "mtm_rate",
-  "days_to_maturity",
+  // "days_to_maturity",
   "entity",
 ];
 
 // Sample row for template
 const mtmSampleRow = [
-  "INTREF001",
-  "2025-08-01",
-  "2025-12-31",
-  "USD/INR",
-  "Buy",
-  "1000000",
-  "83.50",
-  "84.00",
-  "500000",
-  "4M",
-  "EntityA",
+  "21386746",         // Internal Reference ID
+  "2025-05-30",      // Deal Date (converted to YYYY-MM-DD)
+  "2025-08-28",      // Maturity Date (converted to YYYY-MM-DD)
+  "CNH/INR",         // Currency Pair
+  "Sell",            // Buy/Sell
+  "7659652",         // Notional Amount
+  "12.0425",         // Contract Rate
+  "12.07440047",     // MTM Rate
+  "TTRL",            // Entity
 ];
 
 export const templates = [
@@ -112,12 +110,12 @@ const validateColumns = (
     });
   }
   // Check extra
-  const extraHeaders = headers.filter((h) => !expected.includes(h));
-  if (extraHeaders.length > 0) {
-    ifValidationErrors.push({
-      description: `Unexpected headers found: ${extraHeaders.join(", ")}`
-    });
-  }
+  // const extraHeaders = headers.filter((h) => !expected.includes(h));
+  // if (extraHeaders.length > 0) {
+  //   ifValidationErrors.push({
+  //     description: `Unexpected headers found: ${extraHeaders.join(", ")}`
+  //   });
+  // }
 };
 
 // Validate rows for MTM
@@ -153,9 +151,10 @@ const validateRow = (
       "contract_rate",
       "mtm_rate",
       // "mtm_value",
-      "days_to_maturity",
+      // "days_to_maturity",
       "entity",
     ];
+    
     requiredFields.forEach((field) => {
       if (!rowObj[field]) {
         hasMissingValues = true;
@@ -174,7 +173,7 @@ const validateRow = (
       "contract_rate",
       "mtm_rate",
       // "mtm_value",
-      "days_to_maturity",
+      // "days_to_maturity",
     ];
     numericFields.forEach((field) => {
       if (rowObj[field] && isNaN(Number(rowObj[field]))) {
@@ -423,7 +422,7 @@ const displayToBackendMap: Record<string, string> = {
   "Contract Rate": "contract_rate",
   "MTM Rate": "mtm_rate",
   // "MTM Value": "mtm_value",
-  "Days to Maturity": "days_to_maturity",
+  // "Days to Maturity": "days_to_maturity",
   "Entity": "entity",
 };
 
