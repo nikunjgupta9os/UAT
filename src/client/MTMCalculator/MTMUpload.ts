@@ -9,7 +9,6 @@ export const mtmDisplayHeaders = [
   "Notional Amount",
   "Contract Rate",
   "MTM Rate",
-  "MTM Value",
   "Days to Maturity",
   "Entity",
 ];
@@ -24,7 +23,6 @@ export const mtmBackendHeaders = [
   "notional_amount",
   "contract_rate",
   "mtm_rate",
-  "mtm_value",
   "days_to_maturity",
   "entity",
 ];
@@ -154,7 +152,7 @@ const validateRow = (
       "notional_amount",
       "contract_rate",
       "mtm_rate",
-      "mtm_value",
+      // "mtm_value",
       "days_to_maturity",
       "entity",
     ];
@@ -175,7 +173,7 @@ const validateRow = (
       "notional_amount",
       "contract_rate",
       "mtm_rate",
-      "mtm_value",
+      // "mtm_value",
       "days_to_maturity",
     ];
     numericFields.forEach((field) => {
@@ -424,7 +422,7 @@ const displayToBackendMap: Record<string, string> = {
   "Notional Amount": "notional_amount",
   "Contract Rate": "contract_rate",
   "MTM Rate": "mtm_rate",
-  "MTM Value": "mtm_value",
+  // "MTM Value": "mtm_value",
   "Days to Maturity": "days_to_maturity",
   "Entity": "entity",
 };
