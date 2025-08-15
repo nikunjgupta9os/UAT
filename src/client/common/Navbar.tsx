@@ -1,25 +1,9 @@
-
 "use client";
 
 import "../styles/theme.css";
 import { motion } from "framer-motion";
 import loginImage from "../../public/assets/logo.png";
 import TacoLogo from "../../public/assets/taco.png";
-import React, { useEffect, useState, useRef } from "react";
-import {
-  Home,
-  CreditCard,
-  TrendingUp,
-  Shield,
-  Bell,
-  User,
-  Mail,
-  Calendar,
-} from "lucide-react";
-import axios from "axios";
-import FXTickerPro from "./FXTickerPro";
-import ThemeToggle from "./ThemeToggle";
-import { useNavigate } from "react-router-dom";
 
 // Constants
 const CURRENCIES_TO_SHOW = ["INR", "EUR", "GBP", "JPY", "AUD"];
@@ -187,6 +171,14 @@ const UserDropdown: React.FC<{
 
 // ---- Main Navbar ---- //
 
+import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+// Replace react-feather imports with lucide-react
+import { Home, CreditCard, TrendingUp, Shield, Bell, User, Mail, Calendar } from "lucide-react";
+import ThemeToggle from "./ThemeToggle";
+import FXTickerPro from "./FXTickerPro";
+
 const Navbar: React.FC = () => {
   const [activeNav, setActiveNav] = useState("Dashboard");
   const [rates, setRates] = useState<Record<string, number>>({});
@@ -198,6 +190,10 @@ const Navbar: React.FC = () => {
   const [unreadCount, setUnreadCount] = useState(mockNotifications.filter((n) => !n.read).length);
   const navigate = useNavigate();
 
+  // Add refs for dropdowns
+  const notificationsRef = useRef<HTMLDivElement>(null);
+  const userDropdownRef = useRef<HTMLDivElement>(null);
+
   const handleLogout = async () => {
     const userId = localStorage.getItem("userId");
     try {
@@ -205,7 +201,7 @@ const Navbar: React.FC = () => {
       localStorage.clear();
       navigate("/", { replace: true });
     } catch (err) {
-      console.error("Logout failed:", err);
+      // console.error("Logout failed:", err)
     }
   };
 
@@ -219,7 +215,7 @@ const Navbar: React.FC = () => {
         setUserData({ name: u.name, email: u.email, lastLoginTime: u.lastLoginTime, role: u.role });
       }
     } catch (err) {
-      console.error("Failed to fetch user details:", err);
+      // console.error("Failed to fetch user details:", err)
     }
   };
 
@@ -252,6 +248,38 @@ const Navbar: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Handle click outside for dropdowns
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        notificationsRef.current &&
+        !notificationsRef.current.contains(event.target as Node) &&
+        userDropdownRef.current &&
+        !userDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsNotificationsVisible(false);
+        setIsUserDetailsVisible(false);
+      } else if (
+        notificationsRef.current &&
+        !notificationsRef.current.contains(event.target as Node)
+      ) {
+        setIsNotificationsVisible(false);
+      } else if (
+        userDropdownRef.current &&
+        !userDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsUserDetailsVisible(false);
+      }
+    }
+
+    if (isNotificationsVisible || isUserDetailsVisible) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isNotificationsVisible, isUserDetailsVisible]);
+
   return (
     <nav className="fixed top-0 right-0 h-[4rem] bg-body flex items-center pl-[6rem] shadow-sm z-30 transition-all duration-500 w-full">
       <div className="flex items-center">
@@ -264,7 +292,7 @@ const Navbar: React.FC = () => {
       </div>
       <div className="flex items-center space-x-4 mr-4">
         <ThemeToggle />
-        <div className="relative cursor-pointer transition-colors">
+        <div className="relative cursor-pointer transition-colors" ref={notificationsRef}>
           <div onClick={toggleNotifications}>
             <Bell size={20} className="text-text hover:text-primary-lt" />
             {unreadCount > 0 && (
@@ -275,7 +303,7 @@ const Navbar: React.FC = () => {
           </div>
           <NotificationsDropdown isOpen={isNotificationsVisible} notifications={notifications} />
         </div>
-        <div className="relative">
+        <div className="relative" ref={userDropdownRef}>
           <div onClick={toggleUserDetails} className="flex items-center space-x-2 cursor-pointer hover:bg-primary-xl px-3 py-2 rounded-full transition-colors">
             <div className="w-8 h-8 bg-primary-md rounded-full flex items-center justify-center">
               <User size={16} className="text-primary-lt" />
