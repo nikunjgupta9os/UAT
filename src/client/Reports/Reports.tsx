@@ -9,6 +9,7 @@ import { Mail, FileText, Download } from "lucide-react";
 import { exportToExcel, exportToPDF } from "../ui/exportToExcel";
 import { ColumnPicker } from "../common/ColumnPicker";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import Pagination from "../ui/Pagination";
 // import LoadingSpinner from "../ui/LoadingSpinner";
 
 import {
@@ -21,9 +22,8 @@ import {
 } from "@tanstack/react-table";
 import Button from "../ui/Button";
 
-
 import axios from "axios";
-import LoadingSpinner from '../ui/LoadingSpinner';
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 // Fallback mock data in case API fails
 const mockLinkedSummaryDataByCategory = {
@@ -33,7 +33,6 @@ const mockLinkedSummaryDataByCategory = {
   "Exposure Positions": [],
 };
 
-
 const getFxTypeOptions = (
   dataByCategory: Record<string, Record<string, any>[]>
 ) => {
@@ -42,8 +41,6 @@ const getFxTypeOptions = (
     label: key,
   }));
 };
-
-
 
 // We'll set typeOptions after fetching data
 
@@ -58,9 +55,10 @@ function getUniqueOptions(data: Record<string, any>[], key: string) {
 
 const nonDraggableColumns = ["actions", "select"];
 
-
 function Reports() {
-  const [linkedSummaryData, setLinkedSummaryData] = useState<Record<string, Record<string, any>[]>>(mockLinkedSummaryDataByCategory);
+  const [linkedSummaryData, setLinkedSummaryData] = useState<
+    Record<string, Record<string, any>[]>
+  >(mockLinkedSummaryDataByCategory);
   const [selectedType, setSelectedType] = useState("Fwd Booking");
   const [data, setData] = useState<Record<string, any>[]>([]);
   const [filteredData, setFilteredData] = useState<Record<string, any>[]>([]);
@@ -68,6 +66,7 @@ function Reports() {
     pageIndex: 0,
     pageSize: 5,
   });
+
   const [loading, setLoading] = useState(false);
   // Filter states
   const [filters, setFilters] = useState({
@@ -79,27 +78,36 @@ function Reports() {
 
   // These states are now always in sync with the current data
   const [columns, setColumns] = useState<ColumnDef<Record<string, any>>[]>([]);
-  const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
+  const [columnVisibility, setColumnVisibility] = useState<
+    Record<string, boolean>
+  >({});
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
 
   // Grouping state
   const [groupBy, setGroupBy] = useState<string[]>([]);
-  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  const [collapsedGroups, setCollapsedGroups] = useState<
+    Record<string, boolean>
+  >({});
+
+  // Pagination helpers must be after table is defined
 
   // Helper to group data by multiple keys
   function groupData(data: Record<string, any>[], keys: string[] = []) {
     if (!keys.length) return null;
-    const groupRecursive = (rows: Record<string, any>[], depth: number): any => {
+    const groupRecursive = (
+      rows: Record<string, any>[],
+      depth: number
+    ): any => {
       if (depth >= keys.length) return rows;
       const key = keys[depth];
       const groups: Record<string, any> = {};
-      rows.forEach(row => {
+      rows.forEach((row) => {
         const groupVal = row[key] ?? "(Blank)";
         if (!groups[groupVal]) groups[groupVal] = [];
         groups[groupVal].push(row);
       });
       // Recursively group subgroups
-      Object.keys(groups).forEach(g => {
+      Object.keys(groups).forEach((g) => {
         groups[g] = groupRecursive(groups[g], depth + 1);
       });
       return groups;
@@ -124,10 +132,18 @@ function Reports() {
     if (!columns.length) return [];
     // Add a clear option at the top
     return [
-      { value: '', label: 'Ungroup (Show All)' },
+      { value: "", label: "Ungroup (Show All)" },
       ...columns
-        .filter(col => typeof (col as any).accessorKey === 'string' && !nonDraggableColumns.includes((col as any).accessorKey))
-        .map(col => ({ value: (col as any).accessorKey as string, label: (typeof col.header === 'string' ? col.header : String(col.header)) }))
+        .filter(
+          (col) =>
+            typeof (col as any).accessorKey === "string" &&
+            !nonDraggableColumns.includes((col as any).accessorKey)
+        )
+        .map((col) => ({
+          value: (col as any).accessorKey as string,
+          label:
+            typeof col.header === "string" ? col.header : String(col.header),
+        })),
     ];
   }, [columns]);
 
@@ -137,16 +153,20 @@ function Reports() {
       try {
         setLoading(true);
         // Fetch main reports
-        const response = await axios.get("https://backend-slqi.onrender.com/api/forwards/linked-summary-by-category");
-        let data: Record<string, any[]> = response.data && typeof response.data === "object" ? response.data : {};
+        const response = await axios.get(
+          "https://backend-slqi.onrender.com/api/forwards/linked-summary-by-category"
+        );
+        let data: Record<string, any[]> =
+          response.data && typeof response.data === "object"
+            ? response.data
+            : {};
 
         // Fetch exposure positions report
         try {
-          const exposureRes = await axios.get("https://backend-slqi.onrender.com/api/forwards/exposure/summary");
-          if (
-            exposureRes.data &&
-            Array.isArray(exposureRes.data.summary)
-          ) {
+          const exposureRes = await axios.get(
+            "https://backend-slqi.onrender.com/api/forwards/exposure/summary"
+          );
+          if (exposureRes.data && Array.isArray(exposureRes.data.summary)) {
             data["Exposure Positions"] = exposureRes.data.summary;
           } else if (Array.isArray(exposureRes.data)) {
             data["Exposure Positions"] = exposureRes.data;
@@ -202,11 +222,17 @@ function Reports() {
 
   // Helper: format numbers to 3-4 decimal places
   function formatNumber(val: number | string, decimals = 3) {
-    if (typeof val === 'number') {
-      return val.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    if (typeof val === "number") {
+      return val.toLocaleString(undefined, {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      });
     }
-    if (typeof val === 'string' && !isNaN(Number(val))) {
-      return Number(val).toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    if (typeof val === "string" && !isNaN(Number(val))) {
+      return Number(val).toLocaleString(undefined, {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      });
     }
     return val;
   }
@@ -260,17 +286,28 @@ function Reports() {
       let sumRow: Record<string, number | string> = {};
       if (isLastLevel && rows.length) {
         visibleColumns.forEach((col, colIdx) => {
-          const values = rows.map(r => r[col.id]);
+          const values = rows.map((r) => r[col.id]);
           // Sum if all values are numbers, or if col.id is in alwaysSumColumns and values are numbers
-          if (values.every(v => typeof v === 'number')) {
+          if (values.every((v) => typeof v === "number")) {
             sumRow[col.id] = values.reduce((a, b) => a + b, 0);
           } else if (alwaysSumColumns.includes(col.id)) {
             // Try to sum if possible (e.g. string numbers)
-            const numericValues = values.map(v => typeof v === 'number' ? v : (typeof v === 'string' && !isNaN(Number(v)) ? Number(v) : null)).filter(v => typeof v === 'number');
-            if (numericValues.length === values.length && numericValues.length > 0) {
+            const numericValues = values
+              .map((v) =>
+                typeof v === "number"
+                  ? v
+                  : typeof v === "string" && !isNaN(Number(v))
+                  ? Number(v)
+                  : null
+              )
+              .filter((v) => typeof v === "number");
+            if (
+              numericValues.length === values.length &&
+              numericValues.length > 0
+            ) {
               sumRow[col.id] = numericValues.reduce((a, b) => a + b, 0);
             } else {
-              sumRow[col.id] = '';
+              sumRow[col.id] = "";
             }
           }
         });
@@ -279,27 +316,63 @@ function Reports() {
       const firstColIdx = 0;
       return (
         <>
-          <tr key={groupId} className="bg-gray-100 cursor-pointer" onClick={() => setCollapsedGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }))}>
-            <td colSpan={visibleColumns.length} className="px-6 py-2 font-bold text-primary flex items-center">
-              <span className="mr-2">{isCollapsed ? '+' : '-'}</span>
-              {groupKey ? `${columns.find(c => (c as any).accessorKey === groupKey)?.header || groupKey}: ` : ''}{group}
-              {isLastLevel && rows.length ? <span className="ml-2 text-xs text-gray-500">({rows.length})</span> : null}
+          <tr
+            key={groupId}
+            className="bg-gray-100 cursor-pointer"
+            onClick={() =>
+              setCollapsedGroups((prev) => ({
+                ...prev,
+                [groupId]: !prev[groupId],
+              }))
+            }
+          >
+            <td
+              colSpan={visibleColumns.length}
+              className="px-6 py-2 font-bold text-primary flex items-center"
+            >
+              <span className="mr-2">{isCollapsed ? "+" : "-"}</span>
+              {groupKey
+                ? `${
+                    columns.find((c) => (c as any).accessorKey === groupKey)
+                      ?.header || groupKey
+                  }: `
+                : ""}
+              {group}
+              {isLastLevel && rows.length ? (
+                <span className="ml-2 text-xs text-gray-500">
+                  ({rows.length})
+                </span>
+              ) : null}
             </td>
           </tr>
-          {!isCollapsed && (
-            isLastLevel ? (
+          {!isCollapsed &&
+            (isLastLevel ? (
               <>
                 {rows.map((row, rowIdx) => (
-                  <tr key={groupId + '-' + rowIdx} className={rowIdx % 2 === 0 ? "bg-primary-md" : "bg-secondary-color-lt"}>
+                  <tr
+                    key={groupId + "-" + rowIdx}
+                    className={
+                      rowIdx % 2 === 0
+                        ? "bg-primary-md"
+                        : "bg-secondary-color-lt"
+                    }
+                  >
                     {visibleColumns.map((col) => {
                       const val = row[col.id];
-                      const colDef = columns.find(c => (c as any).accessorKey === col.id);
+                      const colDef = columns.find(
+                        (c) => (c as any).accessorKey === col.id
+                      );
                       let cellContent = val;
                       if (colDef && colDef.cell) {
-                        cellContent = (colDef.cell as any)({ getValue: () => val });
+                        cellContent = (colDef.cell as any)({
+                          getValue: () => val,
+                        });
                       }
                       return (
-                        <td key={col.id} className="px-6 py-4 whitespace-nowrap text-sm border-b border-border">
+                        <td
+                          key={col.id}
+                          className="px-6 py-4 whitespace-nowrap text-sm border-b border-border"
+                        >
                           {cellContent}
                         </td>
                       );
@@ -308,18 +381,29 @@ function Reports() {
                 ))}
                 {/* Sum row for numeric columns and alwaysSumColumns */}
                 {Object.keys(sumRow).length > 0 && (
-                  <tr key={groupId + '-sum'} className="bg-gray-200 font-semibold">
+                  <tr
+                    key={groupId + "-sum"}
+                    className="bg-gray-200 font-semibold"
+                  >
                     {visibleColumns.map((col, colIdx) => {
                       if (colIdx === firstColIdx) {
                         return (
-                          <td key={col.id} className="px-6 py-2 border-b border-border text-left font-bold">
+                          <td
+                            key={col.id}
+                            className="px-6 py-2 border-b border-border text-left font-bold"
+                          >
                             Total
                           </td>
                         );
                       }
                       return (
-                        <td key={col.id} className="px-6 py-2 border-b border-border text-right">
-                          {sumRow[col.id] !== undefined && sumRow[col.id] !== '' ? formatNumber(sumRow[col.id]) : ''}
+                        <td
+                          key={col.id}
+                          className="px-6 py-2 border-b border-border text-right"
+                        >
+                          {sumRow[col.id] !== undefined && sumRow[col.id] !== ""
+                            ? formatNumber(sumRow[col.id])
+                            : ""}
                         </td>
                       );
                     })}
@@ -327,9 +411,11 @@ function Reports() {
                 )}
               </>
             ) : (
-              renderGroupedRows(rowsOrSubgroups, depth + 1, [...parentKeys, group])
-            )
-          )}
+              renderGroupedRows(rowsOrSubgroups, depth + 1, [
+                ...parentKeys,
+                group,
+              ])
+            ))}
         </>
       );
     });
@@ -350,7 +436,7 @@ function Reports() {
         "counterparty",
         "currency_pair",
         "booking_amount",
-        "settlement_date"
+        "settlement_date",
       ]);
     } else {
       defaultVisible = new Set(allKeys.slice(0, 4));
@@ -367,10 +453,25 @@ function Reports() {
           return <span>{formatted}</span>;
         }
         // Format numbers for booking_amount and other numeric columns
-        if (["booking_amount", "actual_value_base_currency", "bank_margin", "total_rate", "value_quote_currency"].includes(key) && val !== undefined && val !== null && val !== "") {
+        if (
+          [
+            "booking_amount",
+            "actual_value_base_currency",
+            "bank_margin",
+            "total_rate",
+            "value_quote_currency",
+          ].includes(key) &&
+          val !== undefined &&
+          val !== null &&
+          val !== ""
+        ) {
           return <span>{formatNumber(val as number | string)}</span>;
         }
-        return val === undefined || val === null ? "" : <span>{val as string}</span>;
+        return val === undefined || val === null ? (
+          ""
+        ) : (
+          <span>{val as string}</span>
+        );
       },
       enableHiding: !defaultVisible.has(key),
     }));
@@ -398,13 +499,21 @@ function Reports() {
     pageCount: Math.ceil(filteredData.length / pagination.pageSize),
   });
 
+  // Pagination helpers for Pagination component (must be after table is defined)
+  const totalItems = filteredData.length;
+  const currentPageItems = table.getPaginationRowModel().rows.length;
+  const startIndex =
+    totalItems === 0 ? 0 : pagination.pageIndex * pagination.pageSize + 1;
+  const endIndex = Math.min(
+    (pagination.pageIndex + 1) * pagination.pageSize,
+    totalItems
+  );
+
   // Update data and columns when selectedType or linkedSummaryData changes
   useEffect(() => {
     if (selectedType && linkedSummaryData) {
       const newData =
-        linkedSummaryData[
-          selectedType as keyof typeof linkedSummaryData
-        ] ?? [];
+        linkedSummaryData[selectedType as keyof typeof linkedSummaryData] ?? [];
       setData(newData);
       setFilteredData(newData);
 
@@ -424,7 +533,7 @@ function Reports() {
           "currency_pair",
           "booking_amount",
           "settlement_date",
-          "maturity_date"
+          "maturity_date",
         ];
         defaultVisibility = newColumnOrder.reduce(
           (acc, key) => ({ ...acc, [key]: defaultCols.includes(key) }),
@@ -441,50 +550,95 @@ function Reports() {
       setPagination((prev) => ({ ...prev, pageIndex: 0 }));
 
       // Reset filters on type change
-      setFilters({ orderType: null, currencyPair: null, entity: null, bank: null });
+      setFilters({
+        orderType: null,
+        currencyPair: null,
+        entity: null,
+        bank: null,
+      });
     }
   }, [selectedType, linkedSummaryData]);
 
   // Type options and filter options for dropdowns (dynamically from data)
-  const typeOptions = useMemo(() => getFxTypeOptions(linkedSummaryData), [linkedSummaryData]);
-  const orderTypeOptions = useMemo(() => getUniqueOptions(data, "order_type"), [data]);
-  const currencyPairOptions = useMemo(() => getUniqueOptions(data, "currency_pair"), [data]);
+  const typeOptions = useMemo(
+    () => getFxTypeOptions(linkedSummaryData),
+    [linkedSummaryData]
+  );
+  const orderTypeOptions = useMemo(
+    () => getUniqueOptions(data, "order_type"),
+    [data]
+  );
+  const currencyPairOptions = useMemo(
+    () => getUniqueOptions(data, "currency_pair"),
+    [data]
+  );
   // Entity dropdown: use correct key for Exposure Positions, fallback to entity_level_3 for others
   const entityOptions = useMemo(() => {
     if (selectedType === "Exposure Positions") {
       // Try to find a suitable entity key in the data
       // Common keys: entity, entity_name, entity_level_3, etc.
-      const possibleKeys = ["entity", "entity_name", "entity_level_3", "entity_level_2", "entity_level_0"];
-      const key = data.length > 0 ? possibleKeys.find(k => k in data[0]) : "entity";
+      const possibleKeys = [
+        "entity",
+        "entity_name",
+        "entity_level_3",
+        "entity_level_2",
+        "entity_level_0",
+      ];
+      const key =
+        data.length > 0 ? possibleKeys.find((k) => k in data[0]) : "entity";
       return getUniqueOptions(data, key || "entity");
     } else {
       return getUniqueOptions(data, "entity_level_3");
     }
   }, [data, selectedType]);
-  const bankOptions = useMemo(() => getUniqueOptions(data, "counterparty"), [data]);
+  const bankOptions = useMemo(
+    () => getUniqueOptions(data, "counterparty"),
+    [data]
+  );
 
   // Filtering logic
   const handleSearch = () => {
     let filtered = [...data];
-    if (filters.orderType) filtered = filtered.filter(row => row.order_type === filters.orderType);
-    if (filters.currencyPair) filtered = filtered.filter(row => row.currency_pair === filters.currencyPair);
+    if (filters.orderType)
+      filtered = filtered.filter((row) => row.order_type === filters.orderType);
+    if (filters.currencyPair)
+      filtered = filtered.filter(
+        (row) => row.currency_pair === filters.currencyPair
+      );
     // Entity filter: use correct key for Exposure Positions
     if (filters.entity) {
       if (selectedType === "Exposure Positions") {
-        const possibleKeys = ["entity", "entity_name", "entity_level_3", "entity_level_2", "entity_level_0"];
-        const key = data.length > 0 ? possibleKeys.find(k => k in data[0]) : "entity";
-        filtered = filtered.filter(row => row[key || "entity"] === filters.entity);
+        const possibleKeys = [
+          "entity",
+          "entity_name",
+          "entity_level_3",
+          "entity_level_2",
+          "entity_level_0",
+        ];
+        const key =
+          data.length > 0 ? possibleKeys.find((k) => k in data[0]) : "entity";
+        filtered = filtered.filter(
+          (row) => row[key || "entity"] === filters.entity
+        );
       } else {
-        filtered = filtered.filter(row => row.entity_level_3 === filters.entity);
+        filtered = filtered.filter(
+          (row) => row.entity_level_3 === filters.entity
+        );
       }
     }
-    if (filters.bank) filtered = filtered.filter(row => row.counterparty === filters.bank);
+    if (filters.bank)
+      filtered = filtered.filter((row) => row.counterparty === filters.bank);
     setFilteredData(filtered);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
   const handleReset = () => {
-    setFilters({ orderType: null, currencyPair: null, entity: null, bank: null });
+    setFilters({
+      orderType: null,
+      currencyPair: null,
+      entity: null,
+      bank: null,
+    });
     setFilteredData(data);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
     setGroupBy([]);
@@ -515,9 +669,9 @@ function Reports() {
     const rows = getVisibleRows();
     const cols = visibleColumns;
     // Map rows to only visible columns
-    const exportRows = rows.map(row => {
+    const exportRows = rows.map((row) => {
       const obj: Record<string, any> = {};
-      cols.forEach(col => {
+      cols.forEach((col) => {
         obj[col.id] = row[col.id];
       });
       return obj;
@@ -526,18 +680,29 @@ function Reports() {
     if (rows.length) {
       let sumRow: Record<string, number | string> = {};
       cols.forEach((col, colIdx) => {
-        const values = rows.map(r => r[col.id]);
+        const values = rows.map((r) => r[col.id]);
         if (colIdx === 0) {
-          sumRow[col.id] = 'Total';
-        } else if (values.every(v => typeof v === 'number')) {
+          sumRow[col.id] = "Total";
+        } else if (values.every((v) => typeof v === "number")) {
           sumRow[col.id] = values.reduce((a, b) => a + b, 0);
         } else {
           // Try to sum if possible (e.g. string numbers)
-          const numericValues = values.map(v => typeof v === 'number' ? v : (typeof v === 'string' && !isNaN(Number(v)) ? Number(v) : null)).filter(v => typeof v === 'number');
-          if (numericValues.length === values.length && numericValues.length > 0) {
+          const numericValues = values
+            .map((v) =>
+              typeof v === "number"
+                ? v
+                : typeof v === "string" && !isNaN(Number(v))
+                ? Number(v)
+                : null
+            )
+            .filter((v) => typeof v === "number");
+          if (
+            numericValues.length === values.length &&
+            numericValues.length > 0
+          ) {
             sumRow[col.id] = numericValues.reduce((a, b) => a + b, 0);
           } else {
-            sumRow[col.id] = '';
+            sumRow[col.id] = "";
           }
         }
       });
@@ -549,26 +714,37 @@ function Reports() {
   const handleExportPDF = () => {
     // Only export visible columns and visible data
     const rows = getVisibleRows();
-    const pdfColumns = visibleColumns.map(col => ({
+    const pdfColumns = visibleColumns.map((col) => ({
       header: col.columnDef.header,
-      accessorKey: col.id
+      accessorKey: col.id,
     }));
     // Add sum row at the end
     let sumRow: Record<string, number | string> = {};
     if (rows.length) {
       visibleColumns.forEach((col, colIdx) => {
-        const values = rows.map(r => r[col.id]);
+        const values = rows.map((r) => r[col.id]);
         if (colIdx === 0) {
-          sumRow[col.id] = 'Total';
-        } else if (values.every(v => typeof v === 'number')) {
+          sumRow[col.id] = "Total";
+        } else if (values.every((v) => typeof v === "number")) {
           sumRow[col.id] = values.reduce((a, b) => a + b, 0);
         } else {
           // Try to sum if possible (e.g. string numbers)
-          const numericValues = values.map(v => typeof v === 'number' ? v : (typeof v === 'string' && !isNaN(Number(v)) ? Number(v) : null)).filter(v => typeof v === 'number');
-          if (numericValues.length === values.length && numericValues.length > 0) {
+          const numericValues = values
+            .map((v) =>
+              typeof v === "number"
+                ? v
+                : typeof v === "string" && !isNaN(Number(v))
+                ? Number(v)
+                : null
+            )
+            .filter((v) => typeof v === "number");
+          if (
+            numericValues.length === values.length &&
+            numericValues.length > 0
+          ) {
             sumRow[col.id] = numericValues.reduce((a, b) => a + b, 0);
           } else {
-            sumRow[col.id] = '';
+            sumRow[col.id] = "";
           }
         }
       });
@@ -585,105 +761,131 @@ function Reports() {
     console.log("Email functionality would go here");
   };
 
-  return(
-  <Layout title="Reports">
-    <div className="space-y-4">
-      {/* FX Type Selector (above filters) */}
-      <div className="grid z-50 grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-4 mb-24">
-        <CustomSelect
-          label="Select FX Type"
-          options={typeOptions}
-          selectedValue={selectedType}
-          onChange={(value) => setSelectedType(Array.isArray(value) ? value[0] : value as string)}
-          placeholder="Select type"
-          isClearable={false}
-        />
-      </div>
-
-      <div className="flex gap-4 py-4 items-end max-w-5xl">
-        <CustomSelect
-          label="Order type"
-          options={orderTypeOptions}
-          selectedValue={filters.orderType}
-          onChange={(value) => setFilters((f) => ({ ...f, orderType: Array.isArray(value) ? value[0] : value as string }))}
-          placeholder="Order type"
-          isClearable={true}
-        />
-        <CustomSelect
-          label="Currency pair"
-          options={currencyPairOptions}
-          selectedValue={filters.currencyPair}
-          onChange={(value) => setFilters((f) => ({ ...f, currencyPair: Array.isArray(value) ? value[0] : value as string }))}
-          placeholder="Currency pair"
-          isClearable={true}
-        />
-        <CustomSelect
-          label="Entity"
-          options={entityOptions}
-          selectedValue={filters.entity}
-          onChange={(value) => setFilters((f) => ({ ...f, entity: Array.isArray(value) ? value[0] : value as string }))}
-          placeholder="Entity"
-          isClearable={true}
-        />
-        <CustomSelect
-          label="Bank"
-          options={bankOptions}
-          selectedValue={filters.bank}
-          onChange={(value) => setFilters((f) => ({ ...f, bank: Array.isArray(value) ? value[0] : value as string }))}
-          placeholder="Bank"
-          isClearable={true}
-        />
-        <div className="flex gap-4 ml-4">  
-          <Button
-            categories="Large"
-            onClick={handleSearch}
-          >
-            Search
-          </Button>
-          <Button
-            categories="Large"
-            onClick={handleReset}
-          >
-            Reset
-          </Button>
-        </div>
-      </div>
-
-      {/* Group By Dropdown */}
-      <div className="flex gap-4 items-end max-w-5xl mb-2">
-        <div style={{ minWidth: 180, maxWidth: 320 }}>
+  return (
+    <Layout title="Reports">
+      <div className="space-y-4">
+        {/* FX Type Selector (above filters) */}
+        <div className="grid z-50 grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-4 mb-8">
+          {/* <div style={{ minWidth: 260, maxWidth: 320 }}> */}
           <CustomSelect
-            label="Group By"
-            options={groupByOptions}
-            selectedValue={groupBy}
-            onChange={(vals) => {
-              if (!vals || (Array.isArray(vals) && vals.length === 0)) {
-                setGroupBy([]);
-                setCollapsedGroups({});
-              } else {
-                setGroupBy(Array.isArray(vals) ? vals : [vals]);
-              }
-            }}
-            placeholder="Select column(s) to group by"
-            isClearable={true}
-            isMulti={true}
+            label="Select FX Type"
+            options={typeOptions}
+            selectedValue={selectedType}
+            onChange={(value) =>
+              setSelectedType(
+                Array.isArray(value) ? value[0] : (value as string)
+              )
+            }
+            placeholder="Select type"
+            isClearable={false}
           />
+          {/* </div> */}
         </div>
-      </div>
 
-      <div className="flex items-center justify-between gap-2">
-        <div>
-          <ColumnPicker table={table} />
+        <div className="flex gap-4 items-end">
+          <CustomSelect
+            label="Order type"
+            options={orderTypeOptions}
+            selectedValue={filters.orderType}
+            onChange={(value) =>
+              setFilters((f) => ({
+                ...f,
+                orderType: Array.isArray(value) ? value[0] : (value as string),
+              }))
+            }
+            placeholder="Order type"
+            isClearable={true}
+          />
+          <CustomSelect
+            label="Currency pair"
+            options={currencyPairOptions}
+            selectedValue={filters.currencyPair}
+            onChange={(value) =>
+              setFilters((f) => ({
+                ...f,
+                currencyPair: Array.isArray(value)
+                  ? value[0]
+                  : (value as string),
+              }))
+            }
+            placeholder="Currency pair"
+            isClearable={true}
+          />
+          <CustomSelect
+            label="Entity"
+            options={entityOptions}
+            selectedValue={filters.entity}
+            onChange={(value) =>
+              setFilters((f) => ({
+                ...f,
+                entity: Array.isArray(value) ? value[0] : (value as string),
+              }))
+            }
+            placeholder="Entity"
+            isClearable={true}
+          />
+          <CustomSelect
+            label="Bank"
+            options={bankOptions}
+            selectedValue={filters.bank}
+            onChange={(value) =>
+              setFilters((f) => ({
+                ...f,
+                bank: Array.isArray(value) ? value[0] : (value as string),
+              }))
+            }
+            placeholder="Bank"
+            isClearable={true}
+          />
+          <div className="flex gap-4 ml-4">
+            <Button categories="Large" onClick={handleSearch}>
+              Search
+            </Button>
+            <Button color="Fade" categories="Large" onClick={handleReset}>
+              Reset
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center justify-end gap-x-6">
-          <div className="flex items-center justify-end gap-x-6">
+
+        {/* Group By Dropdown */}
+        <div className="flex items-center justify-between gap-4 pt-8 flex-wrap">
+          {/* LEFT SIDE: column picker + group by dropdown */}
+          <div className="flex items-center gap-8 flex-wrap">
+            <div>
+              <ColumnPicker table={table} />
+            </div>
+            <div
+              className="relative -top-3"
+              style={{ minWidth: 260, maxWidth: 320 }}
+            >
+              <CustomSelect
+                label="Group By"
+                options={groupByOptions}
+                selectedValue={groupBy}
+                onChange={(vals) => {
+                  if (!vals || (Array.isArray(vals) && vals.length === 0)) {
+                    setGroupBy([]);
+                    setCollapsedGroups({});
+                  } else {
+                    setGroupBy(Array.isArray(vals) ? vals : [vals]);
+                  }
+                }}
+                placeholder="Select column(s) to group by"
+                isClearable={true}
+                isMulti={true}
+              />
+            </div>
+          </div>
+
+          {/* RIGHT SIDE: download / export / email buttons */}
+          <div className="flex items-center gap-4">
             <button
               type="button"
               className="group flex items-center justify-center border border-primary rounded-lg px-2 h-10 text-sm transition hover:bg-primary hover:text-white"
               title="Export to Excel"
               onClick={handleExportExcel}
             >
-              <Download className="flex items-center justify-center text-primary group-hover:text-white" />
+              <Download className="text-primary group-hover:text-white" />
             </button>
             <button
               type="button"
@@ -691,7 +893,7 @@ function Reports() {
               title="Export to PDF"
               onClick={handleExportPDF}
             >
-              <FileText className="flex items-center justify-center text-primary group-hover:text-white" />
+              <FileText className="text-primary group-hover:text-white" />
             </button>
             <button
               type="button"
@@ -699,108 +901,174 @@ function Reports() {
               title="Email Report"
               onClick={handleEmail}
             >
-              <Mail className="flex items-center justify-center text-primary group-hover:text-white" />
+              <Mail className="text-primary group-hover:text-white" />
             </button>
           </div>
         </div>
-      </div>
 
-      <div className="w-full space-y-4">
-        <div className="shadow-lg border border-border overflow-x-auto">
-          <DndContext
-            onDragEnd={handleDragEnd}
-            modifiers={[restrictToFirstScrollableAncestor]}
-          >
-            <div className="min-w-[800px] w-full">
-              {loading ? (
-                <div className="w-full h-64 flex justify-center items-center">
-                  <LoadingSpinner />
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <table className="w-full table-auto">
-                    <colgroup>
-                      {visibleColumns.map((col) => (
-                        <col key={col.id} className="font-medium min-w-full" />
-                      ))}
-                    </colgroup>
-                    <thead className="bg-secondary-color rounded-xl">
-                      {table.getHeaderGroups().map((headerGroup) => (
-                        <tr key={headerGroup.id}>
-                          {headerGroup.headers
-                            .filter(header => visibleColumns.some(col => col.id === header.column.id))
-                            .map((header) => {
-                              const isDraggable = !nonDraggableColumns.includes(header.column.id);
-                              const canSort = !nonDraggableColumns.includes(header.column.id);
-                              const isSorted = header.column.getIsSorted?.();
-                              return (
-                                <th
-                                  key={header.id}
-                                  className="px-6 py-4 text-left text-xs font-semibold text-header-color uppercase tracking-wider border-b border-border select-none group"
-                                  style={{ width: header.getSize() }}
-                                >
-                                  <div className="flex items-center gap-1">
-                                    <span
-                                      className={canSort ? "cursor-pointer" : ""}
-                                      onClick={canSort ? () => header.column.toggleSorting?.() : undefined}
-                                    >
-                                      {isDraggable ? (
-                                        <Droppable id={header.column.id}>
-                                          <Draggable id={header.column.id}>
-                                            <div className="cursor-move rounded py-1 transition duration-150 ease-in-out">
-                                              {flexRender(header.column.columnDef.header, header.getContext())}
-                                            </div>
-                                          </Draggable>
-                                        </Droppable>
-                                      ) : (
-                                        <div className="px-1">
-                                          {flexRender(header.column.columnDef.header, header.getContext())}
-                                        </div>
-                                      )}
-                                      {canSort && (
-                                        <span className="ml-1 text-xs">
-                                          {isSorted === 'asc' ? '▲' : isSorted === 'desc' ? '▼' : <span className="opacity-30">▲▼</span>}
-                                        </span>
-                                      )}
-                                    </span>
-                                  </div>
-                                </th>
-                              );
-                            })}
-                        </tr>
-                      ))}
-                    </thead>
-                    <tbody className="divide-y">
-                      {groupBy.length && groupedData ? (
-                        Object.entries(groupedData).length === 0 ? (
-                          <tr>
-                            <td colSpan={visibleColumns.length} className="px-6 py-12 text-left text-gray-500">
-                              <div className="flex flex-col items-center">
-                                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                                  <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                  </svg>
-                                </div>
-                                <p className="text-lg font-medium text-gray-900 mb-1">No Data available</p>
-                                <p className="text-sm text-primary">There are no data to display at the moment.</p>
-                              </div>
-                            </td>
+        <div className="w-full space-y-4">
+          <div className="shadow-lg border border-border overflow-x-auto">
+            <DndContext
+              onDragEnd={handleDragEnd}
+              modifiers={[restrictToFirstScrollableAncestor]}
+            >
+              <div className="min-w-[800px] w-full">
+                {loading ? (
+                  <div className="w-full h-64 flex justify-center items-center">
+                    <LoadingSpinner />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <table className="w-full table-auto">
+                      <colgroup>
+                        {visibleColumns.map((col) => (
+                          <col
+                            key={col.id}
+                            className="font-medium min-w-full"
+                          />
+                        ))}
+                      </colgroup>
+                      <thead className="bg-secondary-color rounded-xl">
+                        {table.getHeaderGroups().map((headerGroup) => (
+                          <tr key={headerGroup.id}>
+                            {headerGroup.headers
+                              .filter((header) =>
+                                visibleColumns.some(
+                                  (col) => col.id === header.column.id
+                                )
+                              )
+                              .map((header) => {
+                                const isDraggable =
+                                  !nonDraggableColumns.includes(
+                                    header.column.id
+                                  );
+                                const canSort = !nonDraggableColumns.includes(
+                                  header.column.id
+                                );
+                                const isSorted = header.column.getIsSorted?.();
+                                return (
+                                  <th
+                                    key={header.id}
+                                    className="px-6 py-4 text-left text-xs font-semibold text-header-color uppercase tracking-wider border-b border-border select-none group"
+                                    style={{ width: header.getSize() }}
+                                  >
+                                    <div className="flex items-center gap-1">
+                                      <span
+                                        className={
+                                          canSort ? "cursor-pointer" : ""
+                                        }
+                                        onClick={
+                                          canSort
+                                            ? () =>
+                                                header.column.toggleSorting?.()
+                                            : undefined
+                                        }
+                                      >
+                                        {isDraggable ? (
+                                          <Droppable id={header.column.id}>
+                                            <Draggable id={header.column.id}>
+                                              <div className="cursor-move rounded py-1 transition duration-150 ease-in-out">
+                                                {flexRender(
+                                                  header.column.columnDef
+                                                    .header,
+                                                  header.getContext()
+                                                )}
+                                              </div>
+                                            </Draggable>
+                                          </Droppable>
+                                        ) : (
+                                          <div className="px-1">
+                                            {flexRender(
+                                              header.column.columnDef.header,
+                                              header.getContext()
+                                            )}
+                                          </div>
+                                        )}
+                                        {canSort && (
+                                          <span className="ml-1 text-xs">
+                                            {isSorted === "asc" ? (
+                                              "▲"
+                                            ) : isSorted === "desc" ? (
+                                              "▼"
+                                            ) : (
+                                              <span className="opacity-30">
+                                                ▲▼
+                                              </span>
+                                            )}
+                                          </span>
+                                        )}
+                                      </span>
+                                    </div>
+                                  </th>
+                                );
+                              })}
                           </tr>
-                        ) : (
-                          renderGroupedRows(groupedData, 0, [])
-                        )
-                      ) : (
-                        table.getPaginationRowModel().rows.length === 0 ? (
+                        ))}
+                      </thead>
+                      <tbody className="divide-y">
+                        {groupBy.length && groupedData ? (
+                          Object.entries(groupedData).length === 0 ? (
+                            <tr>
+                              <td
+                                colSpan={visibleColumns.length}
+                                className="px-6 py-12 text-left text-gray-500"
+                              >
+                                <div className="flex flex-col items-center">
+                                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                                    <svg
+                                      className="w-6 h-6 text-gray-400"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                      />
+                                    </svg>
+                                  </div>
+                                  <p className="text-lg font-medium text-gray-900 mb-1">
+                                    No Data available
+                                  </p>
+                                  <p className="text-sm text-primary">
+                                    There are no data to display at the moment.
+                                  </p>
+                                </div>
+                              </td>
+                            </tr>
+                          ) : (
+                            renderGroupedRows(groupedData, 0, [])
+                          )
+                        ) : table.getPaginationRowModel().rows.length === 0 ? (
                           <tr>
-                            <td colSpan={visibleColumns.length} className="px-6 py-12 text-left text-gray-500">
+                            <td
+                              colSpan={visibleColumns.length}
+                              className="px-6 py-12 text-left text-gray-500"
+                            >
                               <div className="flex flex-col items-center">
                                 <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                                  <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                  <svg
+                                    className="w-6 h-6 text-gray-400"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                    />
                                   </svg>
                                 </div>
-                                <p className="text-lg font-medium text-gray-900 mb-1">No Data available</p>
-                                <p className="text-sm text-primary">There are no data to display at the moment.</p>
+                                <p className="text-lg font-medium text-gray-900 mb-1">
+                                  No Data available
+                                </p>
+                                <p className="text-sm text-primary">
+                                  There are no data to display at the moment.
+                                </p>
                               </div>
                             </td>
                           </tr>
@@ -819,92 +1087,37 @@ function Reports() {
                                   key={cell.id}
                                   className="px-6 py-4 whitespace-nowrap text-sm border-b border-border"
                                 >
-                                  {flexRender(
-                                    cell.column.columnDef.cell,
-                                    cell.getContext()
-                                  )}
+                                  <span className="text-secondary-text font-semibold">
+                                    {flexRender(
+                                      cell.column.columnDef.cell,
+                                      cell.getContext()
+                                    )}
+                                  </span>
                                 </td>
                               ))}
                             </tr>
                           ))
-                        )
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </DndContext>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </DndContext>
+          </div>
+        </div>
+        <div className="pt-2">
+          <Pagination
+            table={table}
+            totalItems={totalItems}
+            currentPageItems={currentPageItems}
+            startIndex={startIndex}
+            endIndex={endIndex}
+          />
         </div>
       </div>
-      
-      {/* Pagination controls: hide when grouped */}
-      {!loading && groupBy.length === 0 && (
-        <div className="flex items-center justify-between bg-gray-50 px-4 py-2 text-sm text-gray-700">
-          <div className="flex items-center gap-2">
-            <span>Show</span>
-            <select
-              className="border rounded px-2 py-1"
-              value={pagination.pageSize}
-              onChange={(e) => {
-                table.setPageSize(Number(e.target.value));
-              }}
-            >
-              {[5, 10, 20, 50, 100, 500].map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-            <span>entries</span>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-                className="flex items-center gap-1 px-3 py-1 border border-primary-lt rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                Previous
-              </button>
-
-              <span className="flex items-center gap-1">
-                <span>Page</span>
-                <strong className="text-primary">
-                  {table.getState().pagination.pageIndex + 1} of{" "}
-                  {table.getPageCount()}
-                </strong>
-              </span>
-
-              <button
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-                className="flex items-center gap-1 px-3 py-1 border border-primary-lt rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-              >
-                Next
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          <div>
-            Showing{" "}
-            <span className="font-medium">
-              {filteredData.length === 0 ? 0 : pagination.pageIndex * pagination.pageSize + 1}
-            </span>{" "}
-            to{" "}
-            <span className="font-medium">
-              {Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)}
-            </span>{" "}
-            of <span className="font-medium">{filteredData.length}</span> entries
-          </div>
-        </div>
-      )}
-    </div>
-  </Layout>
-);
+    </Layout>
+  );
 }
 
 export default Reports;

@@ -7,9 +7,11 @@ import { restrictToFirstScrollableAncestor } from "@dnd-kit/modifiers";
 import { Droppable } from "../common/Droppable";
 import { DndContext, type DragEndEvent } from "@dnd-kit/core";
 import type { ColumnDef } from "@tanstack/react-table";
+import { getPaginationRowModel } from "@tanstack/react-table";
 import Layout from "../common/Layout";
 import CustomSelect from "../common/SearchSelect";
 import Button from "../ui/Button";
+import Pagination from "../ui/Pagination";
 import { useNavigate } from "react-router-dom";
 import { useNotification } from "../Notification/Notification";
 import axios from "axios";
@@ -179,6 +181,10 @@ type TabVisibility = {
 };
 
 const ExposureSelection = () => {
+  const [pagination, setPagination] = useState({
+  pageIndex: 0,
+  pageSize: 10,
+});
   const { notify } = useNotification();
   const [renderVars, setRenderVars] = useState<IfPayload["renderVars"] | null>(
     null
@@ -457,7 +463,7 @@ const ExposureSelection = () => {
         accessorKey: "exposure_header_id",
         header: "Exposure ID",
         cell: ({ getValue }) => (
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-secondary-text-dark">
             {getValue() as string}
           </span>
         ),
@@ -467,7 +473,7 @@ const ExposureSelection = () => {
         accessorKey: "document_id",
         header: "Document ID",
         cell: ({ getValue }) => (
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-secondary-text-dark">
             {getValue() as string}
           </span>
         ),
@@ -476,14 +482,14 @@ const ExposureSelection = () => {
         accessorKey: "exposure_type",
         header: "Type",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string}</span>
+          <span className="text-secondary-text">{getValue() as string}</span>
         ),
       },
       {
         accessorKey: "entity",
         header: "Entity",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string}</span>
+          <span className="text-secondary-text">{getValue() as string}</span>
         ),
         meta: {
           filterVariant: "select",
@@ -493,7 +499,7 @@ const ExposureSelection = () => {
         accessorKey: "counterparty_name",
         header: "Counterparty",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string}</span>
+          <span className="text-secondary-text">{getValue() as string}</span>
         ),
         meta: {
           filterVariant: "select",
@@ -506,7 +512,7 @@ const ExposureSelection = () => {
           const amount = Number(getValue());
           const currency = row.original.currency;
           return (
-            <span className="font-medium text-gray-900">
+            <span className="font-medium text-secondary-text-dark">
               {isNaN(amount)
                 ? "-"
                 : new Intl.NumberFormat("en-US", {
@@ -524,7 +530,7 @@ const ExposureSelection = () => {
           const amount = Number(getValue());
           const currency = row.original.currency;
           return (
-            <span className="font-medium text-gray-900">
+            <span className="font-medium text-secondary-text-dark">
               {isNaN(amount)
                 ? "-"
                 : new Intl.NumberFormat("en-US", {
@@ -539,7 +545,7 @@ const ExposureSelection = () => {
         accessorKey: "currency",
         header: "Currency",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string}</span>
+          <span className="text-secondary-text">{getValue() as string}</span>
         ),
       },
       {
@@ -548,7 +554,7 @@ const ExposureSelection = () => {
         cell: ({ getValue }) => {
           const date = new Date(getValue() as string);
           return (
-            <span className="text-gray-700">
+            <span className="text-secondary-text">
               {isNaN(date.getTime()) ? "—" : date.toLocaleDateString()}
             </span>
           );
@@ -560,7 +566,7 @@ const ExposureSelection = () => {
         cell: ({ getValue }) => {
           const date = new Date(getValue() as string);
           return (
-            <span className="text-gray-700">
+            <span className="text-secondary-text">
               {isNaN(date.getTime()) ? "—" : date.toLocaleDateString()}
             </span>
           );
@@ -626,7 +632,7 @@ const ExposureSelection = () => {
           return (
             <span
               className={`px-2 py-1 text-xs font-medium rounded-full ${
-                statusColors[status] || "bg-gray-100 text-gray-800"
+                statusColors[status] || "bg-gray-100 text-primary"
               }`}
             >
               {status}
@@ -638,70 +644,70 @@ const ExposureSelection = () => {
         accessorKey: "company_code",
         header: "Company Code",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "counterparty_type",
         header: "Counterparty Type",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "counterparty_code",
         header: "Counterparty Code",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "entity1",
         header: "Entity 1",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "entity2",
         header: "Entity 2",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "entity3",
         header: "Entity 3",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "product_id",
         header: "Product ID",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string}</span>
+          <span className="text-secondary-text">{getValue() as string}</span>
         ),
       },
       {
         accessorKey: "product_description",
         header: "Product Description",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string}</span>
+          <span className="text-secondary-text">{getValue() as string}</span>
         ),
       },
       {
         accessorKey: "quantity",
         header: "Quantity",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{getValue() as string}</span>
+          <span className="text-secondary-text">{getValue() as string}</span>
         ),
       },
       {
         accessorKey: "unit_of_measure",
         header: "UOM",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
         ),
       },
       {
@@ -711,7 +717,7 @@ const ExposureSelection = () => {
           const price = Number(getValue());
           const currency = row.original.currency;
           return (
-            <span className="text-gray-700">
+            <span className="text-secondary-text">
               {isNaN(price)
                 ? "—"
                 : new Intl.NumberFormat("en-US", {
@@ -729,7 +735,7 @@ const ExposureSelection = () => {
           const amount = Number(getValue());
           const currency = row.original.currency;
           return (
-            <span className="text-gray-700">
+            <span className="text-secondary-text">
               {isNaN(amount)
                 ? "—"
                 : new Intl.NumberFormat("en-US", {
@@ -746,7 +752,7 @@ const ExposureSelection = () => {
         cell: ({ getValue }) => {
           const date = new Date(getValue() as string);
           return (
-            <span className="text-gray-700">
+            <span className="text-secondary-text">
               {isNaN(date.getTime()) ? "—" : date.toLocaleDateString()}
             </span>
           );
@@ -756,42 +762,42 @@ const ExposureSelection = () => {
         accessorKey: "payment_terms",
         header: "Payment Terms",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "inco_terms",
         header: "Inco Terms",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "plant_code",
         header: "Plant Code",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "approved_by",
         header: "Approved By",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "rejected_by",
         header: "Rejected By",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "requested_by",
         header: "Requested By",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text">{(getValue() as string) || "—"}</span>
         ),
       },
       {
@@ -800,7 +806,7 @@ const ExposureSelection = () => {
         cell: ({ getValue }) => {
           const date = new Date(getValue() as string);
           return (
-            <span className="text-gray-700">
+            <span className="text-secondary-text">
               {isNaN(date.getTime()) ? "—" : date.toLocaleDateString()}
             </span>
           );
@@ -812,7 +818,7 @@ const ExposureSelection = () => {
         cell: ({ getValue }) => {
           const date = new Date(getValue() as string);
           return (
-            <span className="text-gray-700">
+            <span className="text-secondary-text">
               {isNaN(date.getTime()) ? "—" : date.toLocaleDateString()}
             </span>
           );
@@ -890,20 +896,32 @@ const ExposureSelection = () => {
   const [columnVisibility, setColumnVisibility] =
     useState<Record<string, boolean>>(defaultVisibility);
 
-  const table = useReactTable({
-    data: filteredData,
-    columns,
-    enableRowSelection: true,
-    onRowSelectionChange: setSelectedRowIds,
-    onColumnOrderChange: setColumnOrder,
-    onColumnVisibilityChange: setColumnVisibility,
-    getCoreRowModel: getCoreRowModel(),
-    state: {
-      columnOrder,
-      rowSelection: selectedRowIds,
-      columnVisibility,
-    },
-  });
+const table = useReactTable({
+  data: filteredData,
+  columns,
+  enableRowSelection: true,
+  onRowSelectionChange: setSelectedRowIds,
+  onColumnOrderChange: setColumnOrder,
+  onColumnVisibilityChange: setColumnVisibility,
+  getCoreRowModel: getCoreRowModel(),
+  getPaginationRowModel: getPaginationRowModel(), // Add this line
+  onPaginationChange: setPagination, // Add this line
+  state: {
+    columnOrder,
+    rowSelection: selectedRowIds,
+    columnVisibility,
+    pagination, // Add this line
+  },
+});
+
+const totalItems = filteredData.length;
+const currentPageItems = table.getRowModel().rows.length;
+const startIndex = pagination.pageIndex * pagination.pageSize + 1;
+const endIndex = Math.min(
+  (pagination.pageIndex + 1) * pagination.pageSize,
+  totalItems
+);
+
 
   type OptionType = { label: string; value: string };
   const [filters, setFilters] = useState({
@@ -1086,7 +1104,7 @@ const ExposureSelection = () => {
           />
 
           <div className="flex flex-col">
-            <label className="mb-1 text-sm font-medium text-gray-700">
+            <label className="mb-1 text-sm font-medium text-secondary-text">
               Settlement Date
             </label>
             <input
@@ -1182,7 +1200,7 @@ const ExposureSelection = () => {
                   <tr>
                     <td
                       colSpan={columns.length}
-                      className="px-6 py-12 text-center text-gray-500"
+                      className="px-6 py-12 text-center text-primary"
                     >
                       No Data Available
                     </td>
@@ -1271,12 +1289,12 @@ const ExposureSelection = () => {
                   ))
                 )}
               </tbody>
-              <tfoot className="bg-gray-50 font-semibold sticky bottom-0">
+              <tfoot className="bg-primary font-semibold sticky bottom-0">
                 <tr>
                   {table.getVisibleLeafColumns().map((col) => (
                     <td
                       key={col.id}
-                      className="px-6 py-2 text-sm text-start border-t border-border"
+                      className="px-6 py-2 text-white text-sm text-start border-t border-border"
                     >
                       {{
                         select: "Total",
@@ -1290,6 +1308,18 @@ const ExposureSelection = () => {
               </tfoot>
             </table>
           </DndContext>
+        </div>
+        <div className="pt-2">
+          <Pagination
+              table={table}
+              totalItems={data.length}
+              currentPageItems={table.getRowModel().rows.length}
+              startIndex={pagination.pageIndex * pagination.pageSize + 1}
+              endIndex={Math.min(
+                (pagination.pageIndex + 1) * pagination.pageSize,
+                data.length
+              )}
+            />
         </div>
       </div>
     </Layout>
