@@ -556,7 +556,7 @@ const validateRow = (
         }
       });
 
-      // Validate company code format for Debtors
+      // // Validate company code format for Debtors
       // const companyCode = rowObj["company_code"];
       // if (companyCode && companyCode.length !== 4) {
       //   ifValidationErrors.push({
@@ -695,7 +695,7 @@ const validateRow = (
         }
       });
 
-      // // Validate company code format for Creditor
+      // Validate company code format for Creditor
       // const companyCode = rowObj["company_code"];
       // if (companyCode && companyCode.length !== 4) {
       //   ifValidationErrors.push({
@@ -1010,19 +1010,19 @@ const validateRow = (
         }
       });
 
-    //   // Validate company code format for GRN
-    //   const companyCode = rowObj["company_code"];
-    //   if (companyCode && companyCode.length !== 4) {
-    //     ifValidationErrors.push({
-    //       description: `Row ${
-    //         index + 2
-    //       }: 'company_code' should be 4 characters`,
-    //       row: index + 2,
-    //       column: headers.indexOf("company_code") + 1,
-    //       currentValue: companyCode,
-    //     });
-    //   }
-    // }
+      // Validate company code format for GRN
+      // const companyCode = rowObj["company_code"];
+      // if (companyCode && companyCode.length !== 4) {
+      //   ifValidationErrors.push({
+      //     description: `Row ${
+      //       index + 2
+      //     }: 'company_code' should be 4 characters`,
+      //     row: index + 2,
+      //     column: headers.indexOf("company_code") + 1,
+      //     currentValue: companyCode,
+      //   });
+      // }
+    }
 
     // Common validations for all templates
     // Validate currency code (should be 3 characters)
@@ -1319,7 +1319,7 @@ export const validatePreviewData = (
           });
         }
 
-        // Company code validation for Debtors
+        // // Company code validation for Debtors
         // if (header === "company_code" && value && value.length !== 4) {
         //   validationErrors.push({
         //     description: "company_code should be 4 characters",
@@ -1329,7 +1329,7 @@ export const validatePreviewData = (
         //   });
         // }
 
-        // // // Document type validation for Debtors
+        // // Document type validation for Debtors
         // const validDocTypes = ["dr", "dz", "dg", "dn", "invoice", "credit_memo", "payment"];
         // if (header === "document_type" && value && !validDocTypes.includes(value.toLowerCase())) {
         //   validationErrors.push({
