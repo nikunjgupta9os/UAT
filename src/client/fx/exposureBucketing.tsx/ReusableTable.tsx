@@ -184,7 +184,7 @@ function ExpandedRow<ExposureBucketing extends WithId>({
           : row.original[field as keyof ExposureBucketing];
         return v === undefined || v === null || v === "" ? 0 : Number(v);
       };
-      const amount = getNum("line_item_amount");
+      const amount = getNum("total_open_amount");
       const advance = getNum("advance");
       const month_1 = getNum("month_1");
       const month_2 = getNum("month_2");
