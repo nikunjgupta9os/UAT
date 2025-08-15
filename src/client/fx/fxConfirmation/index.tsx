@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
+import { FileEdit, UploadCloud, Contrast } from "lucide-react";
 import Layout from "../../common/Layout";
 import FxConfirmation from "./fxConfirmation";
 import FxUploadForm from "./fxUpload";
@@ -77,16 +78,19 @@ const FxConfirmationPage = () => {
     {
       id: "Form",
       label: "Fx Confirmation Form",
+      icon: FileEdit,
       visibility: Visibility.fxForm,
     },
     {
       id: "Upload",
       label: "Fx Confirmation Upload",
+      icon: UploadCloud,
       visibility: Visibility.fxUpload,
     },
     {
       id: "add",
       label: "Pending Forwards",
+      icon: Contrast,
       visibility: Visibility.pendingForwards,
     },
   ];
@@ -105,7 +109,10 @@ const FxConfirmationPage = () => {
           }
         `}
       >
-        <span>{tab.label}</span>
+        <span className="flex items-center">
+          <tab.icon size={20} className="mr-2" />
+          {tab.label}
+        </span>
       </button>
     ));
   }, [Visibility, activeTab, switchTab, isActiveTab]);
@@ -153,7 +160,7 @@ const FxConfirmationPage = () => {
       )}
 
       <div className="transition-opacity duration-300">
-        {hasVisibleTabs ? currentContent : <div className="p-4 text-gray-600">You don't have access to any tabs.</div>}
+        {hasVisibleTabs ? currentContent : <div className="p-4 text-primary">You don't have access to any tabs.</div>}
       </div>
     </Layout>
   );

@@ -677,6 +677,7 @@ const TransactionTable: React.FC = () => {
             type="checkbox"
             checked={table.getIsAllRowsSelected()}
             onChange={table.getToggleAllRowsSelectedHandler()}
+          className="accent-primary w-4 h-4 bg-gray-100 border-gray-300 rounded focus:ring-primary-lt focus:ring-2"
           />
         ),
         cell: ({ row }) => (
@@ -684,6 +685,7 @@ const TransactionTable: React.FC = () => {
             type="checkbox"
             checked={row.getIsSelected()}
             onChange={row.getToggleSelectedHandler()}
+          className="accent-primary w-4 h-4 bg-gray-100 border-gray-300 rounded focus:ring-primary-lt focus:ring-2"
           />
         ),
         enableSorting: false,
@@ -697,7 +699,7 @@ const TransactionTable: React.FC = () => {
             {Visibility.delete && (
               <button
                 onClick={() => handleForwardDelete()}
-                className="flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded text-red-600 hover:bg-red-100 transition-colors"
+                className="flex items-center gap-1 px-2 py-2 text-xs font-semibold rounded text-red-600 hover:bg-primary-xl transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -709,7 +711,7 @@ const TransactionTable: React.FC = () => {
         accessorKey: "systemTransactionId",
         header: "System TX ID",
         cell: ({ getValue }) => (
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-secondary-text-dark">
             {getValue() as string}
           </span>
         ),
@@ -718,7 +720,7 @@ const TransactionTable: React.FC = () => {
         accessorKey: "internalReferenceId",
         header: "Internal Ref ID",
         cell: ({ getValue }) => (
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-secondary-text-dark">
             {getValue() as string}
           </span>
         ),
@@ -742,7 +744,7 @@ const TransactionTable: React.FC = () => {
         accessorKey: "transactionType",
         header: "TX Type",
         cell: ({ getValue }) => (
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-secondary-text-dark">
             {getValue() as string}
           </span>
         ),
@@ -751,7 +753,7 @@ const TransactionTable: React.FC = () => {
         accessorKey: "currencyPair",
         header: "Currency Pair",
         cell: ({ getValue }) => (
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-secondary-text-dark">
             {getValue() as string}
           </span>
         ),
@@ -760,7 +762,7 @@ const TransactionTable: React.FC = () => {
         accessorKey: "inputValue",
         header: "Input Value",
         cell: ({ getValue }) => (
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-secondary-text-dark">
             {(getValue() as number).toLocaleString()}
           </span>
         ),
@@ -769,7 +771,7 @@ const TransactionTable: React.FC = () => {
         accessorKey: "spotRate",
         header: "Spot Rate",
         cell: ({ getValue }) => (
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-secondary-text-dark">
             {(getValue() as number).toFixed(4)}
           </span>
         ),
@@ -785,7 +787,7 @@ const TransactionTable: React.FC = () => {
               : (getValue() as number);
 
           return (
-            <span className="font-medium font-semibold">
+            <span className="font-semibold">
               {value ? value.toFixed(4) : "—"}
             </span>
           );
@@ -795,7 +797,7 @@ const TransactionTable: React.FC = () => {
         accessorKey: "settlementDate",
         header: "Settlement Date",
         cell: ({ getValue }) => (
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-secondary-text-dark">
             {getValue() as string}
           </span>
         ),
@@ -813,23 +815,25 @@ const TransactionTable: React.FC = () => {
             );
           }
 
-          const status =
-            rawStatus.charAt(0).toUpperCase() +
-            rawStatus.slice(1).toLowerCase();
+          const normalized = rawStatus.trim().toLowerCase();
+
           const statusColors: Record<string, string> = {
-            Approved: "bg-green-100 text-green-800",
-            Pending: "bg-yellow-100 text-yellow-800",
-            Rejected: "bg-red-100 text-red-800",
-            Inactive: "bg-gray-200 text-gray-700",
+            approved: "bg-green-100 text-green-800",
+            pending: "bg-yellow-100 text-yellow-800",
+            rejected: "bg-red-100 text-red-800",
+            inactive: "bg-gray-200 text-gray-700",
           };
+
+          const toPascalCase = (str: string) =>
+            str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
 
           return (
             <span
               className={`px-2 py-1 text-xs font-medium rounded-full ${
-                statusColors[status] || "bg-gray-100 text-gray-800"
+                statusColors[normalized] || "bg-gray-100 text-gray-800"
               }`}
             >
-              {status}
+              {toPascalCase(normalized)}
             </span>
           );
         },
@@ -838,7 +842,7 @@ const TransactionTable: React.FC = () => {
         accessorKey: "counterparty",
         header: "Counterparty",
         cell: ({ getValue }) => (
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-secondary-text-dark">
             {getValue() as string}
           </span>
         ),
@@ -847,7 +851,7 @@ const TransactionTable: React.FC = () => {
         accessorKey: "internalDealer",
         header: "Internal Dealer",
         cell: ({ getValue }) => (
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-secondary-text-dark">
             {getValue() as string}
           </span>
         ),
@@ -1117,8 +1121,8 @@ const TransactionTable: React.FC = () => {
                         {isDraggable ? (
                           <Droppable id={header.column.id}>
                             <Draggable id={header.column.id}>
-                              <div className="cursor-move rounded py-1">
-                                {flexRender(
+                              <div className="cursor-move border-border text-header-color hover:bg-primary-lg rounded px-1 py-1 transition duration-150 ease-in-out">
+                                  {flexRender(
                                   header.column.columnDef.header,
                                   header.getContext()
                                 )}
@@ -1144,7 +1148,7 @@ const TransactionTable: React.FC = () => {
                 <tr>
                   <td
                     colSpan={columns.length}
-                    className="px-6 py-12 text-center text-gray-500"
+                    className="px-6 py-12 text-center text-primary"
                   >
                     No Transactions Available
                   </td>
@@ -1162,7 +1166,7 @@ const TransactionTable: React.FC = () => {
                       {row.getVisibleCells().map((cell) => (
                         <td
                           key={cell.id}
-                          className="px-6 py-4 whitespace-nowrap text-sm border-b border-border"
+                          className="px-6 py-4 text-secondary-text-dark font-normal whitespace-nowrap text-sm border-b border-border"
                         >
                           {flexRender(
                             cell.column.columnDef.cell,
@@ -1202,7 +1206,7 @@ const TransactionTable: React.FC = () => {
                               <div className="font-semibold mb-2 text-primary-lt">
                                 Basic Information
                               </div>
-                              <div className="grid grid-cols-1 md:grid-cols-7    gap-4">
+                              <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
                                 {(
                                   [
                                     "systemTransactionId",

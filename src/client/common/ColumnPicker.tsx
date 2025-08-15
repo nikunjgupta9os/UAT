@@ -28,7 +28,7 @@ export const ColumnPicker = ({ table }: { table: any }) => {
                     type="checkbox"
                     checked={column.getIsVisible()}
                     onChange={() => column.toggleVisibility()}
-                    className="rounded text-primary accent-primary focus:ring-primary"
+                    className="accent-primary w-4 h-4 bg-gray-100 border-gray-300 rounded focus:ring-primary-lt focus:ring-2"
                   />
                   <span className="text-sm whitespace-nowrap overflow-hidden text-ellipsis">
                     {column.columnDef.header as string}

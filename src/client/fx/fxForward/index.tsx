@@ -3,6 +3,7 @@ import Layout from "../../common/Layout";
 import FxBookingForm from "./fxBookingForm";
 import FxUploader from "./fxUploader";
 import LoadingSpinner from "../../ui/LoadingSpinner";
+import { UploadCloud, FileEdit} from "lucide-react";
 import axios from "axios";
 
 type TabVisibility = {
@@ -73,11 +74,13 @@ const FxForward = () => {
     {
       id: "Form",
       label: "Fx Forward Booking Form",
+      icon: FileEdit,
       visibility: Visibility.fxForm,
     },
     {
       id: "Upload",
       label: "Fx Forward Upload",
+      icon: UploadCloud,
       visibility: Visibility.fxUpload,
     },
   ];
@@ -96,7 +99,10 @@ const FxForward = () => {
         }
         `}
       >
-        <span>{tab.label}</span>
+        <span className="flex items-center">
+          <tab.icon size={20} className="mr-2" />
+          {tab.label}
+        </span>
       </button>
     ));
   }, [Visibility, activeTab, switchTab, isActiveTab]);
@@ -106,7 +112,7 @@ const FxForward = () => {
     const currentTabConfig = TAB_CONFIG.find(tab => tab.id === activeTab);
     
     if (!currentTabConfig || !currentTabConfig.visibility) {
-      return <div className="p-4 text-gray-600">No accessible tabs available.</div>;
+      return <div className="p-4 text-primary">No accessible tabs available.</div>;
     }
 
     switch (activeTab) {
@@ -142,7 +148,7 @@ const FxForward = () => {
       )}
 
       <div className="transition-opacity duration-300">
-        {hasVisibleTabs ? currentContent : <div className="p-4 text-gray-600">You don't have access to any tabs.</div>}
+        {hasVisibleTabs ? currentContent : <div className="p-4 text-primary">You don't have access to any tabs.</div>}
       </div>
     </Layout>
   );

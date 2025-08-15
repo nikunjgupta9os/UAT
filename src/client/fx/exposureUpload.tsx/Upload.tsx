@@ -1023,7 +1023,7 @@ const UploadFile: React.FC = () => {
           <div></div>
           <div></div>
           <div className="flex items-center space-x-4 gap-2">
-            <Button disabled>
+            <Button color="Fade" disabled>
               <span className="text-white">Import Data</span>
             </Button>
 
@@ -1257,7 +1257,7 @@ const UploadFile: React.FC = () => {
               {templates.map((template) => (
                 <div
                   key={template.id}
-                  className="bg-secondary-color-lt p-6 rounded-lg shadow-sm border border-border hover:shadow-md transition-shadow duration-200 cursor-pointer"
+                  className="bg-primary-xl p-6 rounded-lg shadow-sm border border-border hover:shadow-md transition-shadow duration-200 cursor-pointer"
                 >
                   <div className="flex items-start justify-between Download">
                     <div className="flex-1 Download">

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { Draggable } from "../../common/Draggable";
 import { Droppable } from "../../common/Droppable";
 import { DndContext, type DragEndEvent } from "@dnd-kit/core";
@@ -89,6 +89,8 @@ const UnlinkedExposure: React.FC<TableProps> = ({
   const [editValues, setEditValues] = useState<AvailableForwardsData>(
     {} as AvailableForwardsData
   );
+  const rowRefs = useRef<{ [key: string]: HTMLTableRowElement | null }>({});
+  const tableContainerRef = useRef<HTMLDivElement>(null);
 
   const filteredData = useMemo(() => {
     if (!data) return [];
@@ -185,6 +187,29 @@ const UnlinkedExposure: React.FC<TableProps> = ({
     fetchData();
   }, [setBuOptions, setCurrencyOptions]);
 
+  // Ensure proper scroll behavior and prevent page scrolling
+  useEffect(() => {
+    if (tableContainerRef.current) {
+      // Prevent any unwanted scroll behavior
+      const container = tableContainerRef.current;
+      container.style.overscrollBehavior = 'contain';
+      container.style.scrollBehavior = 'smooth';
+      
+      // Prevent scroll events from bubbling up
+      const preventScrollBubble = (e: Event) => {
+        e.stopPropagation();
+      };
+      
+      container.addEventListener('scroll', preventScrollBubble, { passive: false });
+      container.addEventListener('wheel', preventScrollBubble, { passive: false });
+      
+      return () => {
+        container.removeEventListener('scroll', preventScrollBubble);
+        container.removeEventListener('wheel', preventScrollBubble);
+      };
+    }
+  }, []);
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (active.id !== over?.id) {
@@ -194,6 +219,42 @@ const UnlinkedExposure: React.FC<TableProps> = ({
       newOrder.splice(oldIndex, 1);
       newOrder.splice(newIndex, 0, active.id as string);
       setColumnOrder(newOrder);
+    }
+  };
+
+  const handleExpandClick = (rowId: string) => {
+    const newExpandedId = expandedRowId === rowId ? null : rowId;
+    setExpandedRowId(newExpandedId);
+
+    if (newExpandedId) {
+      const rowElement = rowRefs.current[rowId];
+      if (rowElement && tableContainerRef.current) {
+        // Use the table container ref for reliable scrolling
+        const tableContainer = tableContainerRef.current;
+        
+        // Small delay to ensure the expanded content is rendered
+        setTimeout(() => {
+          // Get the row's position relative to the container
+          const rowTop = rowElement.offsetTop;
+          
+          // Get the header height to calculate the exact position below it
+          const headerElement = tableContainer.querySelector('thead');
+          const headerHeight = headerElement ? headerElement.offsetHeight : 0;
+          
+          // Calculate the target scroll position to place the row right below the header
+          // We want the row to appear exactly below the sticky header
+          const targetScrollTop = Math.max(0, rowTop - headerHeight - 2); // 2px for perfect visual spacing
+          
+          // Smooth scroll within the container only
+          tableContainer.scrollTo({
+            top: targetScrollTop,
+            behavior: 'smooth'
+          });
+        }, 50); // 50ms delay to ensure DOM updates
+      }
+    } else {
+      setIsEditing(false);
+      setEditValues({} as AvailableForwardsData);
     }
   };
 
@@ -250,13 +311,10 @@ const UnlinkedExposure: React.FC<TableProps> = ({
         ),
         cell: ({ row }) => (
           <button
-            onClick={() => {
-              const newExpandedId = expandedRowId === row.id ? null : row.id;
-              setExpandedRowId(newExpandedId);
-              if (newExpandedId !== row.id) {
-                setIsEditing(false);
-                setEditValues({} as AvailableForwardsData);
-              }
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleExpandClick(row.id);
             }}
             className="p-2 hover:bg-primary-xl text-primary rounded-md transition-colors"
             aria-label={
@@ -440,12 +498,16 @@ const UnlinkedExposure: React.FC<TableProps> = ({
   );
 
   return (
-    <div className="w-full space-y-4 pt-6">
+    <div className="w-full space-y-4 pt-6 overflow-hidden">
       <h2 className="text-2xl font-bold text-secondary-text-dark pl-4">
         Unlinked Exposure
       </h2>
 
-      <div className="shadow-lg border border-border rounded-lg max-h-[500px] overflow-auto">
+      <div 
+        ref={tableContainerRef} 
+        className="shadow-lg border border-border rounded-lg max-h-[500px] overflow-auto scroll-smooth relative"
+        style={{ scrollBehavior: 'smooth' }}
+      >
         <DndContext
           onDragEnd={handleDragEnd}
           modifiers={[restrictToFirstScrollableAncestor]}
@@ -462,7 +524,7 @@ const UnlinkedExposure: React.FC<TableProps> = ({
                     return (
                       <th
                         key={header.id}
-                        className="px-6 py-4 text-left text-xs font-semibold text-header-color uppercase tracking-wider border-b border-border sticky top-0 bg-secondary-color z-1"
+                        className="px-6 py-4 text-left text-xs font-semibold text-header-color uppercase tracking-wider border-b border-border sticky top-0 bg-secondary-color z-10"
                         style={{ width: header.getSize() }}
                       >
                         {isDraggable ? (
@@ -504,11 +566,16 @@ const UnlinkedExposure: React.FC<TableProps> = ({
                 table.getRowModel().rows.map((row) => (
                   <React.Fragment key={row.id}>
                     <tr
-                      className={
+                      ref={(el) => {
+                        rowRefs.current[row.id] = el;
+                      }} // <-- added ref here
+                      className={`${
                         row.index % 2 === 0
                           ? "bg-primary-md"
                           : "bg-secondary-color-lt"
-                      }
+                      } ${
+                        expandedRowId === row.id ? "ring-2 ring-primary ring-opacity-50 shadow-md" : ""
+                      }`}
                     >
                       {row.getVisibleCells().map((cell) => (
                         <td

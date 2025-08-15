@@ -681,7 +681,7 @@ const FxBookingForm: React.FC = () => {
     <React.Fragment>
       <div className="mb-6 pt-4">
         <div className="transition-opacity duration-300">
-          <div className="min-h-screen space-y-6 w-full">
+          <div className="min-h-screen space-y-5 w-full">
             {/* Error and Success Messages */}
 
             <div className="flex items-center justify-end gap-2">
@@ -691,20 +691,20 @@ const FxBookingForm: React.FC = () => {
                 </Button>
               </div>
               <div className="w-15rem">
-                <Button onClick={handlePrintForm}>Print Form</Button>
+                <Button color="Fade" onClick={handlePrintForm}>Print Form</Button>
               </div>
               <div className="w-15rem">
-                <Button>Save Draft</Button>
+                <Button color="Fade">Save Draft</Button>
               </div>
               <div className="w-15rem">
-                <Button onClick={handleResetForm}>Reset Form</Button>
+                <Button color="Fade" onClick={handleResetForm}>Reset Form</Button>
               </div>
             </div>
 
             <div
               ref={formRef}
               id="pdf-section"
-              className="grid lg:grid-cols-2 w-full p-6 gap-4 rounded-lg border border-border bg-white"
+              className="grid lg:grid-cols-2 w-full gap-4 rounded-lg"
             >
               <div>
                 <TransactionDetails

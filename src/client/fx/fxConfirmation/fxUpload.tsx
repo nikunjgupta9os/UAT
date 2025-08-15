@@ -402,10 +402,10 @@ const FxUploader: React.FC = () => {
   return (
     <React.Fragment>
       <div className="space-y-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-secondary-color-lt p-6 rounded-lg shadow-sm border border-border">
           <div className="flex items-center space-x-2 mb-4">
-            <Upload className="w-4 h-4 text-gray-600" />
-            <label className="text-sm font-medium text-gray-700">
+            <Upload className="w-4 h-4 text-primary" />
+            <label className="text-sm font-medium text-primary">
               Upload File (CSV):
             </label>
           </div>
@@ -431,7 +431,7 @@ const FxUploader: React.FC = () => {
             />
             <div className="space-y-2">
               <Upload className="w-8 h-8 text-primary mx-auto" />
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-primary">
                 <span className="font-medium text-primary">
                   Click to upload
                 </span>
@@ -503,7 +503,7 @@ const FxUploader: React.FC = () => {
             <div></div>
             <div></div>
             <div className="flex items-center space-x-4 gap-2">
-              <Button disabled>
+              <Button color="Fade" disabled>
                 <span className="text-white">Import Data</span>
               </Button>
 

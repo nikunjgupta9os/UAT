@@ -602,17 +602,17 @@ const FxBookingForm: React.FC = () => {
                 </Button>
               </div>
               <div className="w-15rem">
-                <Button>Print Form</Button>
+                <Button color="Fade">Print Form</Button>
               </div>
               <div className="w-15rem">
-                <Button>Save Draft</Button>
+                <Button color="Fade">Save Draft</Button>
               </div>
               <div className="w-15rem">
-                <Button onClick={handleResetForm}>Reset Form</Button>
+                <Button color="Fade" onClick={handleResetForm}>Reset Form</Button>
               </div>
             </div>
 
-            <div className="grid lg:grid-cols-2 w-full p-6 gap-4 rounded-lg border border-border">
+            <div className="grid lg:grid-cols-2 w-full gap-4">
               <div>
                
                 <TransactionDetails
