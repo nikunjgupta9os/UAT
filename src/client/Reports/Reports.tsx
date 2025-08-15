@@ -150,39 +150,46 @@ function Reports() {
   // Fetch API data on mount
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        setLoading(true);
-        // Fetch main reports
-        const response = await axios.get(
-          "https://backend-slqi.onrender.com/api/forwards/linked-summary-by-category"
-        );
-        let data: Record<string, any[]> =
-          response.data && typeof response.data === "object"
-            ? response.data
-            : {};
+      setLoading(true);
+      let mainData: Record<string, any[]> = {};
+      let exposureData: any[] = [];
 
-        // Fetch exposure positions report
-        try {
-          const exposureRes = await axios.get(
-            "https://backend-slqi.onrender.com/api/forwards/exposure/summary"
-          );
-          if (exposureRes.data && Array.isArray(exposureRes.data.summary)) {
-            data["Exposure Positions"] = exposureRes.data.summary;
-          } else if (Array.isArray(exposureRes.data)) {
-            data["Exposure Positions"] = exposureRes.data;
-          } else {
-            data["Exposure Positions"] = [];
+      // Fetch both APIs in parallel
+      const mainPromise = axios
+        .get("https://backend-slqi.onrender.com/api/forwards/linked-summary-by-category")
+        .then((response) => {
+          if (response.data && typeof response.data === "object") {
+            mainData = response.data;
           }
-        } catch (exposureErr) {
-          // fallback: leave as empty array
-          data["Exposure Positions"] = [];
-        }
+        })
+        .catch(() => {
+          mainData = {};
+        });
 
-        setLinkedSummaryData({ ...mockLinkedSummaryDataByCategory, ...data });
-      } catch (err) {
-        // fallback to mock data
-        setLinkedSummaryData(mockLinkedSummaryDataByCategory);
-      }
+      const exposurePromise = axios
+        .get("https://backend-slqi.onrender.com/api/forwards/exposure/summary")
+        .then((exposureRes) => {
+          if (exposureRes.data && Array.isArray(exposureRes.data.summary)) {
+            exposureData = exposureRes.data.summary;
+          } else if (Array.isArray(exposureRes.data)) {
+            exposureData = exposureRes.data;
+          } else {
+            exposureData = [];
+          }
+        })
+        .catch(() => {
+          exposureData = [];
+        });
+
+      await Promise.all([mainPromise, exposurePromise]);
+
+      // Merge data
+      const mergedData = {
+        ...mockLinkedSummaryDataByCategory,
+        ...mainData,
+        ["Exposure Positions"]: exposureData,
+      };
+      setLinkedSummaryData(mergedData);
       setLoading(false);
     };
     fetchData();
