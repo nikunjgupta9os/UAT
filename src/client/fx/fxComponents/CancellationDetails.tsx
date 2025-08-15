@@ -40,8 +40,17 @@ type CancellationDetailsProps = {
 };
 
 const CancellationDetailsOldForwards: React.FC<CancellationDetailsProps> = ({ form, setForm }) => {
+  // Provide default values if form is undefined
+  const safeForm = form ?? {
+    currentSpotRate: "",
+    currentForwardRate: "",
+    bankCharges: "",
+    discountRate: "",
+    reason: "",
+  };
+
   const handleChange = (field: string) => (value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm?.((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -49,27 +58,27 @@ const CancellationDetailsOldForwards: React.FC<CancellationDetailsProps> = ({ fo
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <InputField
           label="Current Spot Rate (for Old Forwards)"
-          value={form.currentSpotRate}
+          value={safeForm.currentSpotRate}
           onChange={handleChange("currentSpotRate")}
           step="0.0001"
           required
         />
         <InputField
           label="Current Forward Rate (for Old Forwards ED Calc)"
-          value={form.currentForwardRate}
+          value={safeForm.currentForwardRate}
           onChange={handleChange("currentForwardRate")}
           step="0.0001"
           required
         />
         <InputField
           label="Bank Charges (Total, for Old Forwards)"
-          value={form.bankCharges}
+          value={safeForm.bankCharges}
           onChange={handleChange("bankCharges")}
           step="0.01"
         />
         <InputField
           label="Discount Rate (for ED NPV)"
-          value={form.discountRate}
+          value={safeForm.discountRate}
           onChange={handleChange("discountRate")}
           step="0.01"
           required
@@ -78,7 +87,7 @@ const CancellationDetailsOldForwards: React.FC<CancellationDetailsProps> = ({ fo
           <CustomSelect
             label="Reason for Action *"
             options={reasonOptions}
-            selectedValue={form.reason}
+            selectedValue={safeForm.reason}
             onChange={handleChange("reason")}
             placeholder="Select reason"
             isClearable={true}
