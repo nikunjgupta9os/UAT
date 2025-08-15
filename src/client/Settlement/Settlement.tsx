@@ -9,6 +9,7 @@ import {
   getPaginationRowModel,
 } from "@tanstack/react-table";
 import Button from "../ui/Button";
+import Pagination from "../ui/Pagination";
 
 import { Mail, FileText, Download } from "lucide-react";
 
@@ -144,6 +145,16 @@ function Settlement() {
     pageCount: Math.ceil(data.length / pagination.pageSize),
   });
 
+  // Pagination helpers for Pagination component (must be after table is defined)
+  const totalItems = data.length;
+  const currentPageItems = table.getPaginationRowModel().rows.length;
+  const startIndex =
+    totalItems === 0 ? 0 : pagination.pageIndex * pagination.pageSize + 1;
+  const endIndex = Math.min(
+    (pagination.pageIndex + 1) * pagination.pageSize,
+    totalItems
+  );
+
   useEffect(() => {
     // Filter data based on selections
     const filteredData = mockSettlementData.filter((row) => {
@@ -154,6 +165,9 @@ function Settlement() {
       return matchBank;
     });
     setData(filteredData);
+
+    // Reset pagination to first page when filters change
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   }, [selectedType, selectedEntity, selectDeal, calculationDate]);
 
   const totalAmount = useMemo(() => {
@@ -301,7 +315,7 @@ function Settlement() {
                   </td>
                 </tr>
               ) : (
-                table.getRowModel().rows.map((row) => (
+                table.getPaginationRowModel().rows.map((row) => (
                   <tr
                     key={row.id}
                     className={
@@ -347,9 +361,7 @@ function Settlement() {
             </div>
 
             <div className="w-15rem">
-              <Button onClick={() => setShowSummary(true)}>
-                cancellation
-              </Button>
+              <Button onClick={() => setShowSummary(true)}>cancellation</Button>
             </div>
           </div>
         </div>

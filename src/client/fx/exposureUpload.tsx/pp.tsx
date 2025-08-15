@@ -460,6 +460,7 @@ const AllExposureRequest: React.FC = () => {
         header: "Approval Status",
         cell: (info) => {
           const rawStatus = info.getValue();
+
           if (!rawStatus || typeof rawStatus !== "string") {
             return (
               <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-500">
@@ -468,22 +469,31 @@ const AllExposureRequest: React.FC = () => {
             );
           }
 
-          const status =
-            rawStatus.charAt(0).toUpperCase() +
-            rawStatus.slice(1).toLowerCase();
+          // Normalize to lowercase for matching
+          const normalizedStatus = rawStatus.toLowerCase();
+
+          // Color mapping based on lowercase keys
           const statusColors: Record<string, string> = {
-            Approved: "bg-green-100 text-green-800",
-            Pending: "bg-yellow-100 text-yellow-800",
-            Rejected: "bg-red-100 text-red-800",
+            approved: "bg-green-100 text-green-800",
+            pending: "bg-yellow-100 text-yellow-800",
+            rejected: "bg-red-100 text-red-800",
+            "delete-approval": "bg-orange-100 text-orange-800",
           };
+
+          // Convert lowercase to PascalCase for display
+          const displayStatus = normalizedStatus.replace(
+            /\w+/g,
+            (word) => word.charAt(0).toUpperCase() + word.slice(1)
+          );
 
           return (
             <span
               className={`px-2 py-1 text-xs font-medium rounded-full ${
-                statusColors[status] || "bg-gray-100 text-secondary-text"
+                statusColors[normalizedStatus] ||
+                "bg-gray-100 text-secondary-text"
               }`}
             >
-              {status}
+              {displayStatus}
             </span>
           );
         },
@@ -624,42 +634,54 @@ const AllExposureRequest: React.FC = () => {
         accessorKey: "payment_terms",
         header: "Payment Terms",
         cell: ({ getValue }) => (
-          <span className="text-secondary-text-dark">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text-dark">
+            {(getValue() as string) || "—"}
+          </span>
         ),
       },
       {
         accessorKey: "inco_terms",
         header: "Inco Terms",
         cell: ({ getValue }) => (
-          <span className="text-secondary-text-dark">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text-dark">
+            {(getValue() as string) || "—"}
+          </span>
         ),
       },
       {
         accessorKey: "plant_code",
         header: "Plant Code",
         cell: ({ getValue }) => (
-          <span className="text-secondary-text-dark">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text-dark">
+            {(getValue() as string) || "—"}
+          </span>
         ),
       },
       {
         accessorKey: "approved_by",
         header: "Approved By",
         cell: ({ getValue }) => (
-          <span className="text-secondary-text-dark">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text-dark">
+            {(getValue() as string) || "—"}
+          </span>
         ),
       },
       {
         accessorKey: "rejected_by",
         header: "Rejected By",
         cell: ({ getValue }) => (
-          <span className="text-secondary-text-dark">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text-dark">
+            {(getValue() as string) || "—"}
+          </span>
         ),
       },
       {
         accessorKey: "requested_by",
         header: "Requested By",
         cell: ({ getValue }) => (
-          <span className="text-secondary-text-dark">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text-dark">
+            {(getValue() as string) || "—"}
+          </span>
         ),
       },
       {
