@@ -192,20 +192,24 @@ const UnlinkedExposure: React.FC<TableProps> = ({
     if (tableContainerRef.current) {
       // Prevent any unwanted scroll behavior
       const container = tableContainerRef.current;
-      container.style.overscrollBehavior = 'contain';
-      container.style.scrollBehavior = 'smooth';
-      
+      container.style.overscrollBehavior = "contain";
+      container.style.scrollBehavior = "smooth";
+
       // Prevent scroll events from bubbling up
       const preventScrollBubble = (e: Event) => {
         e.stopPropagation();
       };
-      
-      container.addEventListener('scroll', preventScrollBubble, { passive: false });
-      container.addEventListener('wheel', preventScrollBubble, { passive: false });
-      
+
+      container.addEventListener("scroll", preventScrollBubble, {
+        passive: false,
+      });
+      container.addEventListener("wheel", preventScrollBubble, {
+        passive: false,
+      });
+
       return () => {
-        container.removeEventListener('scroll', preventScrollBubble);
-        container.removeEventListener('wheel', preventScrollBubble);
+        container.removeEventListener("scroll", preventScrollBubble);
+        container.removeEventListener("wheel", preventScrollBubble);
       };
     }
   }, []);
@@ -231,24 +235,24 @@ const UnlinkedExposure: React.FC<TableProps> = ({
       if (rowElement && tableContainerRef.current) {
         // Use the table container ref for reliable scrolling
         const tableContainer = tableContainerRef.current;
-        
+
         // Small delay to ensure the expanded content is rendered
         setTimeout(() => {
           // Get the row's position relative to the container
           const rowTop = rowElement.offsetTop;
-          
+
           // Get the header height to calculate the exact position below it
-          const headerElement = tableContainer.querySelector('thead');
+          const headerElement = tableContainer.querySelector("thead");
           const headerHeight = headerElement ? headerElement.offsetHeight : 0;
-          
+
           // Calculate the target scroll position to place the row right below the header
           // We want the row to appear exactly below the sticky header
           const targetScrollTop = Math.max(0, rowTop - headerHeight - 2); // 2px for perfect visual spacing
-          
+
           // Smooth scroll within the container only
           tableContainer.scrollTo({
             top: targetScrollTop,
-            behavior: 'smooth'
+            behavior: "smooth",
           });
         }, 50); // 50ms delay to ensure DOM updates
       }
@@ -337,6 +341,7 @@ const UnlinkedExposure: React.FC<TableProps> = ({
         header: ({ table }) => (
           <input
             type="checkbox"
+            className="accent-primary w-4 h-4 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2"
             checked={table.getIsAllRowsSelected()}
             onChange={table.getToggleAllRowsSelectedHandler()}
           />
@@ -344,6 +349,7 @@ const UnlinkedExposure: React.FC<TableProps> = ({
         cell: ({ row }) => (
           <input
             type="checkbox"
+            className="accent-primary w-4 h-4 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2"
             checked={row.getIsSelected()}
             onChange={row.getToggleSelectedHandler()}
           />
@@ -503,10 +509,10 @@ const UnlinkedExposure: React.FC<TableProps> = ({
         Unlinked Exposure
       </h2>
 
-      <div 
-        ref={tableContainerRef} 
+      <div
+        ref={tableContainerRef}
         className="shadow-lg border border-border rounded-lg max-h-[500px] overflow-auto scroll-smooth relative"
-        style={{ scrollBehavior: 'smooth' }}
+        style={{ scrollBehavior: "smooth" }}
       >
         <DndContext
           onDragEnd={handleDragEnd}
@@ -524,7 +530,7 @@ const UnlinkedExposure: React.FC<TableProps> = ({
                     return (
                       <th
                         key={header.id}
-                        className="px-6 py-4 text-left text-xs font-semibold text-header-color uppercase tracking-wider border-b border-border sticky top-0 bg-secondary-color z-10"
+                        className="px-6 py-4 text-left text-sm font-semibold text-header-color uppercase tracking-wider border-b border-border sticky top-0 bg-secondary-color z-10"
                         style={{ width: header.getSize() }}
                       >
                         {isDraggable ? (
@@ -559,7 +565,26 @@ const UnlinkedExposure: React.FC<TableProps> = ({
                     colSpan={columns.length}
                     className="px-6 py-12 text-center text-primary-lt"
                   >
-                    No Data Available
+                    <div className="flex flex-col items-center">
+                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                        <svg
+                          className="w-6 h-6 text-primary"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                      </div>
+                      <p className="text-lg font-medium text-primary mb-1">
+                        No Data available
+                      </p>
+                    </div>
                   </td>
                 </tr>
               ) : (
@@ -574,7 +599,9 @@ const UnlinkedExposure: React.FC<TableProps> = ({
                           ? "bg-primary-md"
                           : "bg-secondary-color-lt"
                       } ${
-                        expandedRowId === row.id ? "ring-2 ring-primary ring-opacity-50 shadow-md" : ""
+                        expandedRowId === row.id
+                          ? "ring-2 ring-primary ring-opacity-50 shadow-md"
+                          : ""
                       }`}
                     >
                       {row.getVisibleCells().map((cell) => (

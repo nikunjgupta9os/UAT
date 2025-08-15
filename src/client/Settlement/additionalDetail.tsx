@@ -141,14 +141,14 @@ const AdditionalForwardDetail: React.FC<HedgingDetailsProps> = ({
         header: "Forward Ref",
         accessorKey: "forwardRef",
         cell: ({ getValue }) => (
-          <span className="text-sm text-gray-700">{getValue<string>()}</span>
+          <span className="text-sm text-secondary-text-dark">{getValue<string>()}</span>
         ),
       },
       {
         header: "Outstanding Amount",
         accessorKey: "outstandingAmount",
         cell: ({ getValue }) => (
-          <span className="text-sm text-gray-700">
+          <span className="text-sm text-secondary-text-dark">
             {getValue<number>().toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
@@ -214,7 +214,7 @@ const AdditionalForwardDetail: React.FC<HedgingDetailsProps> = ({
         header: "Net Rate",
         accessorKey: "netRate",
         cell: ({ getValue }) => (
-          <span className="text-sm text-gray-700">
+          <span className="text-sm text-secondary-text-dark">
             {getValue<number>().toFixed(4)}
           </span>
         ),
@@ -241,14 +241,14 @@ const AdditionalForwardDetail: React.FC<HedgingDetailsProps> = ({
         header: "Bank Name",
         accessorKey: "bankName",
         cell: ({ getValue }) => (
-          <span className="text-sm text-gray-700">{getValue<string>()}</span>
+          <span className="text-sm text-secondary-text-dark">{getValue<string>()}</span>
         ),
       },
       {
         header: "Maturity",
         accessorKey: "maturity",
         cell: ({ getValue }) => (
-          <span className="text-sm text-gray-700">
+          <span className="text-sm text-secondary-text-dark">
             {new Date(getValue<string>()).toLocaleDateString()}
           </span>
         ),
@@ -275,7 +275,7 @@ const AdditionalForwardDetail: React.FC<HedgingDetailsProps> = ({
         header: "ED Benefit",
         accessorKey: "edBenefit",
         cell: ({ getValue }) => (
-          <span className="text-sm text-gray-700">
+          <span className="text-sm text-secondary-text-dark">
             {getValue<number>().toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
@@ -342,7 +342,7 @@ const AdditionalForwardDetail: React.FC<HedgingDetailsProps> = ({
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="px-6 py-4 text-left text-xs font-semibold text-header-color uppercase tracking-wider border-b border-border"
+                    className="px-6 py-4 text-left text-sm font-semibold text-header-color uppercase tracking-wider border-b border-border"
                   >
                     {flexRender(header.column.columnDef.header, header.getContext())}
                   </th>
@@ -355,12 +355,12 @@ const AdditionalForwardDetail: React.FC<HedgingDetailsProps> = ({
               <tr>
                 <td
                   colSpan={hedgingDetailColumns.length}
-                  className="px-6 py-12 text-left text-gray-500"
+                  className="px-6 py-12 text-left text-primary"
                 >
                   <div className="flex flex-col items-center">
                     <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
                       <svg
-                        className="w-6 h-6 text-gray-400"
+                        className="w-6 h-6 text-primary"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -373,10 +373,10 @@ const AdditionalForwardDetail: React.FC<HedgingDetailsProps> = ({
                         />
                       </svg>
                     </div>
-                    <p className="text-lg font-medium text-gray-900 mb-1">
+                    <p className="text-xl font-medium text-primary mb-1">
                       No Data available
                     </p>
-                    <p className="text-sm text-primary">
+                    <p className="text-md font-medium text-primary">
                       There are no data to display at the moment.
                     </p>
                   </div>

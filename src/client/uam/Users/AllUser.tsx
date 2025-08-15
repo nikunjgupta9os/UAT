@@ -757,7 +757,7 @@ const AllUser: React.FC = () => {
                       return (
                         <th
                           key={header.id}
-                          className="px-6 py-4 text-left text-xs font-semibold text-header-color uppercase tracking-wider border-b border-border"
+                          className="px-6 py-4 text-left text-sm font-semibold text-header-color uppercase tracking-wider border-b border-border"
                           style={{ width: header.getSize() }}
                         >
                           <Droppable id={header.column.id}>
@@ -810,10 +810,10 @@ const AllUser: React.FC = () => {
                           />
                         </svg>
                       </div>
-                      <p className="text-lg font-medium text-primary mb-1">
+                      <p className="text-xl font-medium text-primary mb-1">
                         No users found
                       </p>
-                      <p className="text-sm text-primary">
+                      <p className="text-md font-medium text-primary">
                         There are no users to display at the moment.
                       </p>
                     </div>

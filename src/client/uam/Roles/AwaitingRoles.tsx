@@ -694,7 +694,7 @@ const AwaitingApproval: React.FC = () => {
                         return (
                           <th
                             key={header.id}
-                            className="px-6 py-4 text-left text-xs font-semibold text-header-color uppercase tracking-wider border-b border-border"
+                            className="px-6 py-4 text-left text-sm font-medium text-header-color uppercase tracking-wider border-b border-border"
                             style={{ width: header.getSize() }}
                           >
                             <Droppable id={header.column.id}>
@@ -707,7 +707,7 @@ const AwaitingApproval: React.FC = () => {
                                 </div>
                               ) : (
                                 <Draggable id={header.column.id}>
-                                  <div className="cursor-move border-border text-header-color hover:bg-primary-lg rounded px-1 py-1 transition duration-150 ease-in-out">
+                                  <div className="cursor-move border-border hover:bg-primary-lg rounded px-1 py-1 transition duration-150 ease-in-out">
                                   {flexRender(
                                       header.column.columnDef.header,
                                       header.getContext()
@@ -734,7 +734,7 @@ const AwaitingApproval: React.FC = () => {
                       <div className="flex flex-col items-center">
                         <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
                           <svg
-                            className="w-6 h-6 text-gray-400"
+                            className="w-6 h-6 text-primary"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -747,10 +747,10 @@ const AwaitingApproval: React.FC = () => {
                             />
                           </svg>
                         </div>
-                        <p className="text-lg font-medium text-gray-900 mb-1">
+                        <p className="text-xl font-medium text-primary mb-1">
                           No role found
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-md font-normal text-primary">
                           There are no role to display at the moment.
                         </p>
                       </div>

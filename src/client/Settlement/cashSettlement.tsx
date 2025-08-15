@@ -292,7 +292,7 @@ const CashSettlementTable: React.FC<CashSettlementTableProps> = ({
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="px-6 py-4 text-left text-xs font-semibold text-header-color uppercase tracking-wider border-b border-border"
+                    className="px-6 py-4 text-left text-sm font-semibold text-header-color uppercase tracking-wider border-b border-border"
                   >
                     {flexRender(
                       header.column.columnDef.header,

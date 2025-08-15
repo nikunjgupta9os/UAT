@@ -511,7 +511,6 @@ function NyneOSTable<T extends EditableRowData>({
 
   return (
     <>
-      
       <div className="flex items-center justify-end">
         <div className="flex items-center py-2.5 gap-2 min-w-[12rem]">
           <Button onClick={handleApprove}>Approve</Button>
@@ -521,7 +520,7 @@ function NyneOSTable<T extends EditableRowData>({
         </div>
       </div>
       <div className={`w-full overflow-x-auto ${className}`}>
-        <div className="shadow-lg border border-border">
+        <div className=" border border-border">
           <DndContext onDragEnd={handleDragEnd}>
             <table className="min-w-full">
               <colgroup>
@@ -577,11 +576,26 @@ function NyneOSTable<T extends EditableRowData>({
                       className="px-6 py-12 text-center text-primary"
                     >
                       <div className="flex flex-col items-center">
-                        <p className="text-lg font-medium text-primary mb-1">
-                          No data found
+                        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                          <svg
+                            className="w-6 h-6 text-primary"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
+                          </svg>
+                        </div>
+                        <p className="text-xl font-medium text-primary mb-1">
+                          No Roles found
                         </p>
-                        <p className="text-sm text-primary">
-                          There is no data to display at the moment.
+                        <p className="text-md font-normal text-primary">
+                          There are no role to display at the moment.
                         </p>
                       </div>
                     </td>

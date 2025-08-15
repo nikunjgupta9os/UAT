@@ -327,6 +327,7 @@ const AvailableForward: React.FC<TableProps> = ({
         header: ({ table }) => (
           <input
             type="checkbox"
+            className="accent-primary w-4 h-4 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2"
             checked={table.getIsAllRowsSelected()}
             onChange={table.getToggleAllRowsSelectedHandler()}
           />
@@ -334,6 +335,7 @@ const AvailableForward: React.FC<TableProps> = ({
         cell: ({ row }) => (
           <input
             type="checkbox"
+            className="accent-primary w-4 h-4 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2"
             checked={row.getIsSelected()}
             onChange={row.getToggleSelectedHandler()}
           />
@@ -486,7 +488,7 @@ const AvailableForward: React.FC<TableProps> = ({
                     return (
                       <th
                         key={header.id}
-                        className="px-6 py-4 text-left text-xs font-semibold text-header-color uppercase tracking-wider border-b border-border sticky top-0 bg-secondary-color z-10"
+                        className="px-6 py-4 text-left text-sm font-semibold text-header-color uppercase tracking-wider border-b border-border sticky top-0 bg-secondary-color z-10"
                         style={{ width: header.getSize() }}
                       >
                         {isDraggable ? (
@@ -519,9 +521,28 @@ const AvailableForward: React.FC<TableProps> = ({
                 <tr>
                   <td
                     colSpan={columns.length}
-                    className="px-6 py-12 text-center text-gray-500"
+                    className="px-6 py-12 text-center text-primary"
                   >
-                    No Data Available
+                    <div className="flex flex-col items-center">
+                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                        <svg
+                          className="w-6 h-6 text-primary"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                      </div>
+                      <p className="text-lg font-medium text-primary mb-1">
+                        No Data available
+                      </p>
+                    </div>
                   </td>
                 </tr>
               ) : (

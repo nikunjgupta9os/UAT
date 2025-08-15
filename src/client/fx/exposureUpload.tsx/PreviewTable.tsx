@@ -1,4 +1,3 @@
-
 import React from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { X } from "lucide-react";
@@ -32,12 +31,12 @@ const PreviewTable: React.FC<PreviewTableProps> = ({
         exposure_header_id: `preview_row_${index}`, // Required by EditableRowData
         originalIndex: index,
       };
-      
+
       // Add each column value with proper key
       row.forEach((value, colIndex) => {
         obj[`col_${colIndex}`] = value || "";
       });
-      
+
       return obj;
     });
   }, [rows]);
@@ -50,7 +49,7 @@ const PreviewTable: React.FC<PreviewTableProps> = ({
     });
     visibility["remove"] = true;
     visibility["actions"] = false; // Always show actions
- // Always show actions
+    // Always show actions
     return visibility;
   }, [headers]);
 
@@ -61,7 +60,9 @@ const PreviewTable: React.FC<PreviewTableProps> = ({
       str
         .trim()
         .split(/\s+/)
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .map(
+          (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        )
         .join(" ");
 
     const allColumns = headers.map((header, index) => ({ header, index }));
@@ -82,26 +83,25 @@ const PreviewTable: React.FC<PreviewTableProps> = ({
   }, [headers]);
 
   // Handle row updates from the table
-  const handleRowUpdate = React.useCallback(async (exposureHeaderId: string, updatedFields: Record<string, any>) => {
-    if (!onUpdateRow) return true;
+  const handleRowUpdate = React.useCallback(
+    async (exposureHeaderId: string, updatedFields: Record<string, any>) => {
+      if (!onUpdateRow) return true;
 
-    // Extract the row index from the exposure_header_id
-    const rowIndex = parseInt(exposureHeaderId.replace('preview_row_', ''));
-    
-    if (isNaN(rowIndex)) return false;
+      // Extract the row index from the exposure_header_id
+      const rowIndex = parseInt(exposureHeaderId.replace("preview_row_", ""));
 
-    try {
-      onUpdateRow(rowIndex, updatedFields);
-      return true;
-    } catch (error) {
-      console.error('Error updating row:', error);
-      return false;
-    }
-  }, [onUpdateRow]);
+      if (isNaN(rowIndex)) return false;
 
-
-
-
+      try {
+        onUpdateRow(rowIndex, updatedFields);
+        return true;
+      } catch (error) {
+        console.error("Error updating row:", error);
+        return false;
+      }
+    },
+    [onUpdateRow]
+  );
 
   // Generate columns based on headers
   const columns: ColumnDef<PreviewRowData>[] = React.useMemo(() => {
@@ -124,8 +124,8 @@ const PreviewTable: React.FC<PreviewTableProps> = ({
         return (
           <span
             className={`text-sm ${
-              isMissing 
-                ? "bg-red-100 text-red-800 px-2 py-1 rounded italic" 
+              isMissing
+                ? "bg-red-100 text-red-800 px-2 py-1 rounded italic"
                 : "text-gray-900"
             }`}
           >
@@ -164,12 +164,27 @@ const PreviewTable: React.FC<PreviewTableProps> = ({
     return (
       <div className="w-full overflow-x-auto">
         <div className="bg-white rounded-xl shadow-lg border border-gray-200">
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-12 text-primary">
+            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+              <svg
+                className="w-6 h-6 text-primary"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
             <div className="flex flex-col items-center">
-              <p className="text-lg font-medium text-gray-900 mb-1">
+              <p className="text-xl font-medium text-primary mb-1">
                 No data to preview
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-md font-medium text-primary">
                 Upload a file or add data to see the preview.
               </p>
             </div>
@@ -179,27 +194,27 @@ const PreviewTable: React.FC<PreviewTableProps> = ({
     );
   }
 
-    return (
-      <div className="space-y-4">
-        <NyneOSTable<PreviewRowData>
-          data={data}
-          columns={columns}
-          defaultColumnVisibility={defaultVisibility}
-          expandedRowConfig={expandedRowConfig}
-          className="max-h-[500px]"
-          edit={true}
-          onUpdate={handleRowUpdate}
-        />      {/* Footer with row count info */}
+  return (
+    <div className="space-y-4">
+      <NyneOSTable<PreviewRowData>
+        data={data}
+        columns={columns}
+        defaultColumnVisibility={defaultVisibility}
+        expandedRowConfig={expandedRowConfig}
+        className="max-h-[500px]"
+        edit={true}
+        onUpdate={handleRowUpdate}
+      />{" "}
+      {/* Footer with row count info */}
       <div className="bg-gray-50 px-6 py-3 border border-gray-200 rounded-xl">
         <div className="flex justify-between items-center text-sm text-gray-600">
           <span>
-            {rows.length > 50 
+            {rows.length > 50
               ? `Showing first 50 rows of ${rows.length} total rows`
-              : `Showing ${rows.length} row${rows.length !== 1 ? 's' : ''}`
-            }
+              : `Showing ${rows.length} row${rows.length !== 1 ? "s" : ""}`}
           </span>
           <span className="text-xs text-gray-500">
-            {headers.length} column{headers.length !== 1 ? 's' : ''}
+            {headers.length} column{headers.length !== 1 ? "s" : ""}
           </span>
         </div>
       </div>

@@ -437,14 +437,14 @@ const MTMRateInput: React.FC = () => {
           {/* Clear Form Button */}
           <div className="w-1/2">
             <div className="flex items-start ">
-              <Button onClick={handleClearForm}>Clear Form</Button>
+              <Button color="Fade" onClick={handleClearForm}>Clear Form</Button>
             </div>
           </div>
         </div>
 
         <div className="relative top-6 flex items-center justify-end gap-4">
           <div className="w-15rem">
-            <Button onClick={handleSaveAllRates}>Save All Rates</Button>
+            <Button color="Fade" onClick={handleSaveAllRates}>Save All Rates</Button>
           </div>
           <div className="w-15rem">
             <Button onClick={handleAddRow}>Add New Rate</Button>

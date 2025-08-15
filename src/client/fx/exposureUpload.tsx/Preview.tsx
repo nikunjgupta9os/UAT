@@ -10,7 +10,13 @@ import {
   type Row,
   type HeaderContext,
 } from "@tanstack/react-table";
-import { X, ChevronDown, ChevronUp, CircleArrowUp, CircleArrowDown } from "lucide-react";
+import {
+  X,
+  ChevronDown,
+  ChevronUp,
+  CircleArrowUp,
+  CircleArrowDown,
+} from "lucide-react";
 // import PaginationFooter from "../../ui/PaginationFooter";
 import Button from "../../../client/ui/Button";
 import "../../styles/theme.css";
@@ -44,7 +50,10 @@ interface PreviewTableProps {
   draggableColumns?: string[];
   sortableColumns?: string[];
   expandedRowConfig?: ExpandedRowConfig;
-  onUpdate?: (rowId: string, changes: Partial<PreviewRowData>) => Promise<boolean>;
+  onUpdate?: (
+    rowId: string,
+    changes: Partial<PreviewRowData>
+  ) => Promise<boolean>;
   className?: string;
   edit?: boolean;
 }
@@ -156,7 +165,6 @@ function ExpandedRow<T extends EditableRowData>({
   };
 
   return (
-    
     <tr key={`${row.id}-expanded`}>
       <td colSpan={visibleColumnCount} className="px-6 py-4 bg-primary-md">
         <div className="bg-secondary-color-lt rounded-lg p-4 shadow-md border border-border">
@@ -207,7 +215,9 @@ const PreviewTable: React.FC<PreviewTableProps> = ({
   edit = true,
 }) => {
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
-  const [columnVisibility, setColumnVisibility] = useState(defaultColumnVisibility);
+  const [columnVisibility, setColumnVisibility] = useState(
+    defaultColumnVisibility
+  );
   const [sorting, setSorting] = useState<any[]>([]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -280,7 +290,10 @@ const PreviewTable: React.FC<PreviewTableProps> = ({
 
         const handleBlur = () => {
           if (onUpdateRow) {
-            const updatedRow = { ...row.original, [column.id]: editingValue.trim() };
+            const updatedRow = {
+              ...row.original,
+              [column.id]: editingValue.trim(),
+            };
             onUpdateRow(row.original.originalIndex, updatedRow);
           }
         };
@@ -326,50 +339,52 @@ const PreviewTable: React.FC<PreviewTableProps> = ({
   }, [headers, onRemoveRow, onUpdateRow]);
 
   // Enhanced columns with sorting capability
-  const enhancedColumns: ColumnDef<PreviewRowData>[] = baseColumns.map((col) => {
-    const columnId = col.id || (col as any).accessorKey;
+  const enhancedColumns: ColumnDef<PreviewRowData>[] = baseColumns.map(
+    (col) => {
+      const columnId = col.id || (col as any).accessorKey;
 
-    if (sortableColumns.includes(columnId)) {
-      return {
-        ...col,
-        enableSorting: true,
-        sortDescFirst: false,
-        header: ({ column }: HeaderContext<PreviewRowData, unknown>) => (
-          <div className="flex items-center space-x-2">
-            <span>
-              {typeof col.header === "function"
-                ? "Sort"
-                : (col.header as React.ReactNode)}
-            </span>
-            <button
-              onClick={() => {
-                const currentSort = column.getIsSorted();
-                if (currentSort === false) {
-                  column.toggleSorting(false);
-                } else if (currentSort === "asc") {
-                  column.toggleSorting(true);
-                } else {
-                  column.toggleSorting(false);
-                }
-              }}
-              className="flex items-center"
-            >
-              {column.getIsSorted() === "asc" ? (
-                <CircleArrowUp className="text-primary w-4 h-4" />
-              ) : column.getIsSorted() === "desc" ? (
-                <CircleArrowDown className="w-4 h-4" />
-              ) : (
-                <div className="flex flex-col">
-                  <CircleArrowUp className="text-primary w-4 h-4 mb-[-2px] opacity-50" />
-                </div>
-              )}
-            </button>
-          </div>
-        ),
-      } as ColumnDef<PreviewRowData>;
+      if (sortableColumns.includes(columnId)) {
+        return {
+          ...col,
+          enableSorting: true,
+          sortDescFirst: false,
+          header: ({ column }: HeaderContext<PreviewRowData, unknown>) => (
+            <div className="flex items-center space-x-2">
+              <span>
+                {typeof col.header === "function"
+                  ? "Sort"
+                  : (col.header as React.ReactNode)}
+              </span>
+              <button
+                onClick={() => {
+                  const currentSort = column.getIsSorted();
+                  if (currentSort === false) {
+                    column.toggleSorting(false);
+                  } else if (currentSort === "asc") {
+                    column.toggleSorting(true);
+                  } else {
+                    column.toggleSorting(false);
+                  }
+                }}
+                className="flex items-center"
+              >
+                {column.getIsSorted() === "asc" ? (
+                  <CircleArrowUp className="text-primary w-4 h-4" />
+                ) : column.getIsSorted() === "desc" ? (
+                  <CircleArrowDown className="w-4 h-4" />
+                ) : (
+                  <div className="flex flex-col">
+                    <CircleArrowUp className="text-primary w-4 h-4 mb-[-2px] opacity-50" />
+                  </div>
+                )}
+              </button>
+            </div>
+          ),
+        } as ColumnDef<PreviewRowData>;
+      }
+      return col;
     }
-    return col;
-  });
+  );
 
   const finalColumns: ColumnDef<PreviewRowData>[] = expandedRowConfigMemo
     ? [
@@ -397,14 +412,14 @@ const PreviewTable: React.FC<PreviewTableProps> = ({
       ]
     : enhancedColumns;
 
-  
-
   const table = useReactTable({
     data,
     columns: finalColumns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getExpandedRowModel: expandedRowConfigMemo ? getExpandedRowModel() : undefined,
+    getExpandedRowModel: expandedRowConfigMemo
+      ? getExpandedRowModel()
+      : undefined,
     getRowCanExpand: expandedRowConfigMemo ? () => true : undefined,
     // onColumnOrderChange: setColumnOrder,
     // onSortingChange: setSorting,
@@ -412,7 +427,10 @@ const PreviewTable: React.FC<PreviewTableProps> = ({
     onRowSelectionChange: setRowSelection,
     state: {
       columnOrder,
-      columnVisibility: Object.keys(defaultVisibility).length > 0 ? defaultVisibility : columnVisibility,
+      columnVisibility:
+        Object.keys(defaultVisibility).length > 0
+          ? defaultVisibility
+          : columnVisibility,
       pagination,
       // sorting,
       rowSelection,
@@ -432,10 +450,25 @@ const PreviewTable: React.FC<PreviewTableProps> = ({
         <div className="bg-white rounded-xl shadow-lg border border-gray-200">
           <div className="text-center py-12 text-gray-500">
             <div className="flex flex-col items-center">
-              <p className="text-lg font-medium text-gray-900 mb-1">
+              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                <svg
+                  className="w-6 h-6 text-primary"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </div>
+              <p className="text-xl font-medium text-gray-900 mb-1">
                 No data to preview
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-md font-normal text-gray-500">
                 Upload a file or add data to see the preview.
               </p>
             </div>
@@ -445,94 +478,109 @@ const PreviewTable: React.FC<PreviewTableProps> = ({
     );
   }
 
- return (
-  <div className="space-y-4">
-    <div className="w-full overflow-x-auto">
-      <div className="shadow-lg border border-border">
-        <table className="min-w-full">
-          <colgroup>
-            {table.getVisibleLeafColumns().map((col) => (
-              <col key={col.id} className="font-medium" />
-            ))}
-          </colgroup>
-          <thead className="bg-secondary-color rounded-xl">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    className="px-6 py-4 text-left text-sm font-semibold text-header-color uppercase tracking-wider border-b border-border"
-                    style={{ width: header.getSize() }}
-                  >
-                    <div className="px-1">
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody className="divide-y">
-            {table.getRowModel().rows.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={finalColumns.length}
-                  className="px-6 py-12 text-center text-gray-500"
-                >
-                  <div className="flex flex-col items-center">
-                    <p className="text-lg font-medium text-primary mb-1">
-                      No data found
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      There is no data to display at the moment.
-                    </p>
-                  </div>
-                </td>
-              </tr>
-            ) : (
-              table.getRowModel().rows.map((row, idx) => (
-                <React.Fragment key={row.id}>
-                  <tr
-                    className={
-                      idx % 2 === 0
-                        ? "bg-primary-md"
-                        : "bg-secondary-color-lt"
-                    }
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <td
-                        key={cell.id}
-                        className="px-6 py-4 whitespace-nowrap text-sm border-b border-border"
-                      >
+  return (
+    <div className="space-y-4">
+      <div className="w-full overflow-x-auto">
+        <div className="shadow-lg border border-border">
+          <table className="min-w-full">
+            <colgroup>
+              {table.getVisibleLeafColumns().map((col) => (
+                <col key={col.id} className="font-medium" />
+              ))}
+            </colgroup>
+            <thead className="bg-secondary-color rounded-xl">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <th
+                      key={header.id}
+                      className="px-6 py-4 text-left text-sm font-semibold text-header-color uppercase tracking-wider border-b border-border"
+                      style={{ width: header.getSize() }}
+                    >
+                      <div className="px-1">
                         {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
+                          header.column.columnDef.header,
+                          header.getContext()
                         )}
-                      </td>
-                    ))}
-                  </tr>
-                  {row.getIsExpanded() && expandedRowConfigMemo && (
-                    <ExpandedRow
-                      row={row}
-                      config={expandedRowConfigMemo}
-                      onUpdate={onUpdate}
-                      visibleColumnCount={row.getVisibleCells().length}
-                      edit={edit}
-                    />
-                  )}
-                </React.Fragment>
-              ))
-            )}
-          </tbody>
-        </table>
-        {/* <PaginationFooter table={table} /> */}
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody className="divide-y">
+              {table.getRowModel().rows.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={finalColumns.length}
+                    className="px-6 py-12 text-center text-gray-500"
+                  >
+                    <div className="flex flex-col items-center">
+                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                        <svg
+                          className="w-6 h-6 text-primary"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                      </div>
+                      <p className="text-xl font-medium text-primary mb-1">
+                        No data found
+                      </p>
+                      <p className="text-md font-normal text-gray-500">
+                        There is no data to display at the moment.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                table.getRowModel().rows.map((row, idx) => (
+                  <React.Fragment key={row.id}>
+                    <tr
+                      className={
+                        idx % 2 === 0
+                          ? "bg-primary-md"
+                          : "bg-secondary-color-lt"
+                      }
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <td
+                          key={cell.id}
+                          className="px-6 py-4 whitespace-nowrap text-sm border-b border-border"
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                    {row.getIsExpanded() && expandedRowConfigMemo && (
+                      <ExpandedRow
+                        row={row}
+                        config={expandedRowConfigMemo}
+                        onUpdate={onUpdate}
+                        visibleColumnCount={row.getVisibleCells().length}
+                        edit={edit}
+                      />
+                    )}
+                  </React.Fragment>
+                ))
+              )}
+            </tbody>
+          </table>
+          {/* <PaginationFooter table={table} /> */}
+        </div>
       </div>
-    </div>
 
-     <div className="bg-gray-50 px-6 py-3 border border-gray-200 rounded-xl">
+      <div className="bg-gray-50 px-6 py-3 border border-gray-200 rounded-xl">
         <div className="flex justify-between items-center text-sm text-gray-600">
           <span>
             {rows.length > 50
@@ -544,11 +592,8 @@ const PreviewTable: React.FC<PreviewTableProps> = ({
           </span>
         </div>
       </div>
-  </div>
-
- 
-    );
+    </div>
+  );
 };
-
 
 export default PreviewTable;

@@ -100,7 +100,7 @@
 //         setIsEditing(false);
 //         return;
 //       }
-      
+
 //       try {
 //         // Prepare the payload with changed fields and requested_by
 //         const payload = {
@@ -126,7 +126,7 @@
 //           // Update the original row data
 //           Object.assign(row.original, changedFields);
 //           setIsEditing(false);
-          
+
 //           // Show success notification
 //           notify("Changes saved successfully", "success");
 //         } else {
@@ -134,14 +134,14 @@
 //         }
 //       } catch (error) {
 //         console.error("Error updating exposure:", error);
-        
+
 //         // Show error notification
 //         notify("Failed to save changes. Please try again.", "error");
-        
+
 //         // Don't exit edit mode on error
 //         return;
 //       }
-      
+
 //       // Legacy fallback for onUpdate prop
 //       if (onUpdate) {
 //         const success = await onUpdate(
@@ -567,7 +567,7 @@
 //             </table>
 //           </DndContext>
 //         </div>
-        
+
 //         {/* Add Pagination Component */}
 //         <Pagination
 //           table={table}
@@ -582,7 +582,6 @@
 // }
 
 // export default NyneOSTable;
-
 
 import React, { useState, useEffect } from "react";
 import type { RowSelectionState } from "@tanstack/react-table";
@@ -1107,11 +1106,26 @@ function NyneOSTable<T extends EditableRowData>({
                       className="px-6 py-12 text-center text-primary"
                     >
                       <div className="flex flex-col items-center">
-                        <p className="text-lg font-medium text-primary mb-1">
-                          No data found
+                        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                          <svg
+                            className="w-6 h-6 text-primary"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
+                          </svg>
+                        </div>
+                        <p className="text-xl font-medium text-primary mb-1">
+                          No Roles found
                         </p>
-                        <p className="text-sm text-primary">
-                          There is no data to display at the moment.
+                        <p className="text-md font-normal text-primary">
+                          There are no role to display at the moment.
                         </p>
                       </div>
                     </td>
@@ -1171,4 +1185,3 @@ function NyneOSTable<T extends EditableRowData>({
 }
 
 export default NyneOSTable;
-

@@ -3,7 +3,13 @@ import { Draggable } from "../../common/Draggable";
 import { Droppable } from "../../common/Droppable";
 import { DndContext, type DragEndEvent } from "@dnd-kit/core";
 import { restrictToFirstScrollableAncestor } from "@dnd-kit/modifiers";
-import { Trash2, ChevronDown, ChevronUp, Download } from "lucide-react";
+import {
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  Receipt,
+} from "lucide-react";
 import axios from "axios";
 import Pagination from "../../ui/Pagination";
 import Button from "../../ui/Button";
@@ -1156,7 +1162,14 @@ const TransactionTable: React.FC = () => {
                     colSpan={columns.length}
                     className="px-6 py-12 text-center text-primary"
                   >
-                    No Transactions Available
+                    <div className="flex flex-col items-center">
+                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                        <Receipt className="w-6 h-6 text-primary" />
+                      </div>
+                      <p className="text-xl font-medium text-primary mb-1">
+                        No Transactions Available
+                      </p>
+                    </div>
                   </td>
                 </tr>
               ) : (
@@ -1406,13 +1419,15 @@ const TransactionTable: React.FC = () => {
       </div>
 
       {/* Add Pagination Component */}
-      <div className="pt-2"><Pagination
-        table={table}
-        totalItems={totalItems}
-        currentPageItems={currentPageItems}
-        startIndex={startIndex}
-        endIndex={endIndex}
-      /></div>
+      <div className="pt-2">
+        <Pagination
+          table={table}
+          totalItems={totalItems}
+          currentPageItems={currentPageItems}
+          startIndex={startIndex}
+          endIndex={endIndex}
+        />
+      </div>
     </div>
   );
 };

@@ -579,7 +579,7 @@ const AllExposureRequest: React.FC = () => {
           const price = Number(getValue());
           const currency = row.original.currency;
           return (
-            <span className="text-gray-700">
+            <span className="text-secondary-text-dark">
               {isNaN(price)
                 ? "—"
                 : new Intl.NumberFormat("en-US", {
@@ -597,7 +597,7 @@ const AllExposureRequest: React.FC = () => {
           const amount = Number(getValue());
           const currency = row.original.currency;
           return (
-            <span className="text-gray-700">
+            <span className="text-secondary-text-dark">
               {isNaN(amount)
                 ? "—"
                 : new Intl.NumberFormat("en-US", {
@@ -614,7 +614,7 @@ const AllExposureRequest: React.FC = () => {
         cell: ({ getValue }) => {
           const date = new Date(getValue() as string);
           return (
-            <span className="text-gray-700">
+            <span className="text-secondary-text-dark">
               {isNaN(date.getTime()) ? "—" : date.toLocaleDateString()}
             </span>
           );
@@ -624,42 +624,42 @@ const AllExposureRequest: React.FC = () => {
         accessorKey: "payment_terms",
         header: "Payment Terms",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text-dark">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "inco_terms",
         header: "Inco Terms",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text-dark">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "plant_code",
         header: "Plant Code",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text-dark">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "approved_by",
         header: "Approved By",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text-dark">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "rejected_by",
         header: "Rejected By",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text-dark">{(getValue() as string) || "—"}</span>
         ),
       },
       {
         accessorKey: "requested_by",
         header: "Requested By",
         cell: ({ getValue }) => (
-          <span className="text-gray-700">{(getValue() as string) || "—"}</span>
+          <span className="text-secondary-text-dark">{(getValue() as string) || "—"}</span>
         ),
       },
       {
@@ -668,7 +668,7 @@ const AllExposureRequest: React.FC = () => {
         cell: ({ getValue }) => {
           const date = new Date(getValue() as string);
           return (
-            <span className="text-gray-700">
+            <span className="text-secondary-text-dark">
               {isNaN(date.getTime()) ? "—" : date.toLocaleDateString()}
             </span>
           );
@@ -680,7 +680,7 @@ const AllExposureRequest: React.FC = () => {
         cell: ({ getValue }) => {
           const date = new Date(getValue() as string);
           return (
-            <span className="text-gray-700">
+            <span className="text-secondary-text-dark">
               {isNaN(date.getTime()) ? "—" : date.toLocaleDateString()}
             </span>
           );

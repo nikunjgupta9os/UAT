@@ -393,7 +393,7 @@ const AvailableForwards: React.FC<{
                 return (
                   <th
                     key={header.id}
-                    className="px-6 py-4 text-left text-xs font-semibold text-header-color uppercase tracking-wider border-b border-border"
+                    className="px-6 py-4 text-left text-sm font-semibold text-header-color uppercase tracking-wider border-b border-border"
                     style={{ width: header.getSize() }}
                   >
                     <div className="px-1">
@@ -418,7 +418,7 @@ const AvailableForwards: React.FC<{
                 <div className="flex flex-col items-center">
                   <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
                     <svg
-                      className="w-6 h-6 text-gray-400"
+                      className="w-6 h-6 text-primary"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -431,10 +431,10 @@ const AvailableForwards: React.FC<{
                       />
                     </svg>
                   </div>
-                  <p className="text-lg font-medium text-primary mb-1">
+                  <p className="text-xl font-medium text-primary mb-1">
                     No Data available
                   </p>
-                  <p className="text-sm text-primary">
+                  <p className="text-md font-medium text-primary">
                     There are no data to display at the moment.
                   </p>
                 </div>

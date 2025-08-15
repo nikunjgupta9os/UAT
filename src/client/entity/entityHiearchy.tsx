@@ -1141,7 +1141,7 @@ const HierarchicalTree = () => {
                 ) : treeData ? (
                   <TreeNode node={treeData} />
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-primary">
                     No hierarchy data available. Create a new one.
                   </div>
                 )}
