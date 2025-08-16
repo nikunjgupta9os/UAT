@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import loginImage from "../../public/assets/logo.png";
 import TacoLogo from "../../public/assets/taco.png";
 
-// Constants
 const CURRENCIES_TO_SHOW = ["INR", "EUR", "GBP", "JPY", "AUD"];
 const mockNotifications = [
   { id: 1, title: "New message received", description: "You have a new message from the support team", time: "2 hours ago", read: false },
@@ -18,8 +17,6 @@ const navItemsList = [
   { icon: TrendingUp, label: "FX Hedging" },
   { icon: Shield, label: "Bank Guarantee" },
 ];
-
-// ---- Subcomponents ---- //
 
 const NavItems: React.FC<{
   items: { icon: any; label: string }[];
@@ -169,12 +166,9 @@ const UserDropdown: React.FC<{
     </motion.div>
   ) : null;
 
-// ---- Main Navbar ---- //
-
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-// Replace react-feather imports with lucide-react
 import { Home, CreditCard, TrendingUp, Shield, Bell, User, Mail, Calendar } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import FXTickerPro from "./FXTickerPro";
@@ -190,7 +184,6 @@ const Navbar: React.FC = () => {
   const [unreadCount, setUnreadCount] = useState(mockNotifications.filter((n) => !n.read).length);
   const navigate = useNavigate();
 
-  // Add refs for dropdowns
   const notificationsRef = useRef<HTMLDivElement>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -248,7 +241,6 @@ const Navbar: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Handle click outside for dropdowns
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
