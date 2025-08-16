@@ -27,7 +27,7 @@ interface RateData {
 
 interface ForwardTableColumns {
   mtm_id: string;
-  booking_id: string; // intentionally hidden
+  booking_id: string;
   deal_date: string;
   maturity_date: string;
   currency_pair: string;
@@ -42,6 +42,35 @@ interface ForwardTableColumns {
   internal_reference_id: string;
   entity: string;
 }
+
+const conversionRates: Record<string, number> = {
+  INR: 1,
+  USD: 83.5,
+  EUR: 90,
+  GBP: 105.2,
+  JPY: 0.58,
+  AUD: 55.3,
+  CAD: 61.7,
+  CHF: 95.8,
+  SGD: 62.5,
+  HKD: 10.7,
+  CNY: 11.5,
+  AED: 22.7,
+};
+
+const getTenorForDays = (days: number): string => {
+  if (days <= 0) return "Spot";
+  if (days <= 30) return "1M";
+  if (days <= 90) return "3M";
+  if (days <= 180) return "6M";
+  return "1Y";
+};
+
+const dealOption = [
+  { value: "active", label: "Active" },
+  { value: "settled", label: "Settled" },
+  { value: "outstanding", label: "Outstanding" },
+];
 
 const mockRateData: RateData[] = [
   {
@@ -80,122 +109,28 @@ const mockRateData: RateData[] = [
   },
 ];
 
-const getBankOptions = (rateData: typeof mockRateData) => {
-  const uniqueBanks = Array.from(new Set(rateData.map((item) => item.bank)));
-
-  const dropdownOptions = [
-    { value: "all", label: "All" },
-    ...uniqueBanks.map((bank) => ({
-      value: bank,
-      label: bank,
-    })),
-  ];
-
-  return dropdownOptions;
+const defaultVisibility: Record<string, boolean> = {
+  mtm_id: false,
+  internal_reference_id: true,
+  entity: true,
+  deal_date: true,
+  maturity_date: true,
+  currency_pair: true,
+  buy_sell: true,
+  notional_amount: true,
+  contract_rate: true,
+  mtm_rate: true,
+  mtm_value: true,
+  days_to_maturity: true,
+  status: true,
+  calculated_at: false,
 };
 
-const getCurrencyPairOptions = (rateData: RateData[]) => {
-  const currencyPairsSet = new Set<string>();
+const MTMCalculator = () => {
+  const [mtmRows, setMtmRows] = React.useState<ForwardTableColumns[]>([]);
+  const [mtmLoading, setMtmLoading] = React.useState(false);
 
-  rateData.forEach((item) => {
-    item.currencyPairs.forEach((pair) => {
-      currencyPairsSet.add(pair.currencyPair);
-    });
-  });
-
-  const dropdownOptions = [
-    { value: "all", label: "All" },
-    ...Array.from(currencyPairsSet).map((pair) => ({
-      value: pair,
-      label: pair,
-    })),
-  ];
-
-  return dropdownOptions;
-};
-
-const entityOptions = getCurrencyPairOptions(mockRateData);
-const typeOptions = getBankOptions(mockRateData);
-
-const dealOption = [
-  { value: "active", label: "Active" },
-  { value: "settled", label: "Settled" },
-  { value: "outstanding", label: "Outstanding" },
-];
-
-const DateInput = ({ label, value, onChange }) => {
-  return (
-    <div className="flex flex-col">
-      <label className="text-sm font-medium text-secondary-text-dark mb-1">
-        {label}
-      </label>
-      <input
-        type="date"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full h-[37px] px-2 pr-3 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 appearance-none"
-      />
-    </div>
-  );
-};
-
-const getTenorForDays = (days: number): string => {
-  if (days <= 0) return "Spot";
-  if (days <= 30) return "1M";
-  if (days <= 90) return "3M";
-  if (days <= 180) return "6M";
-  return "1Y";
-};
-
-const getMTMRate = (
-  row: ForwardTableColumns,
-  calculationDate: string,
-  rateData: RateData[]
-): number | undefined => {
-  const days = getDaysToMaturity(row.maturity_date, calculationDate);
-  const tenor = getTenorForDays(days);
-  // No 'bank' field in ForwardTableColumns anymore; fallback to entity for matching
-  const bankRates = rateData.find((b) => b.bank === row.entity);
-  if (!bankRates) return undefined;
-  const pairRates = bankRates.currencyPairs.find(
-    (p) => p.currencyPair === row.currency_pair
-  );
-  if (!pairRates) return undefined;
-  // Try to find the exact tenor, else fallback to the highest available
-  let rateObj = pairRates.rates.find((r) => r.tenor === tenor);
-  if (!rateObj) {
-    // fallback to last (highest tenor)
-    rateObj = pairRates.rates[pairRates.rates.length - 1];
-  }
-  if (!rateObj) return undefined;
-  if (row.buy_sell.toLowerCase() === "buy") {
-    return rateObj.bidRate;
-  } else {
-    return rateObj.offerRate;
-  }
-};
-
-export function getDaysToMaturity(
-  maturityDate: string,
-  calculationDate: string
-): number {
-  if (!maturityDate || !calculationDate) return 0;
-  const maturity = new Date(maturityDate);
-  const calculation = new Date(calculationDate);
-  const diff = maturity.getTime() - calculation.getTime();
-  return Math.ceil(diff / (1000 * 60 * 60 * 24));
-}
-
-
-const AvailableForwards: React.FC<{
-  data: ForwardTableColumns[];
-  calculationDate: string;
-  showSummary: boolean;
-  pagination: { pageIndex: number; pageSize: number };
-  setPagination: React.Dispatch<
-    React.SetStateAction<{ pageIndex: number; pageSize: number }>
-  >;
-}> = ({ data, calculationDate, showSummary, pagination, setPagination }) => {
+  const [columnVisibility, setColumnVisibility] = useState(defaultVisibility);
   const [columnOrder, setColumnOrder] = useState<string[]>([
     "mtm_id",
     "internal_reference_id",
@@ -212,6 +147,108 @@ const AvailableForwards: React.FC<{
     "status",
     "calculated_at",
   ]);
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+  const [calculationDate, setCalculationDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split("T")[0];
+  });
+  const [selectedEntity, setSelectedEntity] = useState("");
+  const [selectedType, setSelectedType] = useState("");
+  const [selectDeal, setSelectDeal] = useState("");
+  const [showSummary, setShowSummary] = useState(false);
+
+  const getMTMRate = (
+    row: ForwardTableColumns,
+    calculationDate: string,
+    rateData: RateData[]
+  ): number | undefined => {
+    const days = getDaysToMaturity(row.maturity_date, calculationDate);
+    const tenor = getTenorForDays(days);
+    const bankRates = rateData.find((b) => b.bank === row.entity);
+    if (!bankRates) return undefined;
+    const pairRates = bankRates.currencyPairs.find(
+      (p) => p.currencyPair === row.currency_pair
+    );
+    if (!pairRates) return undefined;
+    let rateObj = pairRates.rates.find((r) => r.tenor === tenor);
+    if (!rateObj) {
+      rateObj = pairRates.rates[pairRates.rates.length - 1];
+    }
+    if (!rateObj) return undefined;
+    if (row.buy_sell.toLowerCase() === "buy") {
+      return rateObj.bidRate;
+    } else {
+      return rateObj.offerRate;
+    }
+  };
+
+  const getDaysToMaturity = (
+    maturityDate: string,
+    calculationDate: string
+  ): number => {
+    if (!maturityDate || !calculationDate) return 0;
+    const maturity = new Date(maturityDate);
+    const calculation = new Date(calculationDate);
+    const diff = maturity.getTime() - calculation.getTime();
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  };
+
+  const getBankOptions = (rateData: typeof mockRateData) => {
+    const uniqueBanks = Array.from(new Set(rateData.map((item) => item.bank)));
+
+    const dropdownOptions = [
+      { value: "all", label: "All" },
+      ...uniqueBanks.map((bank) => ({
+        value: bank,
+        label: bank,
+      })),
+    ];
+
+    return dropdownOptions;
+  };
+
+  const getCurrencyPairOptions = (rateData: RateData[]) => {
+    const currencyPairsSet = new Set<string>();
+
+    rateData.forEach((item) => {
+      item.currencyPairs.forEach((pair) => {
+        currencyPairsSet.add(pair.currencyPair);
+      });
+    });
+
+    const dropdownOptions = [
+      { value: "all", label: "All" },
+      ...Array.from(currencyPairsSet).map((pair) => ({
+        value: pair,
+        label: pair,
+      })),
+    ];
+
+    return dropdownOptions;
+  };
+
+  const entityOptions = getCurrencyPairOptions(mockRateData);
+  const typeOptions = getBankOptions(mockRateData);
+
+
+  const DateInput = ({ label, value, onChange }) => {
+    return (
+      <div className="flex flex-col">
+        <label className="text-sm font-medium text-secondary-text-dark mb-1">
+          {label}
+        </label>
+        <input
+          type="date"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full h-[37px] px-2 pr-3 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 appearance-none"
+        />
+      </div>
+    );
+  };
 
   const columns = useMemo<ColumnDef<ForwardTableColumns>[]>(
     () => [
@@ -287,7 +324,8 @@ const AvailableForwards: React.FC<{
         header: "MTM Value",
         cell: ({ getValue }) => {
           const value = Number(getValue());
-          const color = value > 0 ? "text-green-600" : value < 0 ? "text-red-600" : "";
+          const color =
+            value > 0 ? "text-green-600" : value < 0 ? "text-red-600" : "";
           return (
             <span className={`font-semibold ${color}`}>
               {value.toLocaleString(undefined, {
@@ -310,7 +348,9 @@ const AvailableForwards: React.FC<{
         header: "Status",
         cell: ({ getValue }) => {
           const rawStatus = String(getValue() ?? "");
-          const status = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1).toLowerCase();
+          const status =
+            rawStatus.charAt(0).toUpperCase() +
+            rawStatus.slice(1).toLowerCase();
           const statusColors: Record<string, string> = {
             Open: "bg-green-100 text-green-800",
             Closed: "bg-gray-100 text-gray-800",
@@ -318,10 +358,13 @@ const AvailableForwards: React.FC<{
             Approved: "bg-blue-100 text-blue-800",
             Rejected: "bg-red-100 text-red-800",
           };
-          const colorClass = statusColors[status] || "bg-gray-100 text-secondary-text-dark";
+          const colorClass =
+            statusColors[status] || "bg-gray-100 text-secondary-text-dark";
           return (
             <div className="flex justify-start w-full">
-              <span className={`px-2 py-1 text-xs font-medium rounded-full ${colorClass}`}>
+              <span
+                className={`px-2 py-1 text-xs font-medium rounded-full ${colorClass}`}
+              >
                 {status}
               </span>
             </div>
@@ -342,222 +385,6 @@ const AvailableForwards: React.FC<{
     ],
     [calculationDate]
   );
-  const defaultVisibility: Record<string, boolean> = {
-    mtm_id: false,
-    internal_reference_id: true,
-    entity: true,
-    deal_date: true,
-    maturity_date: true,
-    currency_pair: true,
-    buy_sell: true,
-    notional_amount: true,
-    contract_rate: true,
-    mtm_rate: true,
-    mtm_value: true,
-    days_to_maturity: true,
-    status: true,
-    calculated_at: false,
-  };
-
-  const [columnVisibility, setColumnVisibility] = useState(defaultVisibility);
-
-  const table = useReactTable({
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    onColumnOrderChange: setColumnOrder,
-    getPaginationRowModel: getPaginationRowModel(),
-    onPaginationChange: setPagination,
-    onColumnVisibilityChange: setColumnVisibility,
-    state: {
-      columnOrder,
-      pagination,
-      columnVisibility,
-    },
-  });
-
-  const conversionRates: Record<string, number> = {
-    INR: 1,
-    USD: 83.5,
-    EUR: 90,
-    GBP: 105.2,
-    JPY: 0.58,
-    AUD: 55.3,
-    CAD: 61.7,
-    CHF: 95.8,
-    SGD: 62.5,
-    HKD: 10.7,
-    CNY: 11.5,
-    AED: 22.7,
-  };
-
-  // Sum of all MTM values (as numbers)
-  const totalMTMValue = table.getRowModel().rows.reduce((sum, row) => {
-    const val = Number(row.original.mtm_value);
-    return sum + (isNaN(val) ? 0 : val);
-  }, 0);
-  return (
-    <>
-    <div className="shadow-lg border border-border">
-        <table className="min-w-[800px] w-full table-auto">
-          <colgroup>
-            {table.getVisibleLeafColumns().map((col) => (
-              <col key={col.id} className="font-medium min-w-full" />
-            ))}
-          </colgroup>
-          <thead className="bg-secondary-color rounded-xl">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <th
-                      key={header.id}
-                      className="px-6 py-4 text-left text-sm font-semibold text-header-color uppercase tracking-wider border-b border-border"
-                      style={{ width: header.getSize() }}
-                    >
-                      <div className="px-1">
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                      </div>
-                    </th>
-                  );
-                })}
-              </tr>
-            ))}
-          </thead>
-          <tbody className="divide-y">
-            {table.getRowModel().rows.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={columns.length}
-                  className="px-6 py-12 text-left text-primary"
-                >
-                  <div className="flex flex-col items-center">
-                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                      <svg
-                        className="w-6 h-6 text-primary"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                    </div>
-                    <p className="text-xl font-medium text-primary mb-1">
-                      No Data available
-                    </p>
-                    <p className="text-md font-medium text-primary">
-                      There are no data to display at the moment.
-                    </p>
-                  </div>
-                </td>
-              </tr>
-            ) : (
-              table.getRowModel().rows.map((row) => (
-                <tr
-                  key={row.id}
-                  className={
-                    row.index % 2 === 0
-                      ? "bg-primary-md"
-                      : "bg-secondary-color-lt"
-                  }
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      className="px-6 py-4 text-secondary-text-dark font-normal whitespace-nowrap text-sm border-b border-border"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            )}
-          </tbody>
-          {showSummary && (
-            <tfoot className="bg-gray-50 font-semibold text-primary text-sm border-t border-border">
-              <tr>
-                {table.getVisibleLeafColumns().map((col) => {
-                  let content = null;
-                  if (col.id === "mtm_value") {
-                    content = (
-                      <span
-                        className={
-                          totalMTMValue > 0
-                            ? "text-green-600 font-bold"
-                            : totalMTMValue < 0
-                            ? "text-red-600 font-bold"
-                            : "font-bold"
-                        }
-                      >
-                        {totalMTMValue > 0 ? "+" : totalMTMValue < 0 ? "-" : ""} {Math.abs(totalMTMValue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </span>
-                    );
-                  } else if (col.id === "mtm_id") {
-                    content = `Total Contracts: ${table.getRowModel().rows.length}`;
-                  }
-                  return (
-                    <td key={col.id} className="px-6 py-2 text-start">
-                      {content}
-                    </td>
-                  );
-                })}
-              </tr>
-            </tfoot>
-          )}
-        </table>
-      </div>
-      <Pagination
-        table={table}
-        totalItems={data.length}
-        currentPageItems={table.getRowModel().rows.length}
-        startIndex={pagination.pageIndex * pagination.pageSize + 1}
-        endIndex={Math.min(
-          (pagination.pageIndex + 1) * pagination.pageSize,
-          data.length
-        )}
-      />
-    </>
-  );
-};
-
-const MTMCalculator = () => {
-  const [mtmRows, setMtmRows] = React.useState<ForwardTableColumns[]>([]);
-  const [mtmLoading, setMtmLoading] = React.useState(false);
-
-  React.useEffect(() => {
-    setMtmLoading(true);
-    fetch("https://backend-slqi.onrender.com/api/mtm")
-      .then((res) => res.json())
-      .then((data) => {
-        setMtmRows(Array.isArray(data.data) ? data.data : []);
-      })
-      .catch(() => setMtmRows([]))
-      .finally(() => setMtmLoading(false));
-  }, []);
-
-  const [pagination, setPagination] = useState({
-    pageIndex: 0,
-    pageSize: 10,
-  });
-  const [calculationDate, setCalculationDate] = useState(() => {
-    const today = new Date();
-    return today.toISOString().split("T")[0];
-  });
-  const [selectedEntity, setSelectedEntity] = useState("");
-  const [selectedType, setSelectedType] = useState("");
-  const [selectDeal, setSelectDeal] = useState("");
-  const [showSummary, setShowSummary] = useState(false);
 
   const filteredData = useMemo(() => {
     return mtmRows.filter((row) => {
@@ -576,6 +403,41 @@ const MTMCalculator = () => {
       return matchBank && matchCurrency && matchStatus;
     });
   }, [mtmRows, selectedType, selectedEntity, selectDeal]);
+
+
+  const table = useReactTable({
+    data: filteredData,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    onColumnOrderChange: setColumnOrder,
+    getPaginationRowModel: getPaginationRowModel(),
+    onPaginationChange: setPagination,
+    onColumnVisibilityChange: setColumnVisibility,
+    state: {
+      columnOrder,
+      pagination,
+      columnVisibility,
+    },
+  });
+
+  const totalMTMValue = table.getRowModel().rows.reduce((sum, row) => {
+    const val = Number(row.original.mtm_value);
+    return sum + (isNaN(val) ? 0 : val);
+  }, 0);
+
+  useEffect(() => {
+    setMtmLoading(true);
+    fetch("https://backend-slqi.onrender.com/api/mtm")
+      .then((res) => res.json())
+      .then((data) => {
+        setMtmRows(Array.isArray(data.data) ? data.data : []);
+      })
+      .catch(() => setMtmRows([]))
+      .finally(() => setMtmLoading(false));
+  }, []);
+
+  
+
 
   return (
     <Layout title="MTM Calculator">
@@ -628,13 +490,14 @@ const MTMCalculator = () => {
         </div>
 
         <div className="flex items-center justify-end pt-4 gap-2">
-          
           <div className="w-15rem">
             <Button color="Fade">Save MTM Report</Button>
           </div>
 
           <div className="w-15rem">
-            <Button onClick={() => exportToExcel(filteredData, "MTM_Results")}>Export Results</Button>
+            <Button onClick={() => exportToExcel(filteredData, "MTM_Results")}>
+              Export Results
+            </Button>
           </div>
 
           <div className="w-15rem">
@@ -642,12 +505,144 @@ const MTMCalculator = () => {
           </div>
         </div>
 
-        <AvailableForwards
-          data={filteredData}
-          calculationDate={calculationDate}
-          showSummary={showSummary}
-          pagination={pagination}
-          setPagination={setPagination}
+        <div className="shadow-lg border border-border">
+          <table className="min-w-[800px] w-full table-auto">
+            <colgroup>
+              {table.getVisibleLeafColumns().map((col) => (
+                <col key={col.id} className="font-medium min-w-full" />
+              ))}
+            </colgroup>
+            <thead className="bg-secondary-color rounded-xl">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <th
+                        key={header.id}
+                        className="px-6 py-4 text-left text-sm font-semibold text-header-color uppercase tracking-wider border-b border-border"
+                        style={{ width: header.getSize() }}
+                      >
+                        <div className="px-1">
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                        </div>
+                      </th>
+                    );
+                  })}
+                </tr>
+              ))}
+            </thead>
+            <tbody className="divide-y">
+              {table.getRowModel().rows.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={columns.length}
+                    className="px-6 py-12 text-left text-primary"
+                  >
+                    <div className="flex flex-col items-center">
+                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                        <svg
+                          className="w-6 h-6 text-primary"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                      </div>
+                      <p className="text-xl font-medium text-primary mb-1">
+                        No Data available
+                      </p>
+                      <p className="text-md font-medium text-primary">
+                        There are no data to display at the moment.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                table.getRowModel().rows.map((row) => (
+                  <tr
+                    key={row.id}
+                    className={
+                      row.index % 2 === 0
+                        ? "bg-primary-md"
+                        : "bg-secondary-color-lt"
+                    }
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td
+                        key={cell.id}
+                        className="px-6 py-4 text-secondary-text-dark font-normal whitespace-nowrap text-sm border-b border-border"
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              )}
+            </tbody>
+            {showSummary && (
+              <tfoot className="bg-gray-50 font-semibold text-primary text-sm border-t border-border">
+                <tr>
+                  {table.getVisibleLeafColumns().map((col) => {
+                    let content = null;
+                    if (col.id === "mtm_value") {
+                      content = (
+                        <span
+                          className={
+                            totalMTMValue > 0
+                              ? "text-green-600 font-bold"
+                              : totalMTMValue < 0
+                              ? "text-red-600 font-bold"
+                              : "font-bold"
+                          }
+                        >
+                          {totalMTMValue > 0
+                            ? "+"
+                            : totalMTMValue < 0
+                            ? "-"
+                            : ""}{" "}
+                          {Math.abs(totalMTMValue).toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </span>
+                      );
+                    } else if (col.id === "mtm_id") {
+                      content = `Total Contracts: ${
+                        table.getRowModel().rows.length
+                      }`;
+                    }
+                    return (
+                      <td key={col.id} className="px-6 py-2 text-start">
+                        {content}
+                      </td>
+                    );
+                  })}
+                </tr>
+              </tfoot>
+            )}
+          </table>
+        </div>
+        <Pagination
+          table={table}
+          totalItems={filteredData.length}
+          currentPageItems={table.getRowModel().rows.length}
+          startIndex={pagination.pageIndex * pagination.pageSize + 1}
+          endIndex={Math.min(
+            (pagination.pageIndex + 1) * pagination.pageSize,
+            filteredData.length
+          )}
         />
       </div>
     </Layout>

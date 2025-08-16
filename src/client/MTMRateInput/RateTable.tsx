@@ -180,7 +180,7 @@ const RateTable: React.FC<ExtendedRateTableProps> = ({
           return (
             <RateInputCell
               value={rowData.midRate}
-              onChange={() => {}} // Read-only, auto-calculated
+              onChange={() => {}} 
               placeholder="Mid Rate"
               disabled={true}
             />
