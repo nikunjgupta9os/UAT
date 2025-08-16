@@ -358,39 +358,46 @@ export const getFileTextColor = (file: UploadedFile) => {
 export const validatePreviewData = (
   data: string[][],
   previewHeaders: string[]
-) => {
-  const validationErrors: string[] = [];
+): ifValidationError[] => {
+  const validationErrors: ifValidationError[] = [];
+
   // Check for header validation
-  if (
-    previewHeaders.length !== mtmBackendHeaders.length ||
-    !mtmBackendHeaders.every((h, i) => h === (previewHeaders[i] || "").toLowerCase())
-  ) {
-    validationErrors.push("Headers do not match the required MTM template.");
-  }
+  // if (
+  //   previewHeaders.length !== mtmBackendHeaders.length ||
+  //   !mtmBackendHeaders.every((h, i) => h === (previewHeaders[i] || "").toLowerCase())
+  // ) {
+  //   console.log(previewHeaders.length, "  ", mtmBackendHeaders.length);
+  //   validationErrors.push({
+  //     description: "Headers do not match the required MTM template."
+  //   });
+  // }
+
   // Validate each row
   data.forEach((row, rowIndex) => {
     if (row.length !== mtmBackendHeaders.length) {
-      validationErrors.push(`Row ${rowIndex + 1}: Incorrect number of columns`);
+      validationErrors.push({
+        description: `Row ${rowIndex + 1}: Incorrect number of columns`,
+        row: rowIndex + 1,
+      });
     }
     // Required fields
-    if (!row[0]) validationErrors.push(`Row ${rowIndex + 1}: Forward ID is required`);
-    if (!row[1]) validationErrors.push(`Row ${rowIndex + 1}: Deal Date is required`);
-    if (!row[2]) validationErrors.push(`Row ${rowIndex + 1}: Maturity Date is required`);
-    if (!row[3]) validationErrors.push(`Row ${rowIndex + 1}: Currency Pair is required`);
-    if (!row[4]) validationErrors.push(`Row ${rowIndex + 1}: Buy/Sell is required`);
-    if (!row[5] || isNaN(Number(row[5]))) validationErrors.push(`Row ${rowIndex + 1}: Notional Amount must be a number`);
-    if (!row[6] || isNaN(Number(row[6]))) validationErrors.push(`Row ${rowIndex + 1}: Contract Rate must be a number`);
-    if (!row[7] || isNaN(Number(row[7]))) validationErrors.push(`Row ${rowIndex + 1}: MTM Rate must be a number`);
-    if (!row[8] || isNaN(Number(row[8]))) validationErrors.push(`Row ${rowIndex + 1}: MTM Value must be a number`);
-    if (!row[9] || isNaN(Number(row[9]))) validationErrors.push(`Row ${rowIndex + 1}: Days to Maturity must be a number`);
+    if (!row[0]) validationErrors.push({ description: `Row ${rowIndex + 1}: Forward ID is required`, row: rowIndex + 1, column: 1 });
+    if (!row[1]) validationErrors.push({ description: `Row ${rowIndex + 1}: Deal Date is required`, row: rowIndex + 1, column: 2 });
+    if (!row[2]) validationErrors.push({ description: `Row ${rowIndex + 1}: Maturity Date is required`, row: rowIndex + 1, column: 3 });
+    if (!row[3]) validationErrors.push({ description: `Row ${rowIndex + 1}: Currency Pair is required`, row: rowIndex + 1, column: 4 });
+    if (!row[4]) validationErrors.push({ description: `Row ${rowIndex + 1}: Buy/Sell is required`, row: rowIndex + 1, column: 5 });
+    if (!row[5] || isNaN(Number(row[5]))) validationErrors.push({ description: `Row ${rowIndex + 1}: Notional Amount must be a number`, row: rowIndex + 1, column: 6, currentValue: row[5] });
+    if (!row[6] || isNaN(Number(row[6]))) validationErrors.push({ description: `Row ${rowIndex + 1}: Contract Rate must be a number`, row: rowIndex + 1, column: 7, currentValue: row[6] });
+    if (!row[7] || isNaN(Number(row[7]))) validationErrors.push({ description: `Row ${rowIndex + 1}: MTM Rate must be a number`, row: rowIndex + 1, column: 8, currentValue: row[7] });
     // Date format check (YYYY-MM-DD)
-    if (row[1] && isNaN(Date.parse(row[1]))) validationErrors.push(`Row ${rowIndex + 1}: Deal Date must be a valid date`);
-    if (row[2] && isNaN(Date.parse(row[2]))) validationErrors.push(`Row ${rowIndex + 1}: Maturity Date must be a valid date`);
+    if (row[1] && isNaN(Date.parse(row[1]))) validationErrors.push({ description: `Row ${rowIndex + 1}: Deal Date must be a valid date`, row: rowIndex + 1, column: 2, currentValue: row[1] });
+    if (row[2] && isNaN(Date.parse(row[2]))) validationErrors.push({ description: `Row ${rowIndex + 1}: Maturity Date must be a valid date`, row: rowIndex + 1, column: 3, currentValue: row[2] });
     // Currency Pair format
-    if (row[3] && !/^[A-Z]{3}\/[A-Z]{3}$/.test(row[3])) validationErrors.push(`Row ${rowIndex + 1}: Currency Pair must be in format XXX/YYY`);
+    if (row[3] && !/^[A-Z]{3}\/[A-Z]{3}$/.test(row[3])) validationErrors.push({ description: `Row ${rowIndex + 1}: Currency Pair must be in format XXX/YYY`, row: rowIndex + 1, column: 4, currentValue: row[3] });
     // Buy/Sell
-    if (row[4] && !["buy", "sell"].includes(row[4].toLowerCase())) validationErrors.push(`Row ${rowIndex + 1}: Buy/Sell must be 'Buy' or 'Sell'`);
+    if (row[4] && !["buy", "sell"].includes(row[4].toLowerCase())) validationErrors.push({ description: `Row ${rowIndex + 1}: Buy/Sell must be 'Buy' or 'Sell'`, row: rowIndex + 1, column: 5, currentValue: row[4] });
   });
+
   return validationErrors;
 };
 

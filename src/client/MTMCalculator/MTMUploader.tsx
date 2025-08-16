@@ -5,7 +5,7 @@ import {
   formatFileSize,
   handleDownload,
   mtmDisplayHeaders,
-  mtmBackendHeaders, 
+  mtmBackendHeaders,
 } from "./MTMUpload.ts";
 import Layout from "../common/Layout.tsx";
 import {
@@ -143,7 +143,7 @@ const FxUploader: React.FC = () => {
 
   const handlePreviewFile = (uploadedFile: UploadedFile) => {
     if (!uploadedFile.file) {
-      console.error("No file found for preview");
+      // console.error("No file found for preview");
       return;
     }
     const reader = new FileReader();
@@ -184,11 +184,11 @@ const FxUploader: React.FC = () => {
           },
         }));
       } catch (error) {
-        console.error("Error parsing file for preview:", error);
+        // console.error("Error parsing file for preview:", error);
       }
     };
     reader.onerror = () => {
-      console.error("Error reading file for preview");
+      // console.error("Error reading file for preview");
     };
     reader.readAsText(uploadedFile.file);
   };
@@ -222,7 +222,7 @@ const FxUploader: React.FC = () => {
           },
         };
       } catch (error) {
-        console.error("Error processing file:", fileData.name, error);
+        // console.error("Error processing file:", fileData.name, error);
         return {
           id: fileData.id,
           update: {
@@ -246,9 +246,9 @@ const FxUploader: React.FC = () => {
         return prev.map((f) => {
           if (f.id === result.id) {
             const updated = { ...f, ...result.update };
-            console.log(
-              `Updating file ${f.name} from ${f.status} to ${updated.status}`
-            );
+            // console.log(
+            //   `Updating file ${f.name} from ${f.status} to ${updated.status}`
+            // );
             return updated;
           }
           return f;
@@ -267,235 +267,306 @@ const FxUploader: React.FC = () => {
     return new Blob([csvContent], { type: "text/csv" });
   };
 
-  const handleSetManually = async () => {
-    const validFiles = files.filter(
-      (file) =>
-        file.status === "success" &&
-        (!file.validationErrors || file.validationErrors.length === 0)
-    );
+  const handleMTMUpload = async () => {
+  const validFiles = files.filter(
+    (file) =>
+      file.status === "success" &&
+      (!file.validationErrors || file.validationErrors.length === 0)
+  );
 
-    if (validFiles.length === 0) {
-      notify("No valid files to upload.", "warning");
-      return;
-    }
+  if (validFiles.length === 0) {
+    notify("No valid files to upload.", "warning");
+    return;
+  }
 
-    try {
-      for (const file of validFiles) {
-        let blob: Blob | File | undefined;
-        let fileName: string;
+  try {
+    for (const file of validFiles) {
+      let blob: Blob | File | undefined;
+      let fileName: string;
 
-        // Check if file has edited preview data
-        if (
-          (file as any).previewEdited &&
-          (file as any).previewHeaders &&
-          (file as any).previewData
-        ) {
-          blob = convertToCSVBlob(
-            (file as any).previewHeaders,
-            (file as any).previewData
-          );
-          fileName = `${file.name.replace(/\.csv$/, "")}_modified.csv`;
-        } else if (file.file) {
-          blob = file.file;
-          fileName = file.name;
-        } else {
-          continue;
+      if (
+        (file as any).previewEdited &&
+        (file as any).previewHeaders &&
+        (file as any).previewData
+      ) {
+        blob = convertToCSVBlob(mtmBackendHeaders, (file as any).previewData);
+        fileName = `${file.name.replace(/\.csv$/, "")}_modified.csv`;
+      } else if (file.file) {
+        const text = await file.file.text();
+        const lines = text.split("\n").filter((line) => line.trim());
+        if (lines.length < 2) continue;
+        const dataRows = lines.slice(1).map((line) =>
+          line
+            .split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
+            .map((cell) => cell.replace(/^"|"$/g, ""))
+        );
+        blob = convertToCSVBlob(mtmBackendHeaders, dataRows);
+        fileName = file.name;
+      } else {
+        continue;
+      }
+
+      const formData = new FormData();
+      formData.append(
+        "files",
+        new File([blob], fileName, { type: "text/csv" })
+      );
+      formData.append("skipDuplicates", "true");
+
+      const response = await axios.post(
+        "https://backend-slqi.onrender.com/api/mtm/upload",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         }
+      );
 
-        const formData = new FormData();
-        formData.append(
-          "files",
-          new File([blob], fileName, { type: "text/csv" })
-        );
+      if (response.data.success && response.data.results) {
+        let allSucceeded = true;
 
-        // Add this line to skip duplicates
-        formData.append("skipDuplicates", "true");
-
-        const response = await axios.post(
-          "https://backend-slqi.onrender.com/api/forwards/forward-confirmations/upload-multi",
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
+        response.data.results.forEach((result) => {
+          if (result.error) {
+            allSucceeded = false;
+            notify(
+              `Upload failed for ${result.filename}: ${result.error}`,
+              "error"
+            );
+          } else {
+            notify(
+              `Upload successful for ${result.filename} (${result.inserted || 0} records)`,
+              "success"
+            );
           }
-        );
+        });
 
-        // Check if the overall upload was successful
-        if (response.data.success && response.data.results) {
-          const results = response.data.results;
-
-          let allSucceeded = true;
-
-          // Check for errors in each file's result
-          results.forEach((result) => {
-            if (result.errors?.length > 0 || result.invalidRows?.length > 0) {
-              allSucceeded = false;
-              const errorMessage =
-                result.errors?.join(", ") ||
-                `Invalid rows: ${result.invalidRows?.join(", ")}`;
-              notify(
-                `Upload partially failed for ${result.filename}: ${errorMessage}`,
-                "error"
-              );
-            } else {
-              notify(
-                `Upload successful for ${result.filename} (${
-                  result.inserted || 0
-                } records)`,
-                "success"
-              );
-            }
+        if (allSucceeded) {
+          setPreviewStates({});
+          setFiles([]);
+        }
+      } else {
+        // Handle top-level failure
+        if (response.data.results?.length) {
+          response.data.results.forEach((result) => {
+            notify(
+              `Upload failed for ${result.filename}: ${result.error || "Unknown error"}`,
+              "error"
+            );
           });
-
-          if (allSucceeded) {
-            // Clear preview states and files
-            setPreviewStates({});
-            setFiles([]);
-          }
         } else {
-          // Handle case when overall upload failed
           notify(
-            "Upload failed: " + (response.data.message || "Unknown error"),
+            `Upload failed: ${
+              response.data.error || response.data.message || "Unknown error"
+            }`,
             "error"
           );
-          setFiles((prev) =>
-            prev.map((f) =>
-              f.id === file.id
-                ? {
-                    ...f,
-                    status: "error",
-                    error: response.data.message || "Upload failed",
-                  }
-                : f
-            )
-          );
         }
-      }
-    } catch (error) {
-      console.error("Error uploading files:", error);
-      setFiles((prev) =>
-        prev.map((f) => ({
-          ...f,
-          status: "error",
-          error: "Upload failed",
-        }))
-      );
-      notify("Error uploading files. Please try again.", "error");
-    }
-  };
 
-  const handleMTMUpload = async () => {
-    const validFiles = files.filter(
-      (file) =>
-        file.status === "success" &&
-        (!file.validationErrors || file.validationErrors.length === 0)
+        setFiles((prev) =>
+          prev.map((f) =>
+            f.id === file.id
+              ? {
+                  ...f,
+                  status: "error",
+                  error: response.data.message || "Upload failed",
+                }
+              : f
+          )
+        );
+      }
+    }
+  } catch (error) {
+    console.error("Error uploading files:", error);
+    setFiles((prev) =>
+      prev.map((f) => ({
+        ...f,
+        status: "error",
+        error: "Upload failed",
+      }))
     );
+    notify("Error uploading files. Please try again.", "error");
+  }
+};
 
-    if (validFiles.length === 0) {
-      notify("No valid files to upload.", "warning");
-      return;
-    }
 
-    try {
-      for (const file of validFiles) {
-        let blob: Blob | File | undefined;
-        let fileName: string;
+  // const handleMTMUpload = async () => {
+  //   const validFiles = files.filter(
+  //     (file) =>
+  //       file.status === "success" &&
+  //       (!file.validationErrors || file.validationErrors.length === 0)
+  //   );
 
-        // Check if file has edited preview data
-        if ((file as any).previewEdited && (file as any).previewHeaders && (file as any).previewData) {
-          blob = convertToCSVBlob((file as any).previewHeaders, (file as any).previewData);
-          fileName = `${file.name.replace(/\.csv$/, '')}_modified.csv`;
-        } else if (file.file) {
-          blob = file.file;
-          fileName = file.name;
-        } else {
-          continue;
-        }
+  //   if (validFiles.length === 0) {
+  //     notify("No valid files to upload.", "warning");
+  //     return;
+  //   }
 
-        const formData = new FormData();
-        formData.append(
-          "files",
-          new File([blob], fileName, { type: "text/csv" })
-        );
-        formData.append("skipDuplicates", "true");
+  //   try {
+  //     for (const file of validFiles) {
+  //       let blob: Blob | File | undefined;
+  //       let fileName: string;
 
-        const response = await axios.post(
-          "https://backend-slqi.onrender.com/api/mtm/upload",
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
+  //       if (
+  //         (file as any).previewEdited &&
+  //         (file as any).previewHeaders &&
+  //         (file as any).previewData
+  //       ) {
+  //         // Always use backend headers for upload
+  //         blob = convertToCSVBlob(mtmBackendHeaders, (file as any).previewData);
+  //         fileName = `${file.name.replace(/\.csv$/, "")}_modified.csv`;
+  //       } else if (file.file) {
+  //         // Read the file and reformat with backend headers
+  //         const text = await file.file.text();
+  //         const lines = text.split("\n").filter((line) => line.trim());
+  //         if (lines.length < 2) continue;
+  //         // Remove header and keep only data rows
+  //         const dataRows = lines.slice(1).map((line) => {
+  //           // Handle quoted CSV
+  //           return line
+  //             .split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
+  //             .map((cell) => cell.replace(/^"|"$/g, ""));
+  //         });
+  //         blob = convertToCSVBlob(mtmBackendHeaders, dataRows);
+  //         fileName = file.name;
+  //       } else {
+  //         continue;
+  //       }
 
-        if (response.data.success && response.data.results) {
-          const results = response.data.results;
-          let allSucceeded = true;
+  //       const formData = new FormData();
+  //       formData.append(
+  //         "files",
+  //         new File([blob], fileName, { type: "text/csv" })
+  //       );
+  //       formData.append("skipDuplicates", "true");
 
-          results.forEach((result) => {
-            if (result.errors?.length > 0 || result.invalidRows?.length > 0) {
-              allSucceeded = false;
-              const errorMessage =
-                result.errors?.join(", ") ||
-                `Invalid rows: ${result.invalidRows?.join(", ")}`;
-              notify(
-                `Upload partially failed for ${result.filename}: ${errorMessage}`,
-                "error"
-              );
-            } else {
-              notify(`Upload successful for ${result.filename} (${result.inserted || 0} records)`, "success");
-            }
-          });
+  //       const response = await axios.post(
+  //         "https://backend-slqi.onrender.com/api/mtm/upload",
+  //         formData,
+  //         {
+  //           headers: {
+  //             "Content-Type": "multipart/form-data",
+  //           },
+  //         }
+  //       );
+  //       // console.log(response.data);
+  //       // if(response.data.success === "false"){
+  //       //   notify(`Upload failed for ${response.data.result.error}`)
+  //       // }
 
-          if (allSucceeded) {
-            setPreviewStates({});
-            setFiles([]);
-          }
-        } else {
-          notify("Upload failed: " + (response.data.message || "Unknown error"), "error");
-          setFiles((prev) =>
-            prev.map((f) =>
-              f.id === file.id
-                ? { ...f, status: "error", error: response.data.message || "Upload failed" }
-                : f
-            )
-          );
-        }
-      }
-    } catch (error) {
-      console.error("Error uploading files:", error);
-      setFiles((prev) =>
-        prev.map((f) => ({
-          ...f,
-          status: "error",
-          error: "Upload failed",
-        }))
-      );
-      notify("Error uploading files. Please try again.", "error");
-    }
-  };
+  //       if (response.data.success && response.data.results) {
+  //         const results = response.data.results;
+  //         let allSucceeded = true;
+  //         // console.log(allSucceeded)
+
+  //         results.forEach((result) => {
+  //           if (result.errors?.length > 0 || result.invalidRows?.length > 0) {
+  //             allSucceeded = false;
+  //             const errorMessage =
+  //               result.errors?.join(", ") ||
+  //               `Invalid rows: ${result.invalidRows?.join(", ")}`;
+  //             notify(
+  //               `Upload partially failed for ${result.filename}: ${errorMessage}`,
+  //               "error"
+  //             );
+  //           } else {
+  //             notify(
+  //               `Upload successful for ${result.filename} (${
+  //                 result.inserted || 0
+  //               } records)`,
+  //               "success"
+  //             );
+  //           }
+  //         });
+
+  //         if (allSucceeded) {
+  //           setPreviewStates({});
+  //           setFiles([]);
+  //         }
+  //       } else {
+  //         console.log(response.data.result.error);
+  //         if (
+  //           response.data.success === false ||
+  //           response.data.success === "false"
+  //         ) {
+  //           // Try both possible locations for the error message
+  //           const errorMsg =
+  //             response.data.result?.error ||
+  //             response.data.error ||
+  //             "Upload failed";
+  //           notify(`Upload failed: ${errorMsg}`, "error");
+  //         }
+  //         // notify("Upload failed: " + (response.data.message || "Unknown error"), "error");
+  //         setFiles((prev) =>
+  //           prev.map((f) =>
+  //             f.id === file.id
+  //               ? {
+  //                   ...f,
+  //                   status: "error",
+  //                   error: response.data.message || "Upload failed",
+  //                 }
+  //               : f
+  //           )
+  //         );
+  //       }
+  //     }
+  //   } catch (error) {
+  //     // console.error("Error uploading files:", error);
+  //     console.log(error)
+  //     setFiles((prev) =>
+  //       prev.map((f) => ({
+  //         ...f,
+  //         status: "error",
+  //         error: "Upload failed",
+  //       }))
+  //     );
+  //     notify("Error uploading files. Please try again.", "error");
+  //   }
+  // };
 
   const handleSavePreview = (fileId: string) => {
-    // Save the edited preview data to the file state
+    // Get the file name before updating state
+    const fileName = files.find((f) => f.id === fileId)?.name || "file";
     setFiles((prevFiles) =>
       prevFiles.map((file) => {
         if (file.id === fileId && previewStates[fileId]) {
-          return {
-            ...file,
-            previewHeaders: previewStates[fileId].headers,
-            previewData: previewStates[fileId].data,
-            previewEdited: true,
-          };
+          // Validate the edited preview data
+          const validationErrors = validatePreviewData(
+            previewStates[fileId].data,
+            previewStates[fileId].headers
+          );
+          if (validationErrors.length === 0) {
+            // No errors, mark as success
+            return {
+              ...file,
+              previewHeaders: previewStates[fileId].headers,
+              previewData: previewStates[fileId].data,
+              previewEdited: true,
+              status: "success",
+              validationErrors: [],
+              error: undefined,
+              hasMissingValues: false,
+            };
+          } else {
+            // Still has errors
+            return {
+              ...file,
+              previewHeaders: previewStates[fileId].headers,
+              previewData: previewStates[fileId].data,
+              previewEdited: true,
+              status: "error",
+              validationErrors: validationErrors.map((err) =>
+                typeof err === "string" ? { description: err } : err
+              ),
+              error: "Validation issues remain",
+              hasMissingValues: true,
+            };
+          }
         }
         return file;
       })
     );
-    notify(
-      `Edits for ${files.find((f) => f.id === fileId)?.name || "file"} saved.`,
-      "success"
-    );
+    notify(`Edits for ${fileName} saved.`, "success");
   };
 
   const clearAllFiles = () => setFiles([]);
@@ -611,7 +682,7 @@ const FxUploader: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-secondary-text mb-1">
-                Updated By: 
+                Updated By:
               </label>
               <input
                 type="text"
