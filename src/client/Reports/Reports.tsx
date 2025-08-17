@@ -604,7 +604,7 @@ const getVisibleRows = () => {
   <Layout title="Reports">
     <div className="space-y-4">
       {/* FX Type Selector (above filters) */}
-      <div className="grid z-50 grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-4 mb-24">
+      <div className="grid z-50 grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-4 mb-12">
         <CustomSelect
           label="Select FX Type"
           options={typeOptions}
@@ -615,7 +615,7 @@ const getVisibleRows = () => {
         />
       </div>
 
-      <div className="flex gap-4 py-4 items-end max-w-5xl">
+      <div className="flex gap-4 py-4 items-end max-w-7xl">
         <CustomSelect
           label="Order type"
           options={orderTypeOptions}

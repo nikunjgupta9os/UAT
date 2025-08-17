@@ -167,31 +167,31 @@ const MaturityTable: React.FC<Props> = ({ maturity, rows, expanded, toggleExpand
                 </tr>
               ))}
               <tr className="bg-primary-lt shadow-md font-semibold">
-                <td className="px-3 py-2 text-secondary-text border border-border text-center">
+                <td className="px-3 py-2 text-white border border-border text-center">
                   Total
                 </td>
-                <td className="px-3 py-2 text-secondary-text border border-border text-center">
+                <td className="px-3 py-2 text-white border border-border text-center">
                   {maturity}
                 </td>
-                <td className="px-3 py-2 border border-border text-secondary-text ">
+                <td className="px-3 py-2 border border-border text-white ">
                   {formatCurrency(totals.payable)}
                 </td>
-                <td className="px-3 py-2 border border-border text-secondary-text ">
+                <td className="px-3 py-2 border border-border text-white ">
                   {formatCurrency(totals.receivable)}
                 </td>
-                <td className="px-3 py-2 border border-border text-secondary-text ">
+                <td className="px-3 py-2 border border-border text-white ">
                   {formatCurrency(netExp)}
                 </td>
-                <td className="px-3 py-2 border border-border text-secondary-text ">
+                <td className="px-3 py-2 border border-border text-white ">
                   {formatCurrency(totals.forwardBuy)}
                 </td>
-                <td className="px-3 py-2 border border-border text-secondary-text ">
+                <td className="px-3 py-2 border border-border text-white ">
                   {formatCurrency(totals.forwardSell)}
                 </td>
-                <td className="px-3 py-2 border border-border text-secondary-text ">
+                <td className="px-3 py-2 border border-border text-white ">
                   {formatCurrency(netFwd)}
                 </td>
-                <td className={`px-3 py-2 border border-border text-secondary-text-dark  ${diffColor}`}>
+                <td className={`px-3 py-2 border border-border text-white font-semibold ${diffColor}`}>
                   {formatCurrency(diff)}
                 </td>
               </tr>

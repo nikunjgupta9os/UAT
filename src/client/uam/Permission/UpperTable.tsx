@@ -410,11 +410,11 @@ const PermissionsTable: React.FC<prop> = ({ roleName }) => {
           <table className="min-w-full">
             <thead className="bg-body rounded-xl">
               <tr>
-                <th className="px-4 py-3 text-xs font-semibold text-primary uppercase border-b border-border text-start">Page Name</th>
-                <th className="px-4 py-3 text-xs font-semibold text-primary uppercase border-b border-border">Page Access</th>
-                <th className="px-4 py-3 text-xs font-semibold text-primary uppercase border-b border-border text-start">Tab Access</th>
+                <th className="px-4 py-3 text-sm font-semibold text-primary uppercase border-b border-border text-start">Page Name</th>
+                <th className="px-4 py-3 text-sm font-semibold text-primary uppercase border-b border-border">Page Access</th>
+                <th className="px-4 py-3 text-sm font-semibold text-primary uppercase border-b border-border text-start">Tab Access</th>
                 {permissionCheckboxes.map((perm) => (
-                  <th key={perm.key} className="px-4 py-3 text-xs font-semibold text-primary uppercase border-b border-border">{perm.label}</th>
+                  <th key={perm.key} className="px-4 py-3 text-sm font-semibold text-primary uppercase border-b border-border">{perm.label}</th>
                 ))}
               </tr>
             </thead>
@@ -446,7 +446,7 @@ const PermissionsTable: React.FC<prop> = ({ roleName }) => {
                       <td className="px-4 py-3 text-start align-middle flex justify-between">
                         {tabs.length > 1 ? (
                           <>
-                            <span className="mr-2 text-xs font-medium text-secondary-text">{tabLabels[tab]}</span>
+                            <span className="mr-2 text-sm font-normal text-secondary-text">{tabLabels[tab]}</span>
                             <input
                               type="checkbox"
                               checked={tabPerms.hasAccess}

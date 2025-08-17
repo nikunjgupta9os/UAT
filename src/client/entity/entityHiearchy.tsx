@@ -116,14 +116,12 @@ const HierarchicalTree = () => {
 
   useEffect(() => {
     const syncAndFetchHierarchy = async () => {
-      console.log("🔄 Syncing and fetching hierarchy...");
       try {
         await axios.post(`${cURL}/entity/sync-relationships`);
         const response = await axios.get(
           `${cURL}/entity/getRenderVarsHierarchical`
         );
 
-        console.log("✅ Hierarchy synced and fetched successfully");
         setTreeData(response.data.pageData);
         setVisibility({
           approve: response.data.hierarchical.tabs.default.showApproveButton,
@@ -131,9 +129,8 @@ const HierarchicalTree = () => {
           edit: response.data.hierarchical.tabs.default.showEditButton,
         });
       } catch (error) {
-        console.error("❌ Error syncing or fetching hierarchy:", error);
       } finally {
-        setLoading(false); // ✅ Stop loading after request
+        setLoading(false); 
       }
     };
 

@@ -8,8 +8,7 @@ import LoadingSpinner from "../ui/LoadingSpinner";
 import type { Bank, CurrencyPair, Tenor, RateRow, FilterState } from "./Data.d";
 
 // Constants and Mock Data
-const BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api";
+const BASE_URL = "";
 
 const MOCK_DATA = {
   banks: [
@@ -358,11 +357,6 @@ const MTMRateInput: React.FC = () => {
       })
     : rateData;
 
-  // if (loading) {
-  //   return <LoadingSpinner />;
-  // }
-
-  // For CustomSelect options
   const bankOptions = banks.map((bank) => ({
     value: bank.id,
     label: bank.name,

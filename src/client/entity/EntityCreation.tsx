@@ -6,6 +6,7 @@ import Layout from "../common/Layout";
 // import { no } from "zod/v4/locales";
 import Button from "../ui/Button";
 import { useNotification } from "../Notification/Notification.tsx";
+
 const entityTypes = ["Legal", "Non-Legal"];
 const entities = ["Choose...", "Level 1", "Level 2", "Level 3", "Level 4"];
 const currencies = ["INR", "USD", "EUR", "GBP"];

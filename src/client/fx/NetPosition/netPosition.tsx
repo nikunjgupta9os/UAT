@@ -530,7 +530,6 @@ const NetExposure: React.FC = () => {
               </table>
             </div>
           </div>
-          {/* <DetailedViews /> */}
         </div>
       </Layout>
     </>
