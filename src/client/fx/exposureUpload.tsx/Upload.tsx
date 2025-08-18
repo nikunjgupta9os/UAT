@@ -609,7 +609,7 @@ const UploadFile: React.FC = () => {
           : selectedType === "LC"
           ? "input_letters_of_credit"
           : selectedType === "GRN"
-          ? "input_grn_data"
+          ? "input_grn"
           : selectedType === "Creditor"
           ? "input_creditors"
           : selectedType === "Debtors"
