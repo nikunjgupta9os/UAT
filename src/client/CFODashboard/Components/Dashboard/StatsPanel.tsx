@@ -134,11 +134,11 @@ const StatsPanel = () => {
 
   return (
     <div className="grid grid-cols-5 gap-x-3 w-full">
-      <StatCard
+{/*       <StatCard
         title="Hedging Effectiveness Ratio"
         value="87.3%"
         bgColor="bg-gradient-to-tr from-[#1299909E] to-[#129990]"
-      />
+      /> */}
       <StatCard
         title="Total Hedged Exposure"
         value={loading ? "Loading..." : hedgedExposure}
