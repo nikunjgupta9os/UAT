@@ -87,6 +87,18 @@ async function fetchRenderVars(): Promise<IfPayload["renderVars"]> {
   return res.json();
 }
 
+// async function fetchUserVars(): Promise<IfPayload["userVars"]> {
+//   const res = await fetch(`${cURLHOST}/exposureUpload/userVars`);
+//   if (!res.ok) throw new Error("Failed to fetch userVars");
+//   return res.json();
+// }
+
+// async function fetchUserJourney(): Promise<IfPayload["userJourney"]> {
+//   const res = await fetch(`${cURLHOST}/exposureUpload/userJourney`);
+//   if (!res.ok) throw new Error("Failed to fetch userJourney");
+//   return res.json();
+// }
+
 interface Message {
   date: string;
   priority: number;
@@ -257,6 +269,27 @@ const AllExposureRequest: React.FC = () => {
         setRenderVars(fallbackRenderVars);
         setLoading(false);
       });
+
+    // fetchUserVars()
+    //   .then((userVarsRes) => {
+    //     setUserVars(userVarsRes);
+    //     if (!userVarsRes?.isLoggedIn) {
+    //       setRenderVars((prev) =>
+    //         prev ? { ...prev, isLoadable: false } : prev
+    //       );
+    //     }
+    //   })
+    //   .catch((err: any) => {
+    //      console.error("Error fetching userVars:", err);
+    //     setUserVars(fallbackUserVars);
+    //   });
+
+    // fetchUserJourney()
+    //   .then((userJourneyRes) => setUserJourney(userJourneyRes))
+    //   .catch((err) => {
+    //      console.error("Error fetching userJourney:", err);
+    //     setUserJourney(fallbackUserJourney);
+    //   });
   }, []);
 
   const columns = useMemo<ColumnDef<ExposureRequest>[]>(
@@ -294,9 +327,7 @@ const AllExposureRequest: React.FC = () => {
         accessorKey: "exposure_type",
         header: "Type",
         cell: ({ getValue }) => (
-          <span className="text-secondary-text">
-            {(getValue() as string)?.toUpperCase()}
-          </span>
+          <span className="text-secondary-text">{getValue() as string}</span>
         ),
       },
       {
@@ -839,7 +870,38 @@ const AllExposureRequest: React.FC = () => {
   if (loading) {
     return <LoadingSpinner />;
   }
+  
+function renderSection(section, rowData, fieldLabels) {
+  return (
+    <div key={section.title} style={{ marginBottom: 12 }}>
+      <h4 style={{ fontWeight: 600 }}>{section.title}</h4>
+      <div>
+        {section.fields
+          .filter(
+            (field) =>
+              rowData[field] !== null &&
+              rowData[field] !== undefined &&
+              rowData[field] !== ""
+          )
+          .map((field) => (
+            <div key={field}>
+              <strong>{fieldLabels[field] || field}:</strong> {rowData[field]}
+            </div>
+          ))}
+      </div>
+    </div>
+  );
+}
 
+function expandedRowRenderer(rowData) {
+  return (
+    <div>
+      {expandedRowConfig.sections.map((section) =>
+        renderSection(section, rowData, expandedRowConfig.fieldLabels)
+      )}
+    </div>
+  );
+}
   return (
     <div className="space-y-2.5">
       {/* Row 1 - Status Filter */}
@@ -937,42 +999,43 @@ const AllExposureRequest: React.FC = () => {
         </div>
       </div>
 
-      <NyneOSTable<ExposureRequest>
-        data={data}
-        filter={filteredData}
-        edit={true}
-        columns={columns}
-        defaultColumnVisibility={defaultVisibility}
-        draggableColumns={[
-          "document_id",
-          "exposure_type",
-          "entity",
-          "counterparty_name",
-          "total_original_amount",
-          "total_open_amount",
-          "currency",
-          "document_date",
-          "status",
-          "approval_status",
-        ]}
-        sortableColumns={[
-          "document_id",
-          "exposure_type",
-          "entity",
-          "counterparty_name",
-          "total_original_amount",
-          "total_open_amount",
-          "document_date",
-          "value_date",
-          "status",
-          "approval_status",
-          "created_at",
-        ]}
-        expandedRowConfig={expandedRowConfig}
-        onUpdate={handleUpdate}
-        className="mb-8"
-        setData={setData}
-      />
+     <NyneOSTable<ExposureRequest>
+  data={data}
+  filter={filteredData}
+  edit={true}
+  columns={columns}
+  defaultColumnVisibility={defaultVisibility}
+  draggableColumns={[
+    "document_id",
+    "exposure_type",
+    "entity",
+    "counterparty_name",
+    "total_original_amount",
+    "total_open_amount",
+    "currency",
+    "document_date",
+    "status",
+    "approval_status",
+  ]}
+  sortableColumns={[
+    "document_id",
+    "exposure_type",
+    "entity",
+    "counterparty_name",
+    "total_original_amount",
+    "total_open_amount",
+    "document_date",
+    "value_date",
+    "status",
+    "approval_status",
+    "created_at",
+  ]}
+  expandedRowConfig={expandedRowConfig}
+  expandedRowRenderer={expandedRowRenderer} // <-- Add this line
+  onUpdate={handleUpdate}
+  className="mb-8"
+  setData={setData}
+/>
     </div>
   );
 };
