@@ -1,4 +1,4 @@
-import React ,{useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import Button from "../../ui/Button";
 import {
   Upload,
@@ -58,7 +58,7 @@ const getTemplateTypeFromSelected = (selectedType: string): string => {
     case "Debtors":
       return "debtors";
     default:
-      return "so"; 
+      return "so";
   }
 };
 
@@ -234,19 +234,42 @@ const UploadFile: React.FC = () => {
             updated[fileId].headers,
             templateType
           );
-          let mappedValidationErrors: { description: string; row?: number; column?: number; currentValue?: string }[] = [];
+          let mappedValidationErrors: {
+            description: string;
+            row?: number;
+            column?: number;
+            currentValue?: string;
+          }[] = [];
           if (Array.isArray(validationErrors)) {
             mappedValidationErrors = validationErrors
               .map((err) => {
                 if (typeof err === "string") {
                   return { description: err };
-                } else if (typeof err === "object" && err !== null && "description" in err) {
-                  return err as { description: string; row?: number; column?: number; currentValue?: string };
+                } else if (
+                  typeof err === "object" &&
+                  err !== null &&
+                  "description" in err
+                ) {
+                  return err as {
+                    description: string;
+                    row?: number;
+                    column?: number;
+                    currentValue?: string;
+                  };
                 } else {
                   return null;
                 }
               })
-              .filter((e): e is { description: string; row?: number; column?: number; currentValue?: string } => e !== null);
+              .filter(
+                (
+                  e
+                ): e is {
+                  description: string;
+                  row?: number;
+                  column?: number;
+                  currentValue?: string;
+                } => e !== null
+              );
           } else {
             mappedValidationErrors = [];
           }
@@ -454,19 +477,42 @@ const UploadFile: React.FC = () => {
           headerRow || [],
           templateType
         );
-        let mappedValidationErrors: { description: string; row?: number; column?: number; currentValue?: string }[] = [];
+        let mappedValidationErrors: {
+          description: string;
+          row?: number;
+          column?: number;
+          currentValue?: string;
+        }[] = [];
         if (Array.isArray(validationErrors)) {
           mappedValidationErrors = validationErrors
             .map((err) => {
               if (typeof err === "string") {
                 return { description: err };
-              } else if (typeof err === "object" && err !== null && "description" in err) {
-                return err as { description: string; row?: number; column?: number; currentValue?: string };
+              } else if (
+                typeof err === "object" &&
+                err !== null &&
+                "description" in err
+              ) {
+                return err as {
+                  description: string;
+                  row?: number;
+                  column?: number;
+                  currentValue?: string;
+                };
               } else {
                 return null;
               }
             })
-            .filter((e): e is { description: string; row?: number; column?: number; currentValue?: string } => e !== null);
+            .filter(
+              (
+                e
+              ): e is {
+                description: string;
+                row?: number;
+                column?: number;
+                currentValue?: string;
+              } => e !== null
+            );
         } else {
           mappedValidationErrors = [];
         }
@@ -590,7 +636,7 @@ const UploadFile: React.FC = () => {
             // notify(`Converting ${file.name} to CSV format...`, "info");
           } catch (excelError) {
             errorCount++;
-            
+
             continue;
           }
         } else if (file.file) {
@@ -604,24 +650,25 @@ const UploadFile: React.FC = () => {
         }
 
         const formData = new FormData();
-        const fieldName = selectedType === "PO"
-          ? "input_purchase_orders"
-          : selectedType === "LC"
-          ? "input_letters_of_credit"
-          : selectedType === "GRN"
-          ? "input_grn"
-          : selectedType === "Creditor"
-          ? "input_creditors"
-          : selectedType === "Debtors"
-          ? "input_debitors"
-          : "input_sales_orders";
-        
+        const fieldName =
+          selectedType === "PO"
+            ? "input_purchase_orders"
+            : selectedType === "LC"
+            ? "input_letters_of_credit"
+            : selectedType === "GRN"
+            ? "input_grn"
+            : selectedType === "Creditor"
+            ? "input_creditors"
+            : selectedType === "Debtors"
+            ? "input_debitors"
+            : "input_sales_orders";
+
         formData.append(
           fieldName,
           new File([blob], fileName, { type: "text/csv" }) // Always set type as CSV
         );
 
-        console.log(formData, "FormData for upload",fieldName);
+        console.log(formData, "FormData for upload", fieldName);
 
         notify(`Uploading ${fileName}...`, "info");
 
@@ -698,10 +745,7 @@ const UploadFile: React.FC = () => {
 
     // Final summary
     if (successCount > 0 && errorCount === 0) {
-      notify(
-        `All ${successCount} file(s) uploaded successfully!`,
-        "success"
-      );
+      notify(`All ${successCount} file(s) uploaded successfully!`, "success");
       setFiles([]);
       setPreviewStates({});
     } else if (successCount > 0) {
@@ -735,9 +779,7 @@ const UploadFile: React.FC = () => {
   };
 
   // --- Download menu state and handlers (must be inside the component, before return) ---
-  const [downloadMenuOpen, setDownloadMenuOpen] = useState<string | null>(
-    null
-  );
+  const [downloadMenuOpen, setDownloadMenuOpen] = useState<string | null>(null);
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (!(e.target as HTMLElement).closest(".Download")) {
@@ -757,86 +799,296 @@ const UploadFile: React.FC = () => {
     // Get headers and sample row from template type
     let headers: string[] = [];
     let sampleRow: string[] = [];
-    
+
     if (template.id === "po") {
       headers = [
-        "company_code", "controlling_area", "entity", "entity1", "entity2",
-        "document_no", "lc_indicator", "lc_year", "contract_date", "reference_no",
-        "reference_date", "vendor_code", "vendor_name", "price_basis", "currency_code",
-        "payment_terms", "inco_terms", "destination_port", "payment_to_vendor",
-        "uom_code", "uom_quantity", "net_price", "net_value", "exchange_rate",
-        "exchange_rate_date", "documenting", "profit_cost_center", "entity3",
+        "company_code",
+        "controlling_area",
+        "entity",
+        "entity1",
+        "entity2",
+        "document_no",
+        "lc_indicator",
+        "lc_year",
+        "contract_date",
+        "reference_no",
+        "reference_date",
+        "vendor_code",
+        "vendor_name",
+        "price_basis",
+        "currency_code",
+        "payment_terms",
+        "inco_terms",
+        "destination_port",
+        "payment_to_vendor",
+        "uom_code",
+        "uom_quantity",
+        "net_price",
+        "net_value",
+        "exchange_rate",
+        "exchange_rate_date",
+        "documenting",
+        "profit_cost_center",
+        "entity3",
       ];
       sampleRow = [
-        "COMP001", "CA01", "ENT01", "ENT1_001", "ENT2_001", "DOC001", "Y", "2024",
-        "15-01-2024", "REF001", "10-01-2024", "VEN001", "Vendor ABC Ltd", "CIF", "USD",
-        "NET30", "FOB", "Mumbai Port", "1000000", "PCS", "100", "50.00", "5000.00",
-        "1.0", "15-01-2024", "DOC_001", "CC001", "ENT3_001",
+        "COMP001",
+        "CA01",
+        "ENT01",
+        "ENT1_001",
+        "ENT2_001",
+        "DOC001",
+        "Y",
+        "2024",
+        "15-01-2024",
+        "REF001",
+        "10-01-2024",
+        "VEN001",
+        "Vendor ABC Ltd",
+        "CIF",
+        "USD",
+        "NET30",
+        "FOB",
+        "Mumbai Port",
+        "1000000",
+        "PCS",
+        "100",
+        "50.00",
+        "5000.00",
+        "1.0",
+        "15-01-2024",
+        "DOC_001",
+        "CC001",
+        "ENT3_001",
       ];
     } else if (template.id === "lc") {
       headers = [
-        "system_lc_number", "bank_reference_number", "other_references", "lc_type",
-        "applicant_name", "beneficiary_name", "issuing_bank", "currency", "amount",
-        "issue_date", "expiry_date", "linked_po_so_number",
+        "system_lc_number",
+        "bank_reference_number",
+        "other_references",
+        "lc_type",
+        "applicant_name",
+        "beneficiary_name",
+        "issuing_bank",
+        "currency",
+        "amount",
+        "issue_date",
+        "expiry_date",
+        "linked_po_so_number",
       ];
       sampleRow = [
-        "LC001", "BANK001", "REF001", "COMMERCIAL", "ABC Company Ltd",
-        "XYZ Supplier Inc", "Standard Bank", "USD", "100000",
-        "15-01-2024", "15-06-2024", "PO001",
+        "LC001",
+        "BANK001",
+        "REF001",
+        "COMMERCIAL",
+        "ABC Company Ltd",
+        "XYZ Supplier Inc",
+        "Standard Bank",
+        "USD",
+        "100000",
+        "15-01-2024",
+        "15-06-2024",
+        "PO001",
       ];
     } else if (template.id === "grn") {
       headers = [
-        "account", "company_code", "business_area", "document_type", "customer",
-        "assignment", "document_number", "document_date", "posting_date", "supplier",
-        "reference", "amount_in_doc_curr", "document_currency", "amount_in_local_currency",
-        "text", "clearing_document", "clearing_date", "special_gl_ind", "offsetting_account",
-        "currency_2", "company",
+        "account",
+        "company_code",
+        "business_area",
+        "document_type",
+        "customer",
+        "assignment",
+        "document_number",
+        "document_date",
+        "posting_date",
+        "supplier",
+        "reference",
+        "amount_in_doc_curr",
+        "document_currency",
+        "amount_in_local_currency",
+        "text",
+        "clearing_document",
+        "clearing_date",
+        "special_gl_ind",
+        "offsetting_account",
+        "currency_2",
+        "company",
+        "loaded_at",
+        "linked_id",
       ];
       sampleRow = [
-        "261903", "7000", "CHEN", "WE", "", "1575033", "7050000251", "25-03-2025",
-        "30-04-2025", "HC00063", "1575033", "-100,419.66", "EUR", "-9,247,646.49",
-        "NRC for Design, Drawing and Testing for", "", "", "", "413059", "EUR", "Tm Railway",
+        "1000", // account
+        "COMP001", // company_code
+        "BA01", // business_area
+        "GR", // document_type
+        "CUST001", // customer
+        "ASSIGN001", // assignment
+        "DOC001", // document_number
+        "15-01-2024", // document_date
+        "15-01-2024", // posting_date
+        "VEN001", // supplier
+        "REF001", // reference
+        "1000", // amount_in_doc_curr
+        "USD", // document_currency
+        "750000", // amount_in_local_currency
+        "Goods Receipt", // text
+        "CLEAR001", // clearing_document
+        "15-01-2024", // clearing_date
+        "S", // special_gl_ind
+        "1000", // offsetting_account
+        "USD", // currency_2
+        "COMP001", // company
+        "2024-08-18T12:00:00Z", // loaded_at (example ISO date)
+        "LINK123",
       ];
     } else if (template.id === "creditor") {
       headers = [
-        "payment_block", "company_code", "business_area", "account", "pann",
-        "gl_account", "document_date", "net_due_date", "posting_date", "document_type",
-        "posting_key", "amount_in_doc_curr", "document_currency", "local_currency", "currency_2",
+        "payment_block",
+        "company_code",
+        "business_area",
+        "account",
+        "pann",
+        "gl_account",
+        "document_date",
+        "net_due_date",
+        "posting_date",
+        "document_type",
+        "posting_key",
+        "amount_in_doc_curr",
+        "document_currency",
+        "local_currency",
+        "currency_2",
         "bank_reference",
+        "linked_id"
       ];
       sampleRow = [
-        "N", "7000", "CHEN", "2000001", "PAN123456789", "400000", "15-01-2024",
-        "30-01-2024", "15-01-2024", "KR", "31", "100000.00", "USD", "USD", "USD",
+        "N",
+        "7000",
+        "CHEN",
+        "2000001",
+        "PAN123456789",
+        "400000",
+        "15-01-2024",
+        "30-01-2024",
+        "15-01-2024",
+        "KR",
+        "31",
+        "100000.00",
+        "USD",
+        "USD",
+        "USD",
         "BANKREF001",
+        "LINK123"
       ];
     } else if (template.id === "debtors") {
       headers = [
-        "reference", "company_code", "assignment", "document_number", "net_due_date",
-        "document_type", "document_date", "posting_date", "special_gl_ind",
-        "amount_in_local_currency", "amount_in_doc_curr", "document_currency", "text",
-        "customer", "clearing_document", "gl_account", "currency_2", "company",
+        "reference",
+        "company_code",
+        "assignment",
+        "document_number",
+        "net_due_date",
+        "document_type",
+        "document_date",
+        "posting_date",
+        "special_gl_ind",
+        "amount_in_local_currency",
+        "amount_in_doc_curr",
+        "document_currency",
+        "text",
+        "customer",
+        "clearing_document",
+        "gl_account",
+        "currency_2",
+        "company",
         "bank_reference",
+        "linked_id"
       ];
       sampleRow = [
-        "REF001", "7000", "ASSIGN001", "7050000252", "30-01-2024", "DR", "15-01-2024",
-        "15-01-2024", "A", "150000.00", "150000.00", "USD", "Customer payment received",
-        "CUST001", "CLEAR001", "130000", "USD", "ABC Company Ltd",
+        "REF001",
+        "7000",
+        "ASSIGN001",
+        "7050000252",
+        "30-01-2024",
+        "DR",
+        "15-01-2024",
+        "15-01-2024",
+        "A",
+        "150000.00",
+        "150000.00",
+        "USD",
+        "Customer payment received",
+        "CUST001",
+        "CLEAR001",
+        "130000",
+        "USD",
+        "ABC Company Ltd",
         "BANKREF002",
+        "LINK123"
       ];
     } else {
       headers = [
-        "company_code", "controlling_area", "entity", "entity1", "entity2", "entity3",
-        "document_no", "document_type", "contract_date", "reference_no", "reference_date",
-        "customer_code", "customer_name", "currency_code", "price_basis", "payment_terms",
-        "inco_terms", "total_invoice_value", "last_lot_number", "product_description",
-        "uom_code", "uom_quantity", "net_price", "net_value", "remarks", "delivery_date",
-        "lc_indicator", "exchange_rate_preference", "profit_cost_center",
+        "company_code",
+        "controlling_area",
+        "entity",
+        "entity1",
+        "entity2",
+        "entity3",
+        "document_no",
+        "document_type",
+        "contract_date",
+        "reference_no",
+        "reference_date",
+        "customer_code",
+        "customer_name",
+        "currency_code",
+        "price_basis",
+        "payment_terms",
+        "inco_terms",
+        "total_invoice_value",
+        "last_lot_number",
+        "product_description",
+        "uom_code",
+        "uom_quantity",
+        "net_price",
+        "net_value",
+        "remarks",
+        "delivery_date",
+        "lc_indicator",
+        "exchange_rate_preference",
+        "profit_cost_center",
+        "linked_id",
       ];
       sampleRow = [
-        "COMP001", "CA01", "ENT01", "ENT1_001", "ENT2_001", "ENT3_001", "DOC001", "SO",
-        "15-01-2024", "REF001", "10-01-2024", "CUST001", "Customer ABC Ltd", "USD",
-        "CIF", "NET30", "FOB", "1000000", "LOT001", "Steel Products", "PCS", "100",
-        "50.00", "5000.00", "Quality products", "15-02-2024", "Y", "FIXED", "CC001",
+        "COMP001",
+        "CA01",
+        "ENT01",
+        "ENT1_001",
+        "ENT2_001",
+        "ENT3_001",
+        "DOC001",
+        "SO",
+        "15-01-2024",
+        "REF001",
+        "10-01-2024",
+        "CUST001",
+        "Customer ABC Ltd",
+        "USD",
+        "CIF",
+        "NET30",
+        "FOB",
+        "1000000",
+        "LOT001",
+        "Steel Products",
+        "PCS",
+        "100",
+        "50.00",
+        "5000.00",
+        "Quality products",
+        "15-02-2024",
+        "Y",
+        "FIXED",
+        "CC001",
+        "LIN123"
       ];
     }
 
@@ -1000,6 +1252,7 @@ const UploadFile: React.FC = () => {
             <input
               type="text"
               placeholder="Current User"
+              value={localStorage.getItem("userEmail")}
               disabled
               className="w-full px-3 py-2 border border-border rounded-md focus:outline-none bg-secondary-color-lt text-secondary-text"
             />
