@@ -628,6 +628,8 @@ interface ExpandedRowConfig {
   fieldLabels?: Record<string, string>;
 }
 
+// ...existing code...
+
 interface TableProps<T extends EditableRowData> {
   data?: T[];
   filter?: T[];
@@ -636,11 +638,14 @@ interface TableProps<T extends EditableRowData> {
   draggableColumns?: string[];
   sortableColumns?: string[];
   expandedRowConfig?: ExpandedRowConfig;
+  expandedRowRenderer?: (rowData: T) => React.ReactNode; // <-- Add this line
   onUpdate?: (rowId: string, changes: Partial<T>) => Promise<boolean>;
   className?: string;
   edit?: boolean;
   setData?: (data: T[]) => void;
 }
+
+// ...existing code...
 
 interface ExpandedRowProps<T extends EditableRowData> {
   row: Row<T>;
@@ -649,6 +654,10 @@ interface ExpandedRowProps<T extends EditableRowData> {
   visibleColumnCount: number;
   edit?: boolean;
 }
+
+  
+
+// ...existing code...
 
 function ExpandedRow<T extends EditableRowData>({
   row,
@@ -744,12 +753,19 @@ function ExpandedRow<T extends EditableRowData>({
     }
   };
 
+  // Only render fields that are not null or undefined
   const renderField = (key: string) => {
-    const label = config.fieldLabels?.[key] ?? key;
-    const isEditable = config.editableFields?.includes(key) ?? false;
     let value: any = isEditing
       ? editValues[key as keyof T]
       : row.original[key as keyof T];
+
+    // Filter out null or undefined values
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    const label = config.fieldLabels?.[key] ?? key;
+    const isEditable = config.editableFields?.includes(key) ?? false;
 
     if (!isEditing && key.toLowerCase().includes("date")) {
       const date = new Date(value as string);
@@ -813,7 +829,17 @@ function ExpandedRow<T extends EditableRowData>({
                 {section.title}
               </h5>
               <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-                {section.fields.map(renderField)}
+                {section.fields
+                  .filter(
+                    (key) =>
+                      (isEditing
+                        ? editValues[key as keyof T]
+                        : row.original[key as keyof T]) !== null &&
+                      (isEditing
+                        ? editValues[key as keyof T]
+                        : row.original[key as keyof T]) !== undefined
+                  )
+                  .map(renderField)}
               </div>
             </div>
           ))}
@@ -827,6 +853,45 @@ function ExpandedRow<T extends EditableRowData>({
     </tr>
   );
 }
+
+// ...existing code...
+
+//   return (
+//     <tr key={`${row.id}-expanded`}>
+//       <td colSpan={visibleColumnCount} className="px-6 py-4 bg-primary-md">
+//         <div className="bg-secondary-color-lt rounded-lg p-4 shadow-md border border-border">
+//           <div className="flex justify-between items-center mb-4">
+//             <h4 className="text-lg font-semibold text-secondary-text">
+//               Additional Information
+//             </h4>
+//             {edit && (
+//               <div>
+//                 <Button onClick={handleEditToggle}>
+//                   {isEditing ? "Save" : "Edit"}
+//                 </Button>
+//               </div>
+//             )}
+//           </div>
+//           {config.sections.map((section) => (
+//             <div key={section.title} className="mb-6">
+//               <h5 className="text-md font-medium text-primary mb-3 border-b border-primary-md pb-2">
+//                 {section.title}
+//               </h5>
+//               <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+//                 {section.fields.map(renderField)}
+//               </div>
+//             </div>
+//           ))}
+//           {config.sections.length === 0 && (
+//             <div className="text-center text-primary py-4">
+//               No additional information to display
+//             </div>
+//           )}
+//         </div>
+//       </td>
+//     </tr>
+//   );
+// }
 
 // Main Table Component
 function NyneOSTable<T extends EditableRowData>({
@@ -1122,10 +1187,10 @@ function NyneOSTable<T extends EditableRowData>({
                           </svg>
                         </div>
                         <p className="text-xl font-medium text-primary mb-1">
-                          No Data found
+                          No Roles found
                         </p>
                         <p className="text-md font-normal text-primary">
-                          There are no data to display at the moment.
+                          There are no role to display at the moment.
                         </p>
                       </div>
                     </td>
