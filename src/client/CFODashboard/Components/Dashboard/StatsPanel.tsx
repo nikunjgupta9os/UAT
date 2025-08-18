@@ -62,6 +62,7 @@ const StatsPanel = () => {
   const [unhedgedExposure, setUnhedgedExposure] = useState("Loading...");
   const [bankMargin, setBankMargin] = useState("Loading...");
   const [loading, setLoading] = useState(true);
+  const[hedgeratio,setHedgeRatio] = useState(true);
 
   useEffect(() => {
     const fetchExposures = async () => {
@@ -127,6 +128,19 @@ const StatsPanel = () => {
         .finally(() => {
           setLoading(false);
         });
+      axios.get("https://backend-slqi.onrender.com/api/forwardDash/hedge-ratio")
+        .then((res) => {
+          const hedgeratio = res.data?.ratio ?? 0;
+          setHedgeRatio(hedgeratio);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch bank margin:", err);
+          setHedgeRatio("Error");
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+      
     };
 
     fetchExposures();
@@ -166,7 +180,7 @@ const StatsPanel = () => {
       />
       <StatCard
         title="Overall Hedge Ratio"
-        value="85%"
+        value={loading?"Loading..": hedgeratio}
         bgColor="bg-gradient-to-tl from-[#4dc9bf] to-[#073f40CC]"
       />
     </div>
