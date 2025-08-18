@@ -558,7 +558,7 @@ const getVisibleRows = () => {
       });
       exportRows.push(sumRow);
     }
-    exportToExcel(exportRows, `reports_${selectedType || "all"}`);
+    exportToExcel(exportRows, `reports_${selectedType || "all"}`, { fxType: selectedType });
   };
 
   const handleExportPDF = () => {
