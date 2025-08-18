@@ -321,8 +321,8 @@ const AllExposureRequest: React.FC = () => {
         accessorKey: "exposure_type",
         header: "Type",
         cell: ({ getValue }) => (
-          <span className="text-secondary-text-dark">
-            {getValue() as string}
+          <span className="text-secondary-text">
+            {(getValue() as string)?.toUpperCase()}
           </span>
         ),
       },

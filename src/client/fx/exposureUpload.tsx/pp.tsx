@@ -269,27 +269,6 @@ const AllExposureRequest: React.FC = () => {
         setRenderVars(fallbackRenderVars);
         setLoading(false);
       });
-
-    // fetchUserVars()
-    //   .then((userVarsRes) => {
-    //     setUserVars(userVarsRes);
-    //     if (!userVarsRes?.isLoggedIn) {
-    //       setRenderVars((prev) =>
-    //         prev ? { ...prev, isLoadable: false } : prev
-    //       );
-    //     }
-    //   })
-    //   .catch((err: any) => {
-    //      console.error("Error fetching userVars:", err);
-    //     setUserVars(fallbackUserVars);
-    //   });
-
-    // fetchUserJourney()
-    //   .then((userJourneyRes) => setUserJourney(userJourneyRes))
-    //   .catch((err) => {
-    //      console.error("Error fetching userJourney:", err);
-    //     setUserJourney(fallbackUserJourney);
-    //   });
   }, []);
 
   const columns = useMemo<ColumnDef<ExposureRequest>[]>(
@@ -327,7 +306,9 @@ const AllExposureRequest: React.FC = () => {
         accessorKey: "exposure_type",
         header: "Type",
         cell: ({ getValue }) => (
-          <span className="text-secondary-text">{getValue() as string}</span>
+          <span className="text-secondary-text">
+            {(getValue() as string)?.toUpperCase()}
+          </span>
         ),
       },
       {
