@@ -47,8 +47,6 @@ const grnHeaders = [
   "offsetting_account",
   "currency_2",
   "company",
-  "loaded_at",
-  "linked_id",
 ];
 
 const creditorHeaders = [
@@ -67,8 +65,7 @@ const creditorHeaders = [
   "document_currency",
   "local_currency",
   "currency_2",
-  "bank_reference",
-  "linked_id", // This must be present
+  "bank_reference", // This must be present
 ];
 
 const debtorsHeaders = [
@@ -90,8 +87,7 @@ const debtorsHeaders = [
   "gl_account",
   "currency_2",
   "company",
-  "bank_reference",
-  "linked_id", // This must be present
+  "bank_reference", // This must be present
 ];
 
 export const templates = [
@@ -227,6 +223,49 @@ interface UploadedFile {
   file?: File;
 }
 
+function isLikelyDate(val: any) {
+  if (val instanceof Date) return true;
+  if (typeof val === "number" && val > 25569 && val < 60000) return true; // Excel serial
+  if (typeof val === "string" && /^\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}$/.test(val))
+    return true; // D/M/YY, DD/MM/YYYY, etc.
+  if (typeof val === "string" && /^\d{4}-\d{2}-\d{2}/.test(val)) return true; // ISO
+  return false;
+}
+
+function formatToDDMMYYYY(val: any) {
+  let date: Date | null = null;
+  if (val instanceof Date) {
+    date = val;
+  } else if (typeof val === "number") {
+    // Excel serial date
+    // @ts-ignore
+    const d = XLSX.SSF.parse_date_code(val);
+    if (d) {
+      date = new Date(Date.UTC(d.y, d.m - 1, d.d));
+    }
+  } else if (typeof val === "string") {
+    // Handle D/M/YY or DD/MM/YY or D-M-YY or DD-MM-YYYY
+    let d, m, y;
+    if (/^\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}$/.test(val)) {
+      [d, m, y] = val.split(/[\/-]/);
+      if (y.length === 2) {
+        y = parseInt(y, 10) > 50 ? "19" + y : "20" + y;
+      }
+      date = new Date(`${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
+    } else if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+      // YYYY-MM-DD
+      date = new Date(val);
+    }
+  }
+  if (date && !isNaN(date.getTime())) {
+    const dd = String(date.getDate()).padStart(2, "0");
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const yyyy = date.getFullYear();
+    return `${dd}-${mm}-${yyyy}`;
+  }
+  return String(val || "").trim();
+}
+
 const parseExcel = (arrayBuffer: ArrayBuffer): string[][] => {
   try {
     // Read the workbook from array buffer
@@ -248,7 +287,14 @@ const parseExcel = (arrayBuffer: ArrayBuffer): string[][] => {
       .filter((row) =>
         row.some((cell) => cell !== "" && cell !== null && cell !== undefined)
       )
-      .map((row) => row.map((cell) => String(cell || "").trim()));
+      .map((row, rowIdx) =>
+        row.map((cell, colIdx) => {
+          // Don't format header row
+          if (rowIdx === 0) return String(cell || "").trim();
+          if (isLikelyDate(cell)) return formatToDDMMYYYY(cell);
+          return String(cell || "").trim();
+        })
+      );
 
     return filteredData;
   } catch (error) {
@@ -315,41 +361,28 @@ const getRequiredFields = (templateType?: string): string[] => {
       ];
     case "grn":
       return [
-        // "account",
+        "account",
         "company_code",
-        // "business_area",
+        "business_area",
         "document_type",
-        // "customer",
-        // "assignment",
         "document_number",
         "document_date",
         "posting_date",
-        // "supplier",
+        "supplier",
         "reference",
         "amount_in_doc_curr",
         "document_currency",
         "amount_in_local_currency",
-        // "text",
-        // "clearing_document",
-        // "clearing_date",
-        // "special_gl_ind",
-        // "offsetting_account",
-        // "currency_2",
-        "company",
-        // "loaded_at",
-        // "linked_id",
       ];
     case "creditor":
       return [
         "company_code",
-        // "business_area",
-        // "account",
+        "business_area",
+        "account",
         "document_date",
         "posting_date",
-        "document_number",
-        "reference",
-        // "document_type",
-        // "posting_key",
+        "document_type",
+        "posting_key",
         "amount_in_doc_curr",
         "document_currency",
       ];
@@ -359,9 +392,8 @@ const getRequiredFields = (templateType?: string): string[] => {
         "document_number",
         "document_date",
         "posting_date",
-        "net_due_date",
-        // "document_type",
-        // "customer",
+        "document_type",
+        "customer",
         "amount_in_doc_curr",
         "document_currency",
         "amount_in_local_currency",
@@ -369,7 +401,7 @@ const getRequiredFields = (templateType?: string): string[] => {
     default:
       return [
         "company_code",
-        // "bank_reference",
+        "bank_reference",
         "amount_in_doc_curr",
         "document_currency",
       ];
@@ -600,35 +632,35 @@ const validateRow = (
       // }
 
       // Validate special G/L indicator (should be valid values)
-      // const validSpecialGLInds = [
-      //   "a",
-      //   "b",
-      //   "c",
-      //   "d",
-      //   "f",
-      //   "k",
-      //   "p",
-      //   "v",
-      //   "w",
-      //   "",
-      // ];
-      // const specialGLInd = rowObj["special_gl_ind"];
-      // if (
-      //   specialGLInd &&
-      //   !validSpecialGLInds.includes(specialGLInd.toLowerCase())
-      // ) {
-      //   ifValidationErrors.push({
-      //     description: `Row ${
-      //       index + 2
-      //     }: 'special_gl_ind' must be one of: ${validSpecialGLInds
-      //       .filter((x) => x !== "")
-      //       .join(", ")
-      //       .toUpperCase()} or empty`,
-      //     row: index + 2,
-      //     column: headers.indexOf("special_gl_ind") + 1,
-      //     currentValue: specialGLInd,
-      //   });
-      // }
+      const validSpecialGLInds = [
+        "a",
+        "b",
+        "c",
+        "d",
+        "f",
+        "k",
+        "p",
+        "v",
+        "w",
+        "",
+      ];
+      const specialGLInd = rowObj["special_gl_ind"];
+      if (
+        specialGLInd &&
+        !validSpecialGLInds.includes(specialGLInd.toLowerCase())
+      ) {
+        ifValidationErrors.push({
+          description: `Row ${
+            index + 2
+          }: 'special_gl_ind' must be one of: ${validSpecialGLInds
+            .filter((x) => x !== "")
+            .join(", ")
+            .toUpperCase()} or empty`,
+          row: index + 2,
+          column: headers.indexOf("special_gl_ind") + 1,
+          currentValue: specialGLInd,
+        });
+      }
 
       // Validate customer code format (should not be empty if provided)
       const customer = rowObj["customer"];
@@ -978,7 +1010,7 @@ const validateRow = (
     } else if (templateType === "grn") {
       // Validate numeric fields for GRN
       const numericFields = [
-        // "account",
+        "account",
         "amount_in_doc_curr",
         "amount_in_local_currency",
       ];
@@ -1565,29 +1597,27 @@ export const handleDownload = (template: any) => {
   } else {
     // grn template
     sampleRow = [
-      "1000", // account
-      "COMP001", // company_code
-      "BA01", // business_area
-      "GR", // document_type
-      "CUST001", // customer
-      "ASSIGN001", // assignment
-      "DOC001", // document_number
-      "15-01-2024", // document_date
-      "15-01-2024", // posting_date
-      "VEN001", // supplier
-      "REF001", // reference
-      "1000", // amount_in_doc_curr
-      "USD", // document_currency
-      "750000", // amount_in_local_currency
-      "Goods Receipt", // text
-      "CLEAR001", // clearing_document
-      "15-01-2024", // clearing_date
-      "S", // special_gl_ind
-      "1000", // offsetting_account
-      "USD", // currency_2
-      "COMP001", // company
-      "2024-08-18T12:00:00Z", // loaded_at (example ISO date)
-      "LINK123", // linked_id
+      "1000",
+      "COMP001",
+      "BA01",
+      "GR",
+      "CUST001",
+      "ASSIGN001",
+      "DOC001",
+      "15-01-2024",
+      "15-01-2024",
+      "VEN001",
+      "REF001",
+      "1000",
+      "USD",
+      "750000",
+      "Goods Receipt",
+      "CLEAR001",
+      "15-01-2024",
+      "S",
+      "1000",
+      "USD",
+      "COMP001",
     ];
   }
 
