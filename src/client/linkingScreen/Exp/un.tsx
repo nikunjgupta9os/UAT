@@ -475,7 +475,7 @@ const AvailableForward: React.FC<TableProps> = ({
   return (
     <div className="w-full space-y-4 pt-6 overflow-hidden">
       <h2 className="text-2xl font-bold text-secondary-text pl-4">
-        Avaliable Forward
+        Available Forward
       </h2>
 
       <div
