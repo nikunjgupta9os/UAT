@@ -975,7 +975,7 @@ const validateRow = (
     } else if (templateType === "grn") {
       // Validate numeric fields for GRN
       const numericFields = [
-        "account",
+        // "account",
         "amount_in_doc_curr",
         "amount_in_local_currency",
       ];
