@@ -89,18 +89,6 @@ async function fetchRenderVars(): Promise<IfPayload["renderVars"]> {
   return res.json();
 }
 
-// async function fetchUserVars(): Promise<IfPayload["userVars"]> {
-//   const res = await fetch(`${cURLHOST}/exposureUpload/userVars`);
-//   if (!res.ok) throw new Error("Failed to fetch userVars");
-//   return res.json();
-// }
-
-// async function fetchUserJourney(): Promise<IfPayload["userJourney"]> {
-//   const res = await fetch(`${cURLHOST}/exposureUpload/userJourney`);
-//   if (!res.ok) throw new Error("Failed to fetch userJourney");
-//   return res.json();
-// }
-
 interface Message {
   date: string;
   priority: number;
@@ -263,27 +251,6 @@ const AllExposureRequest: React.FC = () => {
         console.error("Error fetching renderVars:", err);
         setRenderVars(fallbackRenderVars);
       });
-
-    // fetchUserVars()
-    //   .then((userVarsRes) => {
-    //     setUserVars(userVarsRes);
-    //     if (!userVarsRes?.isLoggedIn) {
-    //       setRenderVars((prev) =>
-    //         prev ? { ...prev, isLoadable: false } : prev
-    //       );
-    //     }
-    //   })
-    //   .catch((err: any) => {
-    //      console.error("Error fetching userVars:", err);
-    //     setUserVars(fallbackUserVars);
-    //   });
-
-    // fetchUserJourney()
-    //   .then((userJourneyRes) => setUserJourney(userJourneyRes))
-    //   .catch((err) => {
-    //      console.error("Error fetching userJourney:", err);
-    //     setUserJourney(fallbackUserJourney);
-    //   });
   }, []);
 
   const columns = useMemo<ColumnDef<ExposureRequest>[]>(

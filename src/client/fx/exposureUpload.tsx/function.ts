@@ -67,8 +67,8 @@ const creditorHeaders = [
   "document_currency",
   "local_currency",
   "currency_2",
-  "bank_reference", 
-  "linked_id"// This must be present
+  "bank_reference",
+  "linked_id", // This must be present
 ];
 
 const debtorsHeaders = [
@@ -91,7 +91,7 @@ const debtorsHeaders = [
   "currency_2",
   "company",
   "bank_reference",
-  "linked_id" // This must be present
+  "linked_id", // This must be present
 ];
 
 export const templates = [
@@ -319,6 +319,8 @@ const getRequiredFields = (templateType?: string): string[] => {
         "company_code",
         "business_area",
         "document_type",
+        "customer",
+        "assignment",
         "document_number",
         "document_date",
         "posting_date",
@@ -327,6 +329,15 @@ const getRequiredFields = (templateType?: string): string[] => {
         "amount_in_doc_curr",
         "document_currency",
         "amount_in_local_currency",
+        "text",
+        "clearing_document",
+        "clearing_date",
+        "special_gl_ind",
+        "offsetting_account",
+        "currency_2",
+        "company",
+        "loaded_at",
+        "linked_id",
       ];
     case "creditor":
       return [
@@ -355,7 +366,7 @@ const getRequiredFields = (templateType?: string): string[] => {
     default:
       return [
         "company_code",
-        "bank_reference",
+        // "bank_reference",
         "amount_in_doc_curr",
         "document_currency",
       ];
@@ -586,35 +597,35 @@ const validateRow = (
       // }
 
       // Validate special G/L indicator (should be valid values)
-      const validSpecialGLInds = [
-        "a",
-        "b",
-        "c",
-        "d",
-        "f",
-        "k",
-        "p",
-        "v",
-        "w",
-        "",
-      ];
-      const specialGLInd = rowObj["special_gl_ind"];
-      if (
-        specialGLInd &&
-        !validSpecialGLInds.includes(specialGLInd.toLowerCase())
-      ) {
-        ifValidationErrors.push({
-          description: `Row ${
-            index + 2
-          }: 'special_gl_ind' must be one of: ${validSpecialGLInds
-            .filter((x) => x !== "")
-            .join(", ")
-            .toUpperCase()} or empty`,
-          row: index + 2,
-          column: headers.indexOf("special_gl_ind") + 1,
-          currentValue: specialGLInd,
-        });
-      }
+      // const validSpecialGLInds = [
+      //   "a",
+      //   "b",
+      //   "c",
+      //   "d",
+      //   "f",
+      //   "k",
+      //   "p",
+      //   "v",
+      //   "w",
+      //   "",
+      // ];
+      // const specialGLInd = rowObj["special_gl_ind"];
+      // if (
+      //   specialGLInd &&
+      //   !validSpecialGLInds.includes(specialGLInd.toLowerCase())
+      // ) {
+      //   ifValidationErrors.push({
+      //     description: `Row ${
+      //       index + 2
+      //     }: 'special_gl_ind' must be one of: ${validSpecialGLInds
+      //       .filter((x) => x !== "")
+      //       .join(", ")
+      //       .toUpperCase()} or empty`,
+      //     row: index + 2,
+      //     column: headers.indexOf("special_gl_ind") + 1,
+      //     currentValue: specialGLInd,
+      //   });
+      // }
 
       // Validate customer code format (should not be empty if provided)
       const customer = rowObj["customer"];
@@ -1551,29 +1562,29 @@ export const handleDownload = (template: any) => {
   } else {
     // grn template
     sampleRow = [
-      "1000",           // account
-      "COMP001",        // company_code
-      "BA01",           // business_area
-      "GR",             // document_type
-      "CUST001",        // customer
-      "ASSIGN001",      // assignment
-      "DOC001",         // document_number
-      "15-01-2024",     // document_date
-      "15-01-2024",     // posting_date
-      "VEN001",         // supplier
-      "REF001",         // reference
-      "1000",           // amount_in_doc_curr
-      "USD",            // document_currency
-      "750000",         // amount_in_local_currency
-      "Goods Receipt",  // text
-      "CLEAR001",       // clearing_document
-      "15-01-2024",     // clearing_date
-      "S",              // special_gl_ind
-      "1000",           // offsetting_account
-      "USD",            // currency_2
-      "COMP001",        // company
+      "1000", // account
+      "COMP001", // company_code
+      "BA01", // business_area
+      "GR", // document_type
+      "CUST001", // customer
+      "ASSIGN001", // assignment
+      "DOC001", // document_number
+      "15-01-2024", // document_date
+      "15-01-2024", // posting_date
+      "VEN001", // supplier
+      "REF001", // reference
+      "1000", // amount_in_doc_curr
+      "USD", // document_currency
+      "750000", // amount_in_local_currency
+      "Goods Receipt", // text
+      "CLEAR001", // clearing_document
+      "15-01-2024", // clearing_date
+      "S", // special_gl_ind
+      "1000", // offsetting_account
+      "USD", // currency_2
+      "COMP001", // company
       "2024-08-18T12:00:00Z", // loaded_at (example ISO date)
-      "LINK123",        // linked_id
+      "LINK123", // linked_id
     ];
   }
 

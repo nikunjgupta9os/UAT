@@ -87,18 +87,6 @@ async function fetchRenderVars(): Promise<IfPayload["renderVars"]> {
   return res.json();
 }
 
-// async function fetchUserVars(): Promise<IfPayload["userVars"]> {
-//   const res = await fetch(`${cURLHOST}/exposureUpload/userVars`);
-//   if (!res.ok) throw new Error("Failed to fetch userVars");
-//   return res.json();
-// }
-
-// async function fetchUserJourney(): Promise<IfPayload["userJourney"]> {
-//   const res = await fetch(`${cURLHOST}/exposureUpload/userJourney`);
-//   if (!res.ok) throw new Error("Failed to fetch userJourney");
-//   return res.json();
-// }
-
 interface Message {
   date: string;
   priority: number;
