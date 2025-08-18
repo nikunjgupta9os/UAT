@@ -756,10 +756,10 @@ const AllRoles: React.FC = () => {
                           </svg>
                         </div>
                         <p className="text-xl font-medium text-primary mb-1">
-                          No Roles found
+                          No Data found
                         </p>
                         <p className="text-md font-normal text-primary">
-                          There are no role to display at the moment.
+                          There are no data to display at the moment.
                         </p>
                       </div>
                     </td>

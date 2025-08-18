@@ -153,7 +153,7 @@ const AwaitingApproval: React.FC = () => {
       .getSelectedRowModel()
       .rows.map((row) => row.original.id);
     if (selectedRoleIds.length === 0)
-      return notify("No roles selected", "warning");
+      return notify("No Data selected", "warning");
 
     axios
       .post("https://backend-slqi.onrender.com/roles/bulk-approve", {
@@ -188,7 +188,7 @@ const AwaitingApproval: React.FC = () => {
       .rows.map((row) => row.original.id);
 
     if (selectedRoleIds.length === 0)
-      return notify("No roles selected", "warning");
+      return notify("No Data selected", "warning");
 
     axios
       .post("https://backend-slqi.onrender.com/roles/bulk-reject", {
@@ -748,10 +748,10 @@ const AwaitingApproval: React.FC = () => {
                           </svg>
                         </div>
                         <p className="text-xl font-medium text-primary mb-1">
-                          No role found
+                          No Data found
                         </p>
                         <p className="text-md font-normal text-primary">
-                          There are no role to display at the moment.
+                          There are no data to display at the moment.
                         </p>
                       </div>
                     </td>
