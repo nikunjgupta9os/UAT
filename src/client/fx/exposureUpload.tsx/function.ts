@@ -47,6 +47,8 @@ const grnHeaders = [
   "offsetting_account",
   "currency_2",
   "company",
+  "loaded_at",
+  "linked_id",
 ];
 
 const creditorHeaders = [
@@ -65,7 +67,8 @@ const creditorHeaders = [
   "document_currency",
   "local_currency",
   "currency_2",
-  "bank_reference", // This must be present
+  "bank_reference", 
+  "linked_id"// This must be present
 ];
 
 const debtorsHeaders = [
@@ -87,7 +90,8 @@ const debtorsHeaders = [
   "gl_account",
   "currency_2",
   "company",
-  "bank_reference", // This must be present
+  "bank_reference",
+  "linked_id" // This must be present
 ];
 
 export const templates = [
@@ -1547,27 +1551,29 @@ export const handleDownload = (template: any) => {
   } else {
     // grn template
     sampleRow = [
-      "1000",
-      "COMP001",
-      "BA01",
-      "GR",
-      "CUST001",
-      "ASSIGN001",
-      "DOC001",
-      "15-01-2024",
-      "15-01-2024",
-      "VEN001",
-      "REF001",
-      "1000",
-      "USD",
-      "750000",
-      "Goods Receipt",
-      "CLEAR001",
-      "15-01-2024",
-      "S",
-      "1000",
-      "USD",
-      "COMP001",
+      "1000",           // account
+      "COMP001",        // company_code
+      "BA01",           // business_area
+      "GR",             // document_type
+      "CUST001",        // customer
+      "ASSIGN001",      // assignment
+      "DOC001",         // document_number
+      "15-01-2024",     // document_date
+      "15-01-2024",     // posting_date
+      "VEN001",         // supplier
+      "REF001",         // reference
+      "1000",           // amount_in_doc_curr
+      "USD",            // document_currency
+      "750000",         // amount_in_local_currency
+      "Goods Receipt",  // text
+      "CLEAR001",       // clearing_document
+      "15-01-2024",     // clearing_date
+      "S",              // special_gl_ind
+      "1000",           // offsetting_account
+      "USD",            // currency_2
+      "COMP001",        // company
+      "2024-08-18T12:00:00Z", // loaded_at (example ISO date)
+      "LINK123",        // linked_id
     ];
   }
 
