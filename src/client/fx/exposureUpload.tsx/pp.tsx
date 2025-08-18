@@ -326,9 +326,15 @@ const AllExposureRequest: React.FC = () => {
       {
         accessorKey: "exposure_type",
         header: "Type",
-        cell: ({ getValue }) => (
-          <span className="text-secondary-text">{getValue() as string}</span>
-        ),
+        cell: ({ getValue }) => {
+          const value = getValue() as string;
+          const pascalCaseValue = value
+            .split("_")
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ");
+
+          return <span className="text-secondary-text">{pascalCaseValue}</span>;
+        },
       },
       {
         accessorKey: "entity",
@@ -797,6 +803,15 @@ const AllExposureRequest: React.FC = () => {
       "delete_comment",
       "status",
       "approval_status",
+      "counterparty_type",
+      "company_code",
+      "value_date",
+      "document_date",
+      "counterparty_name",
+      "currency",
+      "total_original_amount",
+      "line_item_amount",
+      "counterparty_code",
     ],
     fieldLabels: {
       exposure_header_id: "Exposure Header ID",
@@ -870,38 +885,38 @@ const AllExposureRequest: React.FC = () => {
   if (loading) {
     return <LoadingSpinner />;
   }
-  
-function renderSection(section, rowData, fieldLabels) {
-  return (
-    <div key={section.title} style={{ marginBottom: 12 }}>
-      <h4 style={{ fontWeight: 600 }}>{section.title}</h4>
-      <div>
-        {section.fields
-          .filter(
-            (field) =>
-              rowData[field] !== null &&
-              rowData[field] !== undefined &&
-              rowData[field] !== ""
-          )
-          .map((field) => (
-            <div key={field}>
-              <strong>{fieldLabels[field] || field}:</strong> {rowData[field]}
-            </div>
-          ))}
-      </div>
-    </div>
-  );
-}
 
-function expandedRowRenderer(rowData) {
-  return (
-    <div>
-      {expandedRowConfig.sections.map((section) =>
-        renderSection(section, rowData, expandedRowConfig.fieldLabels)
-      )}
-    </div>
-  );
-}
+  function renderSection(section, rowData, fieldLabels) {
+    return (
+      <div key={section.title} style={{ marginBottom: 12 }}>
+        <h4 style={{ fontWeight: 600 }}>{section.title}</h4>
+        <div>
+          {section.fields
+            .filter(
+              (field) =>
+                rowData[field] !== null &&
+                rowData[field] !== undefined &&
+                rowData[field] !== ""
+            )
+            .map((field) => (
+              <div key={field}>
+                <strong>{fieldLabels[field] || field}:</strong> {rowData[field]}
+              </div>
+            ))}
+        </div>
+      </div>
+    );
+  }
+
+  function expandedRowRenderer(rowData) {
+    return (
+      <div>
+        {expandedRowConfig.sections.map((section) =>
+          renderSection(section, rowData, expandedRowConfig.fieldLabels)
+        )}
+      </div>
+    );
+  }
   return (
     <div className="space-y-2.5">
       {/* Row 1 - Status Filter */}
@@ -999,43 +1014,43 @@ function expandedRowRenderer(rowData) {
         </div>
       </div>
 
-     <NyneOSTable<ExposureRequest>
-  data={data}
-  filter={filteredData}
-  edit={true}
-  columns={columns}
-  defaultColumnVisibility={defaultVisibility}
-  draggableColumns={[
-    "document_id",
-    "exposure_type",
-    "entity",
-    "counterparty_name",
-    "total_original_amount",
-    "total_open_amount",
-    "currency",
-    "document_date",
-    "status",
-    "approval_status",
-  ]}
-  sortableColumns={[
-    "document_id",
-    "exposure_type",
-    "entity",
-    "counterparty_name",
-    "total_original_amount",
-    "total_open_amount",
-    "document_date",
-    "value_date",
-    "status",
-    "approval_status",
-    "created_at",
-  ]}
-  expandedRowConfig={expandedRowConfig}
-  expandedRowRenderer={expandedRowRenderer} // <-- Add this line
-  onUpdate={handleUpdate}
-  className="mb-8"
-  setData={setData}
-/>
+      <NyneOSTable<ExposureRequest>
+        data={data}
+        filter={filteredData}
+        edit={true}
+        columns={columns}
+        defaultColumnVisibility={defaultVisibility}
+        draggableColumns={[
+          "document_id",
+          "exposure_type",
+          "entity",
+          "counterparty_name",
+          "total_original_amount",
+          "total_open_amount",
+          "currency",
+          "document_date",
+          "status",
+          "approval_status",
+        ]}
+        sortableColumns={[
+          "document_id",
+          "exposure_type",
+          "entity",
+          "counterparty_name",
+          "total_original_amount",
+          "total_open_amount",
+          "document_date",
+          "value_date",
+          "status",
+          "approval_status",
+          "created_at",
+        ]}
+        expandedRowConfig={expandedRowConfig}
+        expandedRowRenderer={expandedRowRenderer} // <-- Add this line
+        onUpdate={handleUpdate}
+        className="mb-8"
+        setData={setData}
+      />
     </div>
   );
 };
