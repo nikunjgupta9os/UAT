@@ -62,7 +62,7 @@ const StatsPanel = () => {
   const [unhedgedExposure, setUnhedgedExposure] = useState("Loading...");
   const [bankMargin, setBankMargin] = useState("Loading...");
   const [loading, setLoading] = useState(true);
-  const[hedgeratio,setHedgeRatio] = useState(true);
+  const[hedgeratio,setHedgeRatio] = useState("Loading...");
 
   useEffect(() => {
     const fetchExposures = async () => {
