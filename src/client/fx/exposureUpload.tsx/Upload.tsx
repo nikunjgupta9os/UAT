@@ -959,7 +959,8 @@ const UploadFile: React.FC = () => {
         "local_currency",
         "currency_2",
         "bank_reference",
-        "linked_id"
+        "linked_id",
+        "company"
       ];
       sampleRow = [
         "N",
@@ -978,7 +979,8 @@ const UploadFile: React.FC = () => {
         "USD",
         "USD",
         "BANKREF001",
-        "LINK123"
+        "LINK123",
+        "TACO"
       ];
     } else if (template.id === "debtors") {
       headers = [
