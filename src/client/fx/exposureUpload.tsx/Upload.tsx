@@ -184,28 +184,37 @@ const UploadFile: React.FC = () => {
     });
   };
 
-  const parseExcel = (arrayBuffer: ArrayBuffer): string[][] => {
-    try {
-      const workbook = XLSX.read(arrayBuffer, { type: "array" });
-      const firstSheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheetName];
+  
+const parseExcel = (arrayBuffer: ArrayBuffer): string[][] => {
+  try {
+    const workbook = XLSX.read(arrayBuffer, { type: "array" });
+    const firstSheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[firstSheetName];
 
-      const data: any[][] = XLSX.utils.sheet_to_json(worksheet, {
-        header: 1,
-        defval: "",
-        raw: false,
-      });
+    const data: any[][] = XLSX.utils.sheet_to_json(worksheet, {
+      header: 1,
+      defval: "",
+      raw: false,
+    });
 
-      return data
-        .filter((row) =>
-          row.some((cell) => cell !== "" && cell !== null && cell !== undefined)
-        )
-        .map((row) => row.map((cell) => String(cell || "").trim()));
-    } catch (error) {
-      console.error("Error parsing Excel file:", error);
-      throw new Error("Failed to parse Excel file");
-    }
-  };
+    return data
+      .filter((row) =>
+        row.some((cell) => cell !== "" && cell !== null && cell !== undefined)
+      )
+      .map((row, rowIdx) =>
+        row.map((cell) => {
+          // Try to format as DD-MM-YYYY if it's a date (skip header row)
+          if (rowIdx > 0 && isLikelyDate(cell)) {
+            return formatToDDMMYYYY(cell);
+          }
+          return String(cell || "").trim();
+        })
+      );
+  } catch (error) {
+    console.error("Error parsing Excel file:", error);
+    throw new Error("Failed to parse Excel file");
+  }
+};
 
   const handleUpdateRow = (
     rowIndex: number,
@@ -757,6 +766,68 @@ const UploadFile: React.FC = () => {
       notify(`All ${errorCount} file(s) failed to upload`, "error");
     }
   };
+
+  function isLikelyDate(val: any) {
+  if (val instanceof Date) return true;
+  if (typeof val === "number" && val > 25569 && val < 60000) return true; // Excel serial
+  if (typeof val === "string" && /^\d{4}-\d{2}-\d{2}/.test(val)) return true; // ISO
+  if (typeof val === "string" && /^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(val)) return true; // D/M/YY, DD/MM/YYYY, etc.
+  if (typeof val === "string" && /^\d{1,2}-\d{1,2}-\d{2,4}$/.test(val)) return true; // D-M-YY, DD-MM-YYYY, etc.
+  return false;
+}
+
+// Format JS Date or string to DD-MM-YYYY
+function formatToDDMMYYYY(val: any) {
+  let date: Date | null = null;
+  if (val instanceof Date) {
+    date = val;
+  } else if (typeof val === "number") {
+    // Excel serial date
+    const parsed = XLSX.SSF.parse_date_code(val);
+    if (parsed && parsed.y && parsed.m && parsed.d) {
+      date = new Date(Date.UTC(parsed.y, parsed.m - 1, parsed.d));
+    }
+  } else if (typeof val === "string") {
+    // Handle D/M/YY or DD/MM/YY or D-M-YY or DD-MM-YYYY
+    let d, m, y;
+    if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(val)) {
+      [d, m, y] = val.split("/");
+    } else if (/^\d{1,2}-\d{1,2}-\d{2,4}$/.test(val)) {
+      [d, m, y] = val.split("-");
+    }
+    if (d && m && y) {
+      let yyyy = y.length === 2 ? (parseInt(y, 10) > 50 ? "19" + y : "20" + y) : y;
+      date = new Date(`${yyyy}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
+    } else {
+      const parts = val.split(/[-\/]/);
+      if (parts.length === 3) {
+        if (val.includes("-")) {
+          if (parts[0].length === 4) {
+            // YYYY-MM-DD
+            date = new Date(`${parts[0]}-${parts[1]}-${parts[2]}`);
+          } else {
+            // DD-MM-YYYY
+            date = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+          }
+        } else if (val.includes("/")) {
+          // MM/DD/YYYY
+          date = new Date(`${parts[2]}-${parts[0]}-${parts[1]}`);
+        }
+      }
+      if (!date || isNaN(date.getTime())) {
+        date = new Date(val);
+      }
+    }
+  }
+  if (date && !isNaN(date.getTime())) {
+    const dd = String(date.getDate()).padStart(2, "0");
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const yyyy = date.getFullYear();
+    return `${dd}-${mm}-${yyyy}`;
+  }
+  return val;
+}
+
 
   const handleSavePreview = (fileId: string) => {
     setFiles((prevFiles) =>
