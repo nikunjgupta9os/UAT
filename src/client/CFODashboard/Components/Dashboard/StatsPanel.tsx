@@ -1,6 +1,13 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
+
+interface StatCardProps {
+  title: string;
+  value: string;
+  bgColor: string;
+}
+
 const StatCard = ({ title, value, bgColor }: StatCardProps) => (
   <div
     className={`
