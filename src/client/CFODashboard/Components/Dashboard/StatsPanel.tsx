@@ -1,13 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-
-interface StatCardProps {
-  title: string;
-  value: string;
-  bgColor: string;
-}
-
 const StatCard = ({ title, value, bgColor }: StatCardProps) => (
   <div
     className={`
@@ -54,135 +47,167 @@ const StatCard = ({ title, value, bgColor }: StatCardProps) => (
         <span className="text-4xl font-bold text-white">{value}</span>
       </div>
     </div>
+
   </div>
 );
-
 const StatsPanel = () => {
   const [hedgedExposure, setHedgedExposure] = useState("Loading...");
   const [unhedgedExposure, setUnhedgedExposure] = useState("Loading...");
   const [bankMargin, setBankMargin] = useState("Loading...");
+  const [hedgeRatio, setHedgeRatio] = useState("Loading...");
+  const [buyForwards, setBuyForwards] = useState("Loading...");
+  const [sellForwards, setSellForwards] = useState("Loading...");
+  const [avgExposureMaturity, setAvgExposureMaturity] = useState("Loading...");
+  const [avgForwardMaturity, setAvgForwardMaturity] = useState("Loading...");
   const [loading, setLoading] = useState(true);
-  const[hedgeratio,setHedgeRatio] = useState("Loading...");
+
+  // Static values (replace with API if available)
+  const markToMarketPL = "$3.1M";
+  const costOfPremiumPaid = "$1.47M";
 
   useEffect(() => {
-    const fetchExposures = async () => {
+    const fetchStats = async () => {
       setLoading(true);
+      try {
+        // Parallel API calls
+        const [
+          hedgeRatioRes,
+          hedgedRes,
+          unhedgedRes,
+          bankMarginRes,
+          buySellRes,
+          waetRes,
+          waftRes,
+        ] = await Promise.all([
+          axios.get("https://backend-slqi.onrender.com/api/forwardDash/hedge-ratio"),
+          axios.get("https://backend-slqi.onrender.com/api/forwardDash/total-usd"),
+          axios.get("https://backend-slqi.onrender.com/api/exposureUpload/USDsum-headers"),
+          axios.get("https://backend-slqi.onrender.com/api/forwardDash/total-bankmargin"),
+          axios.get("https://backend-slqi.onrender.com/api/forwardDash/buysell"),
+          axios.get("https://backend-slqi.onrender.com/api/forwardDash/waet"),
+          axios.get("https://backend-slqi.onrender.com/api/forwardDash/waht"),
+        ]);
 
-      // try {
-      //   const [unhedgedRes, hedgedRes, bankMarginRes] = await Promise.all([
-      //     axios.get("https://backend-slqi.onrender.com/api/exposureUpload/USDsum-headers"),
-      //     axios.get("https://backend-slqi.onrender.com/api/forwardDash/total-usd"),
-      //     axios.get("https://backend-slqi.onrender.com/api/forwardDash/total-bankmargin"),
-      //   ]);
 
-      //   const unhedgedVal = (unhedgedRes.data?.totalUsd ?? 0) / 1_000_000;
-      //   const hedgedVal = (hedgedRes.data?.totalUsd ?? 0) / 1_000_000;
-      //   const bankMarginVal = (bankMarginRes.data?.totalBankmargin ?? 0) / 1_000_000;
 
-      //   setHedgedExposure(`$${hedgedVal.toFixed(4)}M`);
-      //   setUnhedgedExposure(`$${(unhedgedVal - hedgedVal).toFixed(2)}M`);
-      //   setBankMargin(`$${bankMarginVal.toFixed(4)}M`);
-      // } catch (err) {
-      //   console.error("Failed to fetch exposures:", err);
-      //   setHedgedExposure("Error");
-      //   setUnhedgedExposure("Error");
-      //   setBankMargin("Error");
-      // } finally {
-      //   setLoading(false);
-      // }
+        // Hedge Ratio
+        setHedgeRatio(
+          hedgeRatioRes.data?.ratio !== undefined
+            ? `${hedgeRatioRes.data.ratio}%`
+            : "N/A"
+        );
 
-      // Fetch Unhedged
-      axios.get("https://backend-slqi.onrender.com/api/exposureUpload/USDsum-headers")
-        .then((res) => {
-          const rawValue = res.data?.totalUsd ?? 0;
-          const processed = rawValue / 1000000;
-          setUnhedgedExposure(`$${processed.toFixed(2)}M`);
-        })
-        .catch((err) => {
-          console.error("Failed to fetch unhedged exposures:", err);
-          setUnhedgedExposure("Error");
-        });
+        // Hedged Exposure
+        const hedgedVal = (hedgedRes.data?.totalUsd ?? 0) / 1_000_000;
+        setHedgedExposure(`$${hedgedVal.toFixed(4)}M`);
 
-      // Fetch Hedged
-      axios.get("https://backend-slqi.onrender.com/api/forwardDash/total-usd")
-        .then((res) => {
-          const hedgedRaw = res.data?.totalUsd ?? 0;
-          const totalHedgedExposure = hedgedRaw / 1000000;
-          setHedgedExposure(`$${totalHedgedExposure.toFixed(4)}M`);
-        })
-        .catch((err) => {
-          console.error("Failed to fetch hedged exposures:", err);
-          setHedgedExposure("Error");
-        });
+        // Unhedged Exposure
+        const unhedgedVal = (unhedgedRes.data?.totalUsd ?? 0) / 1_000_000;
+        setUnhedgedExposure(`$${(unhedgedVal - hedgedVal).toFixed(2)}M`);
 
-      // Fetch Bank Margin
-      axios.get("https://backend-slqi.onrender.com/api/forwardDash/total-bankmargin")
-        .then((res) => {
-          const bankMarginRaw = res.data?.totalBankmargin ?? 0;
-          setBankMargin(`$${bankMarginRaw.toFixed(4)}M`);
-        })
-        .catch((err) => {
-          console.error("Failed to fetch bank margin:", err);
-          setBankMargin("Error");
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-      axios.get("https://backend-slqi.onrender.com/api/forwardDash/hedge-ratio")
-        .then((res) => {
-          const hedgeratio = res.data?.ratio ?? 0;
-          setHedgeRatio(hedgeratio);
-        })
-        .catch((err) => {
-          console.error("Failed to fetch bank margin:", err);
-          setHedgeRatio("Error");
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-      
+        // Bank Margin
+        const bankMarginVal = (bankMarginRes.data?.totalBankmargin ?? 0) / 1_000_000;
+        setBankMargin(`$${bankMarginVal.toFixed(4)}M`);
+
+        // Buy/Sell Forwards
+        setBuyForwards(
+          buySellRes.data?.buyForwardsUSD
+            ? `$${(parseFloat(buySellRes.data.buyForwardsUSD) / 1_000_000).toFixed(2)}M`
+            : "N/A"
+        );
+        setSellForwards(
+          buySellRes.data?.sellForwardsUSD
+            ? `$${(parseFloat(buySellRes.data.sellForwardsUSD) / 1_000_000).toFixed(2)}M`
+            : "N/A"
+        );
+
+        // Avg Exposure Maturity
+        setAvgExposureMaturity(
+          waetRes.data?.avgExposureMaturity !== undefined
+            ? `${waetRes.data.avgExposureMaturity} days`
+            : "N/A"
+        );
+        // Avg Forward Maturity
+        setAvgForwardMaturity(
+          waftRes.data?.avgForwardMaturity !== undefined
+            ? `${waftRes.data.avgForwardMaturity} days`
+            : "N/A"
+        );
+      } catch (err) {
+        setHedgeRatio("Error");
+        setHedgedExposure("Error");
+        setUnhedgedExposure("Error");
+        setBankMargin("Error");
+        setBuyForwards("Error");
+        setSellForwards("Error");
+        setAvgExposureMaturity("Error");
+        setAvgForwardMaturity("Error");
+      } finally {
+        setLoading(false);
+      }
     };
 
-    fetchExposures();
+    fetchStats();
   }, []);
 
   return (
-    <div className="grid grid-cols-5 gap-x-3 w-full">
-{/*       <StatCard
-        title="Hedging Effectiveness Ratio"
-        value="87.3%"
-        bgColor="bg-gradient-to-tr from-[#1299909E] to-[#129990]"
-      /> */}
-      <StatCard
-        title="Total Hedged Exposure"
-        value={loading ? "Loading..." : hedgedExposure}
-        bgColor="bg-gradient-to-r from-[#65b67cf7] to-green-700"
-      />
-      <StatCard
-        title="Total Unhedged Exposure"
-        value={loading ? "Loading..." : unhedgedExposure}
-        bgColor="bg-gradient-to-br from-[#0d6d69CC] to-[#0a5755B3]"
-      />
-      <StatCard
-        title="Mark-to-Market P&L"
-        value="$3.1M"
-        bgColor="bg-gradient-to-b from-teal-500 to-teal-600"
-      />
-      <StatCard
-        title="Cost of Premium Paid (YTD)"
-        value="$1.47M"
-        bgColor="bg-gradient-to-bl from-green-400 to-green-700"
-      />
-      <StatCard
-        title="Cost of Bank Margin (YTD)"
-        value={loading ? "Loading..." : bankMargin}
-        bgColor="bg-gradient-to-l from-[#429d5c] to-[#68ba7fe9]"
-      />
-      <StatCard
-        title="Overall Hedge Ratio"
-        value={loading?"Loading..": hedgeratio}
-        bgColor="bg-gradient-to-tl from-[#4dc9bf] to-[#073f40CC]"
-      />
+    <div className="space-y-2 w-full">
+      {/* Row 1 */}
+      <div className="grid grid-cols-5 gap-x-3 w-full">
+        <StatCard
+          title="Overall Hedge Ratio"
+          value={loading ? "Loading..." : hedgeRatio}
+          bgColor="bg-gradient-to-tl from-[#4dc9bf] to-[#073f40CC]"
+        />
+        <StatCard
+          title="Total Hedged Exposure"
+          value={loading ? "Loading..." : hedgedExposure}
+          bgColor="bg-gradient-to-r from-[#65b67cf7] to-green-700"
+        />
+        <StatCard
+          title="Total Unhedged Exposure"
+          value={loading ? "Loading..." : unhedgedExposure}
+          bgColor="bg-gradient-to-br from-[#0d6d69CC] to-[#0a5755B3]"
+        />
+        <StatCard //
+          title="Buy Forwards"
+          value={loading ? "Loading..." : buyForwards}
+          bgColor="bg-gradient-to-tr from-[#40916c] to-[#52b788]"
+        />
+        <StatCard //
+          title="Sell Forwards"
+          value={loading ? "Loading..." : sellForwards}
+          bgColor="bg-gradient-to-tr from-[#80ed99] to-[#5c4d7a]"
+        />
+      </div>
+      {/* Row 2 */}
+      <div className="grid grid-cols-5 gap-x-3 w-full">
+        <StatCard
+          title="Mark-to-Market P&L"
+          value={markToMarketPL}
+          bgColor="bg-gradient-to-b from-teal-500 to-teal-600"
+        />
+        <StatCard
+          title="Cost of Premium Paid (YTD)"
+          value={costOfPremiumPaid}
+          bgColor="bg-gradient-to-bl from-green-400 to-green-700"
+        />
+        <StatCard
+          title="Cost of Bank Margin (YTD)"
+          value={loading ? "Loading..." : bankMargin}
+          bgColor="bg-gradient-to-l from-[#429d5c] to-[#68ba7fe9]"
+        />
+        <StatCard //
+          title="Avg Exposure Maturity"
+          value={loading ? "Loading..." : avgExposureMaturity}
+         bgColor="bg-gradient-to-r from-[#65b67cf7] to-green-700"
+        />
+        <StatCard //
+          title="Avg Forward Maturity"
+          value={loading ? "Loading..." : avgForwardMaturity}
+          bgColor="bg-gradient-to-r from-[#65b67cf7] to-green-700"
+        />
+      </div>
     </div>
   );
 };
