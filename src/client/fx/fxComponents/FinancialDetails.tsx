@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import SectionCard from "./SectionCard";
 import CustomSelect from "../../common/SearchSelect";
 
@@ -13,7 +13,7 @@ interface FinancialDetailsResponse {
   actualValueBaseCurrency: number | null;
   spotRate: number | null;
   forwardPoints: number | null;
-  inputValue: number | null; // Added inputValue for booking amount
+  inputValue: number | null;
   bankMargin: number | null;
   totalRate: number | null;
   valueQuoteCurrency: number | null;
@@ -28,7 +28,7 @@ interface FinancialDetailsProps {
   setFormData: React.Dispatch<React.SetStateAction<FinancialDetailsResponse>>;
   currencyPairs: OptionType[];
   isLoading: boolean;
-  orderType?: string; // Changed to string type
+  orderType?: string;
 }
 
 const valueTypeOptions: OptionType[] = [
@@ -37,7 +37,6 @@ const valueTypeOptions: OptionType[] = [
   { value: "Thousands", label: "Thousands" },
 ];
 
-// Mock currency pairs
 const mockCurrencyPairs: OptionType[] = [
   { value: "USDINR", label: "USD/INR" },
   { value: "EURUSD", label: "EUR/USD" },
@@ -48,11 +47,9 @@ const mockCurrencyPairs: OptionType[] = [
 const FinancialDetails: React.FC<FinancialDetailsProps> = ({
   formData,
   setFormData,
-  // currencyPairs = mockCurrencyPairs,
   isLoading,
   orderType,
 }) => {
-  // Function to get multiplier based on value type
   const getValueTypeMultiplier = (valueType: string): number => {
     switch (valueType) {
       case "Actual":
@@ -66,7 +63,7 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
     }
   };
 
-  // Extract base and quote currency from currency pair
+  // Extract base and quote
   useEffect(() => {
     if (formData.currencyPair.length >= 6) {
       const base = formData.currencyPair.slice(0, 3);
@@ -85,76 +82,37 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
     }
   }, [formData.currencyPair, setFormData]);
 
-  // Auto-calculate Total Rate based on order type
+  // Calculate total rate
   useEffect(() => {
     const { spotRate, forwardPoints, bankMargin } = formData;
-    
-    // Only calculate if we have all required values and orderType is provided
     if (orderType && spotRate !== null && forwardPoints !== null && bankMargin !== null) {
       let totalRate: number;
-      
       if (orderType.toLowerCase() === "buy") {
-        // Buy: Spot Rate + Forward Points + Bank Margin
         totalRate = spotRate + forwardPoints + bankMargin;
       } else if (orderType.toLowerCase() === "sell") {
-        // Sell: Spot Rate + Forward Points - Bank Margin
         totalRate = spotRate + forwardPoints - bankMargin;
-      } else {
-        // Default case - no calculation
-        return;
-      }
-      
-      setFormData((prev) => ({
-        ...prev,
-        totalRate: totalRate,
-      }));
+      } else return;
+      setFormData((prev) => ({ ...prev, totalRate }));
     }
   }, [formData.spotRate, formData.forwardPoints, formData.bankMargin, orderType, setFormData]);
 
-  // Auto-calculate Value (Quote Currency) and Value (Local Currency)
+  // Value Quote + Local
   useEffect(() => {
     const { inputValue, spotRate, valueType } = formData;
-
-    // Calculate Value (Quote Currency) if inputValue and spotRate are present
-    if (
-      inputValue !== null &&
-      spotRate !== null &&
-      valueType &&
-      inputValue !== 0 &&
-      spotRate !== 0
-    ) {
+    if (inputValue && spotRate && valueType) {
       const multiplier = getValueTypeMultiplier(valueType);
       const valueQuoteCurrency = inputValue * multiplier * spotRate;
-
-      setFormData((prev) => ({
-        ...prev,
-        valueQuoteCurrency,
-      }));
-
-      // Calculate Value (Local Currency) if needed
       const valueLocalCurrency = inputValue * multiplier * valueQuoteCurrency;
-      setFormData((prev) => ({
-        ...prev,
-        valueLocalCurrency,
-      }));
+      setFormData((prev) => ({ ...prev, valueQuoteCurrency, valueLocalCurrency }));
     }
   }, [formData.inputValue, formData.spotRate, formData.valueType, setFormData]);
 
-  // Auto-calculate Booking Amount = Actual Value (Base Currency) * Total Rate
+  // Booking amount
   useEffect(() => {
     const { actualValueBaseCurrency, totalRate } = formData;
-
-    if (
-      actualValueBaseCurrency !== null &&
-      totalRate !== null &&
-      !isNaN(actualValueBaseCurrency) &&
-      !isNaN(totalRate)
-    ) {
+    if (actualValueBaseCurrency && totalRate) {
       const inputValue = actualValueBaseCurrency * totalRate;
-      setFormData((prev) => ({
-        ...prev,
-        inputValue,
-      }));
+      setFormData((prev) => ({ ...prev, inputValue }));
     }
   }, [formData.actualValueBaseCurrency, formData.totalRate, setFormData]);
 
@@ -166,9 +124,7 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
           label="Currency Pair"
           options={mockCurrencyPairs}
           selectedValue={formData.currencyPair}
-          onChange={(val) =>
-            setFormData((prev) => ({ ...prev, currencyPair: val }))
-          }
+          onChange={(val) => setFormData((prev) => ({ ...prev, currencyPair: val }))}
           isDisabled={isLoading}
           isClearable={false}
           placeholder="Choose..."
@@ -179,118 +135,76 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
           label="Value Type"
           options={valueTypeOptions}
           selectedValue={formData.valueType}
-          onChange={(val) =>
-            setFormData((prev) => ({ ...prev, valueType: val }))
-          }
+          onChange={(val) => setFormData((prev) => ({ ...prev, valueType: val }))}
           isDisabled={isLoading}
           isClearable={false}
-          isRequired={true}
+          isRequired
           placeholder="Choose..."
         />
 
-        {/* Value Type Multiplier Info */}
-        {formData.valueType && (
-          <div className="flex flex-col">
-            <label className="text-sm text-secondary-text mb-1">
-              Multiplier Applied
-            </label>
-            <input
-              type="text"
-              value={`×${getValueTypeMultiplier(formData.valueType).toLocaleString()}`}
-              className="h-[37px] border p-2 bg-blue-50 text-blue-800 rounded border-border"
-              disabled
-              placeholder="Multiplier"
-            />
-          </div>
-        )}
-
-        {/* Base Currency (disabled) */}
+        {/* Multiplier Applied - stays in grid but empty when no valueType */}
         <div className="flex flex-col">
-          <label className="text-sm text-secondary-text mb-1">
-            Base Currency (Auto-calculated)
-          </label>
+          <label className="text-sm text-secondary-text mb-1">Multiplier Applied</label>
+          <input
+            type="text"
+            value={
+              formData.valueType
+                ? `×${getValueTypeMultiplier(formData.valueType).toLocaleString()}`
+                : "—"
+            }
+            className="h-[37px] border p-2 bg-blue-50 text-blue-800 rounded border-border"
+            disabled
+          />
+        </div>
+
+        {/* Base Currency */}
+        <div className="flex flex-col">
+          <label className="text-sm text-secondary-text mb-1">Base Currency</label>
           <input
             type="text"
             value={formData.baseCurrency || ""}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                baseCurrency: e.target.value,
-              }))
-            }
-            className="h-[37px] border p-2 bg-secondary-color-lt text-secondary-text-dark rounded border-border"
             disabled
-            placeholder="Auto-filled"
+            className="h-[37px] border p-2 bg-secondary-color-lt text-secondary-text-dark rounded border-border"
           />
         </div>
 
-        {/* Quote Currency (disabled) */}
+        {/* Quote Currency */}
         <div className="flex flex-col">
-          <label className="text-sm text-secondary-text mb-1">
-            Quote Currency (Auto-calculated)
-          </label>
+          <label className="text-sm text-secondary-text mb-1">Quote Currency</label>
           <input
             type="text"
             value={formData.quoteCurrency || ""}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                quoteCurrency: e.target.value,
-              }))
-            }
-            className="h-[37px] border p-2 bg-secondary-color-lt text-secondary-text-dark rounded border-border"
             disabled
-            placeholder="Auto-filled"
+            className="h-[37px] border p-2 bg-secondary-color-lt text-secondary-text-dark rounded border-border"
           />
         </div>
 
-        {/* Other fields */}
+        {/* Dynamic fields */}
         {[
-          {
-            key: "actualValueBaseCurrency",
-            label: "Actual Value (Base Currency)",
-            disabled: false,
-            isMultiplied: true,
-          },
+          { key: "actualValueBaseCurrency", label: "Actual Value", disabled: false, isMultiplied: true },
           { key: "spotRate", label: "Spot Rate", disabled: false, isMultiplied: false },
           { key: "forwardPoints", label: "Forward Points", disabled: false, isMultiplied: false },
           { key: "bankMargin", label: "Bank Margin", disabled: false, isMultiplied: false },
-          { key: "totalRate", label: "Total Rate", disabled: true, isMultiplied: false }, // Auto-calculated
+          { key: "totalRate", label: "Total Rate", disabled: true, isMultiplied: false }, // ✅ removed mt-5
           { key: "valueQuoteCurrency", label: "Value (Quote Currency)", disabled: false, isMultiplied: true },
-          {
-            key: "interveningRateQuoteToLocal",
-            label: "Intervening Rate (Quote to Local)",
-            disabled: false,
-            isMultiplied: false,
-          },
-          {
-            key: "inputValue",
-            label: "Booking Amount",
-            disabled: false,
-            isMultiplied: true,
-          },
-          {
-            key: "valueLocalCurrency",
-            label: "Value (Local Currency)",
-            disabled: true, // Auto-calculated
-            isMultiplied: true,
-          },
+          { key: "interveningRateQuoteToLocal", label: "Intervening Rate (Quote to Local)", disabled: false, isMultiplied: false },
+          { key: "inputValue", label: "Booking Amount", disabled: false, isMultiplied: true },
+          { key: "valueLocalCurrency", label: "Value (Local Currency)", disabled: true, isMultiplied: true },
         ].map((field, idx) => (
-          <div key={idx} className="flex flex-col">
-            <label className="text-sm text-secondary-text mb-1">
-              {field.label}
-              {field.disabled && " (Auto-calculated)"}
+          <div key={idx} className="flex flex-col w-full">
+            <label className="text-sm text-secondary-text mb-1 flex items-center justify-between">
+              <span>{field.label}</span>
               {field.isMultiplied && formData.valueType && (
-                <span className="text-blue-600 text-xs ml-1">
-                  (×{getValueTypeMultiplier(formData.valueType).toLocaleString()})
+                <span className="text-blue-600 text-xs ml-2 whitespace-nowrap">
+                  ×{getValueTypeMultiplier(formData.valueType).toLocaleString()}
                 </span>
               )}
             </label>
             <input
               type="number"
-              className={`h-[37px] border p-2 rounded border-border ${
-                field.disabled 
-                  ? "bg-secondary-color-lt text-secondary-text-dark" 
+              className={`h-[37px] border p-2 rounded border-border w-full ${
+                field.disabled
+                  ? "bg-secondary-color-lt text-secondary-text-dark"
                   : "text-secondary-text-dark"
               }`}
               value={formData[field.key as keyof FinancialDetailsResponse] ?? ""}
@@ -298,8 +212,7 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
                 !field.disabled &&
                 setFormData((prev) => ({
                   ...prev,
-                  [field.key]:
-                    e.target.value === "" ? null : Number(e.target.value),
+                  [field.key]: e.target.value === "" ? null : Number(e.target.value),
                 }))
               }
               required
