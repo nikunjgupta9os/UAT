@@ -111,20 +111,52 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
     }
   }, [formData.spotRate, formData.forwardPoints, formData.bankMargin, orderType, setFormData]);
 
-  // Auto-calculate Value (Local Currency)
+  // Auto-calculate Value (Quote Currency) and Value (Local Currency)
   useEffect(() => {
-    const { inputValue, valueQuoteCurrency } = formData;
-    
-    // Only calculate if both values are provided and not null
-    if (inputValue !== null && valueQuoteCurrency !== null && inputValue !== 0 && valueQuoteCurrency !== 0) {
-      const valueLocalCurrency = inputValue * valueQuoteCurrency;
-      
+    const { inputValue, spotRate, valueType } = formData;
+
+    // Calculate Value (Quote Currency) if inputValue and spotRate are present
+    if (
+      inputValue !== null &&
+      spotRate !== null &&
+      valueType &&
+      inputValue !== 0 &&
+      spotRate !== 0
+    ) {
+      const multiplier = getValueTypeMultiplier(valueType);
+      const valueQuoteCurrency = inputValue * multiplier * spotRate;
+
       setFormData((prev) => ({
         ...prev,
-        valueLocalCurrency: valueLocalCurrency,
+        valueQuoteCurrency,
+      }));
+
+      // Calculate Value (Local Currency) if needed
+      const valueLocalCurrency = inputValue * multiplier * valueQuoteCurrency;
+      setFormData((prev) => ({
+        ...prev,
+        valueLocalCurrency,
       }));
     }
-  }, [formData.inputValue, formData.valueQuoteCurrency, setFormData]);
+  }, [formData.inputValue, formData.spotRate, formData.valueType, setFormData]);
+
+  // Auto-calculate Booking Amount = Actual Value (Base Currency) * Total Rate
+  useEffect(() => {
+    const { actualValueBaseCurrency, totalRate } = formData;
+
+    if (
+      actualValueBaseCurrency !== null &&
+      totalRate !== null &&
+      !isNaN(actualValueBaseCurrency) &&
+      !isNaN(totalRate)
+    ) {
+      const inputValue = actualValueBaseCurrency * totalRate;
+      setFormData((prev) => ({
+        ...prev,
+        inputValue,
+      }));
+    }
+  }, [formData.actualValueBaseCurrency, formData.totalRate, setFormData]);
 
   return (
     <SectionCard title="Financial Details">
