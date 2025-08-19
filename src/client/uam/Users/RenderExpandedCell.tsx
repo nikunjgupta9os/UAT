@@ -43,11 +43,9 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
 
   // Permission state
 
-
   // const roleName = localStorage.getItem("userRole");
- 
+
   // console.log("Role Name:", roleName);
- 
 
   const { notify } = useNotification();
 
@@ -116,7 +114,10 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
             return newSet;
           });
         } else {
-          notify("Update failed: " + (data.message || "Unknown error"), "error");
+          notify(
+            "Update failed: " + (data.message || "Unknown error"),
+            "error"
+          );
         }
       } catch (err) {
         notify("Update error: " + (err as Error).message, "error");
@@ -195,7 +196,10 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
             {/* Show edit button only if both edit prop and Visibility.edit are true */}
             {edit && (
               <div>
-                <Button onClick={handleEditToggle}>
+                <Button
+                  onClick={handleEditToggle}
+                  color={isEditing ? "Green" : "Fade"}
+                >
                   {isEditing ? "Save" : "Edit"}
                 </Button>
               </div>

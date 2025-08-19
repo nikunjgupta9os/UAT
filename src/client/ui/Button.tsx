@@ -5,17 +5,18 @@ import React from 'react';
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   children: React.ReactNode;
   categories?:'Large' | 'Medium';
-  color?: 'Green' | 'Red' | 'Blue' | 'Fade';
+  color?: 'Green' | 'NonPrimary' | 'Disable' | 'Blue' | 'Fade';
 };
 
 const Button: React.FC<ButtonProps> = ({ children,categories='Large',color='Green', ...props }) => {
 
     const BaseColor = {
-        Green : 'bg-primary hover:bg-primary-hover',
-        Red : 'bg-primary hover:bg-primary-hover',
-        Blue : 'bg-blue-500 hover:bg-blue-700',
-        Fade : 'bg-primary-fade hover:bg-primary-lt',
-    } [color] ?? 'bg-green-500 hover:bg-green-700'
+        Green : 'bg-primary hover:bg-primary-hover text-white border-2 border-primary',
+        NonPrimary : 'bg-primary-fade hover:bg-primary-lt text-white',
+        Disable : 'text-primary-fade hover:text-primary bg-[#13595407] border-2 border-primary-fade cursor-not-allowed',
+        Fade : 'text-primary-fade hover:text-primary bg-[#13595407] border-2 border-primary-fade',
+        Blue : 'bg-blue-500 hover:bg-blue-700 text-white',
+        } [color] ?? 'bg-green-500 hover:bg-green-700'
 
     const BaseCategory = {
         Large : 'px-4 py-2 font-bold w-full',
@@ -25,7 +26,7 @@ const Button: React.FC<ButtonProps> = ({ children,categories='Large',color='Gree
 
     return (
         <button
-            className={`${BaseColor} text-center text-white rounded ${BaseCategory} transition`}
+            className={`${BaseColor} text-center rounded ${BaseCategory} transition`}
             {...props}
         >
             {children}

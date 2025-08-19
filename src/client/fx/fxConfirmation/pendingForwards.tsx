@@ -1090,7 +1090,7 @@ const TransactionTable: React.FC = () => {
             </Button>
           )}
           {Visibility.reject && (
-            <Button color="Fade" onClick={() => handleStatusUpdate("Rejected")}>
+            <Button color="Green" onClick={() => handleStatusUpdate("Rejected")}>
               Reject
             </Button>
           )}
@@ -1206,17 +1206,25 @@ const TransactionTable: React.FC = () => {
                             {/* Edit/Save Button */}
                             {Visibility.edit && (
                               <div className="flex justify-end mb-4">
-                                <button
-                                  onClick={() => handleForwardEditToggle(row)}
-                                  className="bg-primary text-white px-4 py-1 rounded shadow hover:bg-primary-dark disabled:opacity-60"
-                                  disabled={isSaving}
-                                >
-                                  {isEditing
-                                    ? isSaving
-                                      ? "Saving..."
-                                      : "Save"
-                                    : "Edit"}
-                                </button>
+                                <div>
+                                  <Button
+                                    onClick={() => handleForwardEditToggle(row)}
+                                    color={
+                                      isEditing
+                                        ? isSaving
+                                          ? "Fade"
+                                          : "Green"
+                                        : "Fade"
+                                    }
+                                    disabled={isSaving}
+                                  >
+                                    {isEditing
+                                      ? isSaving
+                                        ? "Saving..."
+                                        : "Save"
+                                      : "Edit"}
+                                  </Button>
+                                </div>
                               </div>
                             )}
 

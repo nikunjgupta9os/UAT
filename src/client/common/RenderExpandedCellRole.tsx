@@ -262,12 +262,14 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
               Additional Information
             </h4>
             <div>
-              <Button onClick={handleEditToggle}>
-                {isEditing ? "Save" : "Edit"}
-              </Button>
+              <Button
+                  onClick={handleEditToggle}
+                  color={isEditing ? "Green" : "Fade"}
+                >
+                  {isEditing ? "Save" : "Edit"}
+                </Button>
             </div>
           </div>
-
           {/* Details Section */}
           {showDetailsSection && visibleDetailsKeys.length > 0 && (
             <div className="mb-6">

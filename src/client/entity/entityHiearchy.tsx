@@ -411,6 +411,7 @@ const HierarchicalTree = () => {
             {Visibility.edit && (
               <Button
                 categories="Medium"
+                color="Fade"
                 onClick={() => setEditing((prev) => !prev)}
               >
                 {editing ? "Cancel" : "Edit"}
@@ -668,13 +669,15 @@ const HierarchicalTree = () => {
               </>
             )}
             <div className="col-span-2 flex justify-end mt-4">
-              <button
-                type="button"
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-bold"
-                onClick={handleSave}
-              >
-                Save
-              </button>
+              <div>
+                <Button
+                  categories="Large"
+                  color="Green"
+                  onClick={handleSave}
+                >
+                  Save
+                </Button>
+              </div>
             </div>
           </form>
         ) : (

@@ -504,7 +504,7 @@ const FxUploader: React.FC = () => {
             <div></div>
             <div className="flex items-center space-x-4 gap-2">
               <Button color="Fade" disabled>
-                <span className="text-white">Import Data</span>
+                <span>Import Data</span>
               </Button>
 
               <Button onClick={handleSetManually}>

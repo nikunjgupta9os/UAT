@@ -6,9 +6,8 @@ import Layout from "../../common/Layout";
 import "../../styles/theme.css";
 import MaturityTable from "./MaturityTable";
 import LoadingSpinner from "../../ui/LoadingSpinner";
-import { formatCurrency } from "./MaturityTable";
-import DetailedViews from "./DetailedViews.tsx";
 import axios from "axios";
+import DetailedViews from "./DetailedViews.tsx";
 
 export interface NetExposureCurrency {
   bu: string;
@@ -36,68 +35,36 @@ interface ApiForwardData {
   forwardSell: number;
 }
 
-
-async function fetchForwardData(): Promise<ApiForwardData[]> {
-  try {
-    const response = await axios.get<ApiForwardData[]>(
-      "https://backend-slqi.onrender.com/api/forwardDash/bu-maturity-currency-summary"
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching forward data:", error);
-    return [];
-  }
-}
+export const formatCurrency = (value: number): string => {
+  if (Math.abs(value) >= 1_000_000) return `${(value / 1_000_000).toFixed(2)}M`;
+  if (Math.abs(value) >= 1_000) return `${(value / 1_000).toFixed(2)}K`;
+  return value.toFixed(2);
+};
 
 const MATURITY_ORDER: Record<string, number> = {
   "1 Month": 1,
   "2 Month": 2,
   "3 Month": 3,
+  "4 Month": 4,
   "4-6 Month": 4,
-  "6 Month +": 5,
+  "6 Month +": 6,
 };
 
-// Normalize maturity values to match MATURITY_ORDER keys
 function normalizeMaturity(maturity: string): string {
-  if (maturity === "4 Month") return "4-6 Month";
-  if (maturity === "4-6 Month") return "4-6 Month";
-  // Normalize any maturity greater than 6 months to '6 Month +'
+  if (maturity === "4 Month") return "4 Month";
+  if (maturity === "4-6 Month") return "4 Month";
+
   if (
     /^([7-9]|[1-9][0-9]+) Month$/.test(maturity) ||
-    maturity === "6 Month +" ||
-    maturity === "6+ Month" ||
-    maturity === "Greater than 6 Month"
+    ["6 Month +", "6+ Month", "Greater than 6 Month"].includes(maturity)
   ) {
     return "6 Month +";
   }
   return maturity;
 }
 
-async function fetchExposureData(): Promise<ApiExposureData[]> {
-  try {
-    const response = await axios.get(
-      "https://backend-slqi.onrender.com/api/exposureUpload/netanalysis-joined"
-    );
-    console.log("Exposure API data:", response.data);
-
-    // Map API keys to expected keys and normalize maturity
-    const data = Array.isArray(response.data)
-      ? response.data.map((item) => ({
-          bu: item.business_unit,
-          maturity: normalizeMaturity(item.maturity),
-          currency: item.currency,
-          payable: Number(item.payables) || 0,
-          receivable: Number(item.receivables) || 0,
-        }))
-      : [];
-
-    return data;
-  } catch (error) {
-    console.error("Error fetching exposure data:", error);
-    return [];
-  }
-}
-
+const isRowEmpty = (row: NetExposureCurrency): boolean =>
+  !row.payable && !row.receivable && !row.forwardBuy && !row.forwardSell;
 
 const NetExposure: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -106,13 +73,10 @@ const NetExposure: React.FC = () => {
   const [selectedBU, setSelectedBU] = useState<string>("All");
   const [expandedMap, setExpandedMap] = useState<Record<string, boolean>>({});
 
-  // Merge exposure and forward data
   const mergedData = useMemo<NetExposureCurrency[]>(() => {
     const result: NetExposureCurrency[] = [];
 
-    // Process exposure data
     exposureData.forEach((expItem) => {
-      // Find matching forward data
       const forwardItem = forwardData.find(
         (fwd) =>
           fwd.bu === expItem.bu &&
@@ -131,7 +95,6 @@ const NetExposure: React.FC = () => {
       });
     });
 
-    // Add forward data that doesn't have exposure entries
     forwardData.forEach((fwdItem) => {
       const exists = exposureData.some(
         (exp) =>
@@ -156,88 +119,92 @@ const NetExposure: React.FC = () => {
     return result;
   }, [exposureData, forwardData]);
 
-  // Filter data by selected BU
-  const filteredData = useMemo(() => {
-    if (selectedBU === "All") return mergedData;
-    return mergedData.filter((item) => item.bu === selectedBU);
-  }, [mergedData, selectedBU]);
+  const filteredData = useMemo(
+    () =>
+      selectedBU === "All"
+        ? mergedData
+        : mergedData.filter((d) => d.bu === selectedBU),
+    [mergedData, selectedBU]
+  );
 
-  // Get unique BUs for dropdown
-  const buOptions = useMemo(() => {
-    const bus = new Set(mergedData.map((item) => item.bu));
-    return ["All", ...Array.from(bus)].sort();
-  }, [mergedData]);
+  const buOptions = useMemo(
+    () => ["All", ...new Set(mergedData.map((d) => d.bu))].sort(),
+    [mergedData]
+  );
 
-  // Group data by Maturity only (sorted)
   const groupedDataByMaturity = useMemo(() => {
-    const result: Record<string, NetExposureCurrency[]> = {};
-
+    const groups: Record<string, NetExposureCurrency[]> = {};
     filteredData.forEach((row) => {
-      if (!result[row.maturity]) result[row.maturity] = [];
-      result[row.maturity].push(row);
+      (groups[row.maturity] ||= []).push(row);
     });
 
-    // Sort maturities and return sorted object
-    const sortedMaturities = Object.keys(result).sort(
-      (a, b) => (MATURITY_ORDER[a] || 999) - (MATURITY_ORDER[b] || 999)
+    return Object.fromEntries(
+      Object.entries(groups).sort(
+        ([a], [b]) => (MATURITY_ORDER[a] || 999) - (MATURITY_ORDER[b] || 999)
+      )
     );
-
-    const sortedGroup: Record<string, NetExposureCurrency[]> = {};
-    sortedMaturities.forEach((maturity) => {
-      sortedGroup[maturity] = result[maturity];
-    });
-
-    return sortedGroup;
   }, [filteredData]);
 
-  // Helper: check if a row is 'empty' (all numeric values are zero/null/undefined)
-  function isRowEmpty(row: NetExposureCurrency) {
-    return (
-      (!row.payable || row.payable === 0) &&
-      (!row.receivable || row.receivable === 0) &&
-      (!row.forwardBuy || row.forwardBuy === 0) &&
-      (!row.forwardSell || row.forwardSell === 0)
-    );
-  }
-
-  // Initialize expanded state: collapse tables if all rows are 'empty'
   useEffect(() => {
-    if (filteredData.length > 0) {
-      const newExpandedMap: Record<string, boolean> = {};
-      Object.entries(groupedDataByMaturity).forEach(([maturity, rows]) => {
-        // Collapse if all rows are empty
-        const allRowsEmpty = rows.length === 0 || rows.every(isRowEmpty);
-        newExpandedMap[maturity] = !allRowsEmpty;
-      });
-      setExpandedMap(newExpandedMap);
-      setIsLoading(false);
-    }
+    if (!filteredData.length) return;
+    const map: Record<string, boolean> = {};
+    Object.entries(groupedDataByMaturity).forEach(([mat, rows]) => {
+      map[mat] = !rows.every(isRowEmpty);
+    });
+    setExpandedMap(map);
+    setIsLoading(false);
   }, [filteredData, groupedDataByMaturity]);
 
-  // Fetch data on mount
+  const toggleExpand = (mat: string) =>
+    setExpandedMap((prev) => ({ ...prev, [mat]: !prev[mat] }));
+
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchData = () => {
       setIsLoading(true);
-      try {
-        const [exposure, forward] = await Promise.all([
-          fetchExposureData(),
-          fetchForwardData(),
-        ]);
-        setExposureData(exposure);
-        setForwardData(forward);
-      } catch (error) {
-        console.error("Error fetching exposure or forward data:", error);
-      }
+
+      axios
+        .get(
+          "https://backend-slqi.onrender.com/api/exposureUpload/netanalysis-joined"
+        )
+        .then((response) => {
+          console.log("Exposure API data:", response.data);
+
+          const data = Array.isArray(response.data)
+            ? response.data.map((item) => ({
+                bu: item.business_unit,
+                maturity: normalizeMaturity(item.maturity),
+                currency: item.currency,
+                payable: Number(item.payables) || 0,
+                receivable: Number(item.receivables) || 0,
+              }))
+            : [];
+
+          setExposureData(data);
+        })
+        .catch((error) => {
+          console.error("Error fetching exposure data:", error);
+          setExposureData([]);
+        });
+
+      axios
+        .get(
+          "https://backend-slqi.onrender.com/api/forwardDash/bu-maturity-currency-summary"
+        )
+        .then((response) => {
+          setForwardData(response.data);
+        })
+        .catch((error) => {
+          console.error("Error fetching forward data:", error);
+          setForwardData([]);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     };
 
     fetchData();
   }, []);
 
-  const toggleExpand = (maturity: string) => {
-    setExpandedMap((prev) => ({ ...prev, [maturity]: !prev[maturity] }));
-  };
-
-  // Get unique maturities for summary tables (sorted)
   const maturityList = useMemo(() => {
     const maturities = new Set(filteredData.map((item) => item.maturity));
     return Array.from(maturities).sort(
@@ -245,25 +212,33 @@ const NetExposure: React.FC = () => {
     );
   }, [filteredData]);
 
-  // Exposure summary
-  const exposureByMaturity = useMemo(() => {
-    return maturityList.map((mat) => {
-      const filtered = filteredData.filter((d) => d.maturity === mat);
-      const payable = filtered.reduce((acc, r) => acc + r.payable, 0);
-      const receivable = filtered.reduce((acc, r) => acc + r.receivable, 0);
-      return { maturity: mat, payable, receivable };
-    });
-  }, [maturityList, filteredData]);
+  const exposureByMaturity = useMemo(
+    () =>
+      maturityList.map((m) => ({
+        maturity: m,
+        payable: filteredData
+          .filter((d) => d.maturity === m)
+          .reduce((a, r) => a + r.payable, 0),
+        receivable: filteredData
+          .filter((d) => d.maturity === m)
+          .reduce((a, r) => a + r.receivable, 0),
+      })),
+    [maturityList, filteredData]
+  );
 
-  // Forward summary
-  const forwardByMaturity = useMemo(() => {
-    return maturityList.map((mat) => {
-      const filtered = filteredData.filter((d) => d.maturity === mat);
-      const forwardBuy = filtered.reduce((acc, r) => acc + r.forwardBuy, 0);
-      const forwardSell = filtered.reduce((acc, r) => acc + r.forwardSell, 0);
-      return { maturity: mat, forwardBuy, forwardSell };
-    });
-  }, [maturityList, filteredData]);
+  const forwardByMaturity = useMemo(
+    () =>
+      maturityList.map((m) => ({
+        maturity: m,
+        forwardBuy: filteredData
+          .filter((d) => d.maturity === m)
+          .reduce((a, r) => a + r.forwardBuy, 0),
+        forwardSell: filteredData
+          .filter((d) => d.maturity === m)
+          .reduce((a, r) => a + r.forwardSell, 0),
+      })),
+    [maturityList, filteredData]
+  );
 
   // Grand totals
   const grandTotals = useMemo(() => {
@@ -318,7 +293,11 @@ const NetExposure: React.FC = () => {
           {/* Main tables */}
           {Object.entries(groupedDataByMaturity).map(([maturity, rows]) => (
             <MaturityTable
-              key={maturity + '-' + rows.map(r => r.bu + '-' + r.currency).join('-')}
+              key={
+                maturity +
+                "-" +
+                rows.map((r) => r.bu + "-" + r.currency).join("-")
+              }
               maturity={`Maturity : ${maturity}`}
               rows={rows}
               expanded={expandedMap[maturity] || false}
@@ -329,55 +308,55 @@ const NetExposure: React.FC = () => {
           {/* Grand totals table */}
           <div className="mb-6 overflow-x-auto">
             <table className="min-w-full mt-8 text-sm text-center">
-              <thead className="font-semibold">
+              <thead className="font-semibold text-secondary-text">
                 <tr>
-                  <th className="px-4 text-secondary-text py-2 border border-border">
+                  <th className="px-4 py-2 border border-border bg-primary-xl text-secondary-text">
                     Grand Total (All Months)
                   </th>
-                  <th className="px-4 text-secondary-text py-2 border border-border">
+                  <th className="px-4 py-2 border border-border bg-primary-xl text-secondary-text">
                     Payable
                   </th>
-                  <th className="px-4 text-secondary-text py-2 border border-border">
+                  <th className="px-4 py-2 border border-border bg-primary-xl text-secondary-text">
                     Receivable
                   </th>
-                  <th className="px-4 text-secondary-text py-2 border border-border">
+                  <th className="px-4 py-2 border border-border bg-primary-xl text-secondary-text">
                     Net (R - P)
                   </th>
-                  <th className="px-4 text-secondary-text py-2 border border-border">
+                  <th className="px-4 py-2 border border-border bg-primary-xl text-secondary-text">
                     Forward Buy
                   </th>
-                  <th className="px-4 text-secondary-text py-2 border border-border">
+                  <th className="px-4 py-2 border border-border bg-primary-xl text-secondary-text">
                     Forward Sell
                   </th>
-                  <th className="px-4 text-secondary-text py-2 border border-border">
+                  <th className="px-4 py-2 border border-border bg-primary-xl text-secondary-text">
                     Net (B - S)
                   </th>
-                  <th className="px-4 text-secondary-text py-2 border border-border">
+                  <th className="px-4 py-2 border border-border bg-primary-xl text-secondary-text">
                     Diff (Net Exp - Net Fwd)
                   </th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td className="px-4 py-2 border bg-secondary-color-lt font-semibold text-secondary-text border-border">
+                  <td className="px-4 py-2 border bg-secondary-color-lt text-primary-lt font-semibold border-border">
                     Grand Total
                   </td>
-                  <td className="px-4 py-2 border bg-secondary-color-lt text-secondary-text border-border">
+                  <td className="px-4 py-2 border bg-secondary-color-lt border-border">
                     {formatCurrency(grandTotals.payable)}
                   </td>
-                  <td className="px-4 py-2 border bg-secondary-color-lt text-secondary-text border-border">
+                  <td className="px-4 py-2 border bg-secondary-color-lt border-border">
                     {formatCurrency(grandTotals.receivable)}
                   </td>
-                  <td className="px-4 py-2 border bg-secondary-color-lt text-secondary-text border-border">
+                  <td className="px-4 py-2 border bg-secondary-color-lt border-border">
                     {formatCurrency(netExp)}
                   </td>
-                  <td className="px-4 py-2 border bg-secondary-color-lt text-secondary-text border-border">
+                  <td className="px-4 py-2 border bg-secondary-color-lt border-border">
                     {formatCurrency(grandTotals.forwardBuy)}
                   </td>
-                  <td className="px-4 py-2 border bg-secondary-color-lt text-secondary-text border-border">
+                  <td className="px-4 py-2 border bg-secondary-color-lt border-border">
                     {formatCurrency(grandTotals.forwardSell)}
                   </td>
-                  <td className="px-4 py-2 border bg-secondary-color-lt text-secondary-text border-border">
+                  <td className="px-4 py-2 border bg-secondary-color-lt border-border">
                     {formatCurrency(netFwd)}
                   </td>
                   <td
@@ -405,18 +384,18 @@ const NetExposure: React.FC = () => {
               <table className="min-w-full text-center text-secondary-text text-sm bg-primary-xl">
                 <thead>
                   <tr>
-                    <th className="px-2 py-1 border border-border text-secondary-text bg-primary-lg">
+                    <th className="px-2 py-1 border border-border text-secondary-text bg-primary-xl">
                       Type
                     </th>
                     {exposureByMaturity.map((row) => (
                       <th
                         key={row.maturity}
-                        className="px-2 py-1 border text-secondary-text border-border bg-primary-lg"
+                        className="px-2 py-1 border text-secondary-text border-border bg-primary-xl"
                       >
                         {row.maturity}
                       </th>
                     ))}
-                    <th className="px-2 py-1 border border-border bg-primary-lg">
+                    <th className="px-2 py-1 border border-border bg-primary-xl">
                       Total
                     </th>
                   </tr>
@@ -424,18 +403,18 @@ const NetExposure: React.FC = () => {
                 <tbody>
                   {["Payable", "Receivable"].map((type) => (
                     <tr key={type}>
-                      <td className="px-2 py-1 border border-border">{type}</td>
+                      <td className="px-2 py-1 border border-border bg-white">{type}</td>
                       {exposureByMaturity.map((row) => (
                         <td
                           key={`${type}-${row.maturity}`}
-                          className="px-2 py-1 border border-border"
+                          className="px-2 py-1 border border-border bg-white"
                         >
                           {formatCurrency(
                             type === "Payable" ? row.payable : row.receivable
                           )}
                         </td>
                       ))}
-                      <td className="px-2 py-1 border font-semibold border-border">
+                      <td className="px-2 py-1 border font-semibold border-border bg-white">
                         {formatCurrency(
                           type === "Payable"
                             ? grandTotals.payable
@@ -445,16 +424,16 @@ const NetExposure: React.FC = () => {
                     </tr>
                   ))}
                   <tr className="font-semibold bg-primary-lg">
-                    <td className="px-2 py-1 border border-border">Total</td>
+                    <td className="px-2 py-1 border border-border bg-primary-lt text-white">Total</td>
                     {exposureByMaturity.map((row) => (
                       <td
                         key={`total-${row.maturity}`}
-                        className="px-2 py-1 border border-border"
+                        className="px-2 py-1 border border-border bg-primary-lt text-white"
                       >
                         {formatCurrency(row.payable + row.receivable)}
                       </td>
                     ))}
-                    <td className="px-2 py-1 border font-bold border-border ">
+                    <td className="px-2 py-1 border font-bold border-border bg-primary-lt text-white">
                       {formatCurrency(
                         grandTotals.payable + grandTotals.receivable
                       )}
@@ -471,18 +450,18 @@ const NetExposure: React.FC = () => {
               <table className="min-w-full text-center text-secondary-text text-sm bg-primary-xl">
                 <thead>
                   <tr>
-                    <th className="px-2 py-1 border border-border text-secondary-text bg-primary-lg">
+                    <th className="px-2 py-1 border border-border text-secondary-text bg-primary-xl">
                       Type
                     </th>
                     {forwardByMaturity.map((row) => (
                       <th
                         key={row.maturity}
-                        className="px-2 py-1 border text-secondary-text border-border bg-primary-lg"
+                        className="px-2 py-1 border text-secondary-text border-border bg-primary-xl"
                       >
                         {row.maturity}
                       </th>
                     ))}
-                    <th className="px-2 py-1 border border-border bg-primary-lg">
+                    <th className="px-2 py-1 border border-border bg-primary-xl">
                       Total
                     </th>
                   </tr>
@@ -490,18 +469,18 @@ const NetExposure: React.FC = () => {
                 <tbody>
                   {["Buy", "Sell"].map((type) => (
                     <tr key={type}>
-                      <td className="px-2 py-1 border border-border">{type}</td>
+                      <td className="px-2 py-1 border border-border bg-white">{type}</td>
                       {forwardByMaturity.map((row) => (
                         <td
                           key={`${type}-${row.maturity}`}
-                          className="px-2 py-1 border border-border"
+                          className="px-2 py-1 border border-border bg-white"
                         >
                           {formatCurrency(
                             type === "Buy" ? row.forwardBuy : row.forwardSell
                           )}
                         </td>
                       ))}
-                      <td className="px-2 py-1 border font-semibold border-border">
+                      <td className="px-2 py-1 border font-semibold border-border bg-white">
                         {formatCurrency(
                           type === "Buy"
                             ? grandTotals.forwardBuy
@@ -511,16 +490,16 @@ const NetExposure: React.FC = () => {
                     </tr>
                   ))}
                   <tr className="font-semibold bg-primary-lg">
-                    <td className="px-2 py-1 border border-border">Total</td>
+                    <td className="px-2 py-1 border border-border bg-primary-lt text-white">Total</td>
                     {forwardByMaturity.map((row) => (
                       <td
                         key={`total-${row.maturity}`}
-                        className="px-2 py-1 border border-border"
+                        className="px-2 py-1 border border-border bg-primary-lt text-white"
                       >
                         {formatCurrency(row.forwardBuy + row.forwardSell)}
                       </td>
                     ))}
-                    <td className="px-2 py-1 border font-bold border-border">
+                    <td className="px-2 py-1 border font-bold border-border bg-primary-lt text-white">
                       {formatCurrency(
                         grandTotals.forwardBuy + grandTotals.forwardSell
                       )}
@@ -530,6 +509,7 @@ const NetExposure: React.FC = () => {
               </table>
             </div>
           </div>
+          <DetailedViews />
         </div>
       </Layout>
     </>

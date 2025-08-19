@@ -495,7 +495,7 @@ const MTMCalculator = () => {
           </div>
 
           <div className="w-15rem">
-            <Button onClick={() => exportToExcel(filteredData, "MTM_Results")}>
+            <Button color="Fade" onClick={() => exportToExcel(filteredData, "MTM_Results")}>
               Export Results
             </Button>
           </div>

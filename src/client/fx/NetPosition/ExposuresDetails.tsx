@@ -63,7 +63,7 @@ const ExposureDetails: React.FC = () => {
                 {bu} – {currency}
               </h4>
               <table className="min-w-full text-sm text-center border border-primary mb-1">
-                <thead className="text-center font-medium bg-primary-lt">
+                <thead className="text-center font-medium bg-primary-xl">
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr key={headerGroup.id}>
                       {headerGroup.headers.map((header) => (
@@ -84,7 +84,7 @@ const ExposureDetails: React.FC = () => {
                       ))}
                     </tr>
                   ))}
-                  <tr className="bg-primary-xl text-secondary-text-dark border border-border font-semibold shadow-sm">
+                  <tr className="bg-primary-lt text-white text-secondary-text-dark border border-border font-semibold shadow-sm">
                     <td colSpan={3} className="text-right px-2 py-1">
                       Subtotal for {currency} ({bu}):
                     </td>
@@ -101,9 +101,9 @@ const ExposureDetails: React.FC = () => {
       <table className="min-w-full text-sm text-center border border-border mt-6 ">
         <thead className="text-secondary-text">
           <tr>
-            <th className="border border-border px-2 py-1 text-left">Total by Maturity Bucket:</th>
+            <th className="border bg-primary-xl border-border px-2 py-1 text-left">Total by Maturity Bucket:</th>
             {orderedBuckets.map((bucket) => (
-              <th key={bucket} className="border border-border px-2 py-1">{bucket}</th>
+              <th key={bucket} className="border bg-primary-xl border-border px-2 py-1">{bucket}</th>
             ))}
           </tr>
         </thead>

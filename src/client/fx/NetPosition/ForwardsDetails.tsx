@@ -59,7 +59,7 @@ const ForwardsDetails: React.FC = () => {
               Business Unit: {bu}
             </h4>
             <table className="min-w-full text-sm text-center border border-primary mb-1">
-              <thead className="text-center font-medium bg-primary-lt">
+              <thead className="text-center font-medium bg-primary-xl">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
@@ -80,7 +80,7 @@ const ForwardsDetails: React.FC = () => {
                     ))}
                   </tr>
                 ))}
-                <tr className="bg-primary-xl text-secondary-text-dark border border-border font-semibold shadow-sm">
+                <tr className="bg-primary-lt text-white border border-border font-semibold shadow-sm">
                     <td colSpan={9} className="text-right px-2 py-1">
                     Subtotal for {bu} (LCY):
                   </td>

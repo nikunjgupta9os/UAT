@@ -30,17 +30,15 @@ const UserCreationForm: React.FC = () => {
   // const [form, setForm] = useState<FormData[]>([]);
   // console.log("Form data:", formError, timeError);
   useEffect(() => {
-  axios
-    .get("https://backend-slqi.onrender.com/api/entity/names")
-    .then(({ data }) => {
-      setBusinessUnits(data); // assuming response is already an array of strings
-    })
-    .catch((err) => {
-      console.error("Error fetching entity names:", err);
-    });
-}, []);
-
-
+    axios
+      .get("https://backend-slqi.onrender.com/api/entity/names")
+      .then(({ data }) => {
+        setBusinessUnits(data); // assuming response is already an array of strings
+      })
+      .catch((err) => {
+        console.error("Error fetching entity names:", err);
+      });
+  }, []);
 
   useEffect(() => {
     axios
@@ -127,6 +125,7 @@ const UserCreationForm: React.FC = () => {
       showButton={true}
       buttonText="Back"
       onButtonClick={PageChange}
+      buttonColor="NonPrimary"
     >
       <div className="flex justify-center">
         <div className="p-6 rounded-xl border border-border bg-secondary-color-lt  shadow-md space-y-6 flex-shrink-0 w-full max-w-[1500px]">
@@ -149,17 +148,16 @@ const UserCreationForm: React.FC = () => {
                 Authentication Type<span className="text-red-500">*</span>
               </label>
               <select
-  defaultValue="LDAP"
-  {...register("authenticationType", {
-    required: "Please select your authentication type.",
-  })}
-  className="w-full p-2 border rounded text-secondary-text bg-secondary-color-lt border-border"
->
-  <option value="ADFS">ADFS</option>
-  <option value="LDAP">LDAP</option>
-  <option value="CImplr">CImplr</option>
-</select>
-
+                defaultValue="LDAP"
+                {...register("authenticationType", {
+                  required: "Please select your authentication type.",
+                })}
+                className="w-full p-2 border rounded text-secondary-text bg-secondary-color-lt border-border"
+              >
+                <option value="ADFS">ADFS</option>
+                <option value="LDAP">LDAP</option>
+                <option value="CImplr">CImplr</option>
+              </select>
             </div>
 
             <div>
@@ -240,37 +238,37 @@ const UserCreationForm: React.FC = () => {
             <div>
               <label className="text-secondary-text">Business Unit Name</label>
               <select
-  {...register("businessUnitName", {
-    required: "Please select a business unit.",
-  })}
-  className="w-full p-2 border rounded text-secondary-text bg-secondary-color-lt border-border"
->
-  <option value="" disabled hidden selected>
-    Select Business Unit
-  </option>
-  {businessUnits.map((bu, index) => (
-    <option key={index} value={bu}>
-      {bu}
-    </option>
-  ))}
-</select>
-
+                {...register("businessUnitName", {
+                  required: "Please select a business unit.",
+                })}
+                className="w-full p-2 border rounded text-secondary-text bg-secondary-color-lt border-border"
+              >
+                <option value="" disabled hidden selected>
+                  Select Business Unit
+                </option>
+                {businessUnits.map((bu, index) => (
+                  <option key={index} value={bu}>
+                    {bu}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="col-span-2 flex justify-end gap-4 mt-4">
-              <Button type="button" categories="Medium" onClick={onReset}>
-                <span className="text-white">Reset</span>
-              </Button>
-              <Button type="submit" categories="Medium">
-                <span className="text-white">Submit</span>
-              </Button>
+              <div className="flex gap-4">
+                <Button type="button" color="Fade" categories="Large" onClick={onReset}>
+                  <span>Reset</span>
+                </Button>
+                <Button type="submit" categories="Large">
+                  <span className="text-white">Submit</span>
+                </Button>
+              </div>
             </div>
           </form>
         </div>
-      {formError && <div></div>}
-      {timeError && <div></div>}
+        {formError && <div></div>}
+        {timeError && <div></div>}
       </div>
-      
     </Layout>
   );
 };

@@ -647,7 +647,7 @@ const AwaitingApproval: React.FC = () => {
                 <Button onClick={handleBulkApprove}>Approve</Button>
               )}
               {filteredData.length > 0 && Visibility.reject && (
-                <Button color="Fade" onClick={handleBulkReject}>
+                <Button color="Green" onClick={handleBulkReject}>
                   Reject
                 </Button>
               )}

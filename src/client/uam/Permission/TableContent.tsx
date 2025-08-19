@@ -404,7 +404,7 @@ const TableContent: React.FC<{
           <div className="flex justify-end w-full">
             <div className="flex items-center gap-2 w-2xl justify-end">
               <Button onClick={handleApprove}>Approve</Button>
-              <Button color="Fade" onClick={handleReject}>
+              <Button color="Green" onClick={handleReject}>
                 Reject
               </Button>
             </div>

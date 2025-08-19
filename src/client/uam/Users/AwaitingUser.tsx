@@ -622,7 +622,7 @@ const Awaitinguser: React.FC = () => {
                     <Button onClick={handleBulkUserApprove}>Approve</Button>
                   )}
                   {Visibility.reject && (
-                    <Button color="Fade" onClick={handleBulkUserReject}>Reject</Button>
+                    <Button color="Green" onClick={handleBulkUserReject}>Reject</Button>
                   )}
                 </div>
               </div>

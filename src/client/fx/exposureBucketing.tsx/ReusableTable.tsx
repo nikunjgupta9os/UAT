@@ -588,7 +588,7 @@ function NyneOSTable<ExposureBucketing extends WithId>({
       <div className="flex items-center justify-end">
         <div className="flex items-center gap-2 min-w-[12rem]">
           {approve && <Button onClick={handleApprove}>Approve</Button>}
-          {reject && <Button color="Fade" onClick={handleReject}>Reject</Button>}
+          {reject && <Button color="Green" onClick={handleReject}>Reject</Button>}
         </div>
       </div>
 

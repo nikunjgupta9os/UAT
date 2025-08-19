@@ -1,18 +1,27 @@
-import React, {useState } from "react";
+import React, { useState } from "react";
 import ExposureDetails from "./ExposuresDetails.tsx";
 import ForwardsDetails from "./ForwardsDetails.tsx";
 
 const DetailedViews: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"exposure" | "forwards">("exposure");
-  const [collapsedExposure, setCollapsedExposure] = useState(true);
+  const [collapsedExposure, setCollapsedExposure] = useState(true); 
   const [collapsedForwards, setCollapsedForwards] = useState(true);
+
+  const handleTabChange = (tab: "exposure" | "forwards") => {
+    setActiveTab(tab);
+    if (tab === "exposure") {
+      setCollapsedExposure(false); 
+    } else {
+      setCollapsedForwards(false);
+    }
+  };
 
   return (
     <div className="mt-10 border border-border shadow">
       <div className="flex justify-between items-center border-b border-border px-4 py-2 bg-secondary-color">
         <div className="space-x-2">
           <button
-            onClick={() => setActiveTab("exposure")}
+            onClick={() => handleTabChange("exposure")}
             className={`px-4 py-2 font-semibold ${
               activeTab === "exposure" ? "bg-primary text-white" : "bg-primary-md text-primary-lt"
             } rounded`}
@@ -20,7 +29,7 @@ const DetailedViews: React.FC = () => {
             Existing Exposure Details
           </button>
           <button
-            onClick={() => setActiveTab("forwards")}
+            onClick={() => handleTabChange("forwards")}
             className={`px-4 py-2 font-semibold ${
               activeTab === "forwards" ? "bg-primary text-white" : "bg-primary-md text-primary-lt"
             } rounded`}

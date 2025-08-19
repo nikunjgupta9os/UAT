@@ -124,9 +124,9 @@ const DraggableDashboardBuilder = () => {
 
               <button
                 onClick={() => setShowBuilder(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 font-semibold text-primary-fade hover:text-primary bg-[#13595407] border-2 border-primary-fade rounded-lg flex items-center gap-2 transition-colors"
               >
-                <Plus size={18} />
+                <Plus size={20} />
                 Add Chart
               </button>
 
@@ -142,7 +142,7 @@ const DraggableDashboardBuilder = () => {
 
                   <button
                     onClick={handleReset}
-                    className="px-4 py-2 bg-red-color text-white rounded-lg flex items-center gap-2 hover:bg-red-700 transition-colors"
+                    className="px-4 py-2 bg-primary-fade hover:bg-primary-lt text-white rounded-lg flex items-center gap-2 transition-colors"
                   >
                     <Trash2 size={18} />
                     Clear All

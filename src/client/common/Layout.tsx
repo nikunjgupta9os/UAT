@@ -12,6 +12,7 @@ type LayoutProps = {
   showButton?: boolean;
   buttonText?: string;
   onButtonClick?: () => void;
+  buttonColor?: 'Green' | 'NonPrimary' | 'Disable' | 'Fade';
 };
 
 const Layout: React.FC<LayoutProps> = ({
@@ -20,6 +21,7 @@ const Layout: React.FC<LayoutProps> = ({
   showButton = false,
   buttonText = "Click Me",
   onButtonClick,
+  buttonColor,
 }) => {
   const [collapsed, setCollapsed] = useState(() => {
     const stored = localStorage.getItem("sidebar-collapsed");
@@ -49,7 +51,7 @@ const Layout: React.FC<LayoutProps> = ({
               <h1 className="text-3xl font-bold tracking-wider text-secondary-text ">{title}</h1>
               <div>
                 {showButton && (
-                  <Button onClick={onButtonClick}>
+                  <Button categories="Large" onClick={onButtonClick} color={buttonColor}>
                     <span className="text-white">{buttonText}</span>
                   </Button>
                 )}

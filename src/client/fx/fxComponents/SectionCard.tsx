@@ -20,12 +20,12 @@ const SectionCard: React.FC<SectionCardProps> = ({
   return (
     <div className="pt-6">
       <div
-        className="cursor-pointer p-4 text-primary text-xl font-semibold border-t border-x border-primary-lg bg-primary-xl"
+        className="cursor-pointer p-4 text-primary text-xl font-semibold border rounded-t-md border-x border-primary-lg bg-primary-xl"
         onClick={() => setOpen(!open)}
       >
         {heading || title}
       </div>
-      {open && <div className="p-4 border border-primary-lg bg-secondary-color">{children}</div>}
+      {open && <div className="p-4 border border-primary-lg rounded-b-md bg-secondary-color">{children}</div>}
     </div>
   );
 };

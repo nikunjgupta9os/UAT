@@ -514,7 +514,7 @@ function NyneOSTable<T extends EditableRowData>({
       <div className="flex items-center justify-end">
         <div className="flex items-center py-2.5 gap-2 min-w-[12rem]">
           <Button onClick={handleApprove}>Approve</Button>
-          <Button color="Fade" onClick={handleReject}>
+          <Button color="Green" onClick={handleReject}>
             Reject
           </Button>
         </div>

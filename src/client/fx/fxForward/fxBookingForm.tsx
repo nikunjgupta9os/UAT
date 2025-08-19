@@ -694,7 +694,7 @@ const FxBookingForm: React.FC = () => {
                 <Button color="Fade" onClick={handlePrintForm}>Print Form</Button>
               </div>
               <div className="w-15rem">
-                <Button color="Fade">Save Draft</Button>
+                <Button color="Disable">Save Draft</Button>
               </div>
               <div className="w-15rem">
                 <Button color="Fade" onClick={handleResetForm}>Reset Form</Button>

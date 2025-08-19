@@ -65,13 +65,16 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
       const updatedFields = { ...editValues, status: "Awaiting-Approval" };
 
       try {
-        const response = await fetch(`https://backend-slqi.onrender.com/api/users/${row.original.id}/update`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(updatedFields),
-        });
+        const response = await fetch(
+          `https://backend-slqi.onrender.com/api/users/${row.original.id}/update`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(updatedFields),
+          }
+        );
 
         const data = await response.json();
         if (data.success) {
@@ -166,7 +169,10 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
             {/* Conditionally render the edit button based on the edit prop */}
             {edit && (
               <div>
-                <Button onClick={handleEditToggle}>
+                <Button
+                  onClick={handleEditToggle}
+                  color={isEditing ? "Green" : "Fade"}
+                >
                   {isEditing ? "Save" : "Edit"}
                 </Button>
               </div>
