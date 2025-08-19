@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import SectionCard from "./SectionCard";
 import CustomSelect from "../../common/SearchSelect";
 
@@ -58,6 +58,57 @@ const DeliveryDateDetails: React.FC<DeliveryDateDetailsProps> = ({
   setDetails,
   isLoading = false,
 }) => {
+  // Set Add Date to today's date if empty
+  useEffect(() => {
+    if (!details.addDate) {
+      const today = new Date();
+      const todayStr = today.toISOString().slice(0, 10); // yyyy-mm-dd
+      setDetails((prev) => ({ ...prev, addDate: todayStr }));
+    }
+  }, [details.addDate, setDetails]);
+
+  // Auto-calculate Settlement Date based on Mode of Delivery and Add Date
+  useEffect(() => {
+    if (!details.addDate) return;
+    let settlementDate = details.settlementDate;
+    const addDateObj = new Date(details.addDate);
+
+    if (details.modeOfDelivery === "TOM") {
+      addDateObj.setDate(addDateObj.getDate() + 1);
+      settlementDate = addDateObj.toISOString().slice(0, 10);
+    } else if (details.modeOfDelivery === "Cash") {
+      addDateObj.setDate(addDateObj.getDate() + 2);
+      settlementDate = addDateObj.toISOString().slice(0, 10);
+    } else if (details.modeOfDelivery === "Spot") {
+      settlementDate = details.addDate;
+    } else if (details.modeOfDelivery) {
+      addDateObj.setDate(addDateObj.getDate() + 2);
+      settlementDate = addDateObj.toISOString().slice(0, 10);
+    }
+
+    // Only update if different (to preserve user edits)
+    if (details.settlementDate !== settlementDate) {
+      setDetails((prev) => ({ ...prev, settlementDate }));
+    }
+  }, [details.modeOfDelivery, details.addDate, setDetails]);
+
+  // Auto-calculate Maturity Date based on Delivery Period
+  useEffect(() => {
+    if (details.deliveryPeriod) {
+      // Extract number of months from deliveryPeriod (e.g., "2M" => 2)
+      const match = details.deliveryPeriod.match(/^(\d+)M$/);
+      if (match) {
+        const monthsToAdd = parseInt(match[1], 10);
+        const now = new Date();
+        now.setMonth(now.getMonth() + monthsToAdd);
+        const maturityDate = now.toISOString().slice(0, 10); // yyyy-mm-dd
+        if (details.maturityDate !== maturityDate) {
+          setDetails((prev) => ({ ...prev, maturityDate }));
+        }
+      }
+    }
+  }, [details.deliveryPeriod, setDetails, details.maturityDate]);
+
   return (
     <SectionCard title="Delivery & Date Details">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
