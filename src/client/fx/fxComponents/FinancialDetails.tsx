@@ -165,6 +165,7 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
             value={formData.baseCurrency || ""}
             disabled
             className="h-[37px] border p-2 bg-secondary-color-lt text-secondary-text-dark rounded border-border"
+            placeholder="Auto Fill"
           />
         </div>
 
@@ -176,6 +177,7 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
             value={formData.quoteCurrency || ""}
             disabled
             className="h-[37px] border p-2 bg-secondary-color-lt text-secondary-text-dark rounded border-border"
+            placeholder="Auto Fill"
           />
         </div>
 
@@ -185,11 +187,11 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
           { key: "spotRate", label: "Spot Rate", disabled: false, isMultiplied: false },
           { key: "forwardPoints", label: "Forward Points", disabled: false, isMultiplied: false },
           { key: "bankMargin", label: "Bank Margin", disabled: false, isMultiplied: false },
-          { key: "totalRate", label: "Total Rate", disabled: true, isMultiplied: false }, // ✅ removed mt-5
-          { key: "valueQuoteCurrency", label: "Value (Quote Currency)", disabled: false, isMultiplied: true },
+          { key: "totalRate", label: "Total Rate", disabled: true, isMultiplied: false, placeholder: "Auto Fill" },
+          { key: "valueQuoteCurrency", label: "Value (Quote Currency)", disabled: false, isMultiplied: true, placeholder: "Auto Fill" },
           { key: "interveningRateQuoteToLocal", label: "Intervening Rate (Quote to Local)", disabled: false, isMultiplied: false },
-          { key: "inputValue", label: "Booking Amount", disabled: false, isMultiplied: true },
-          { key: "valueLocalCurrency", label: "Value (Local Currency)", disabled: true, isMultiplied: true },
+          { key: "inputValue", label: "Booking Amount", disabled: false, isMultiplied: true, placeholder: "Auto Fill" },
+          { key: "valueLocalCurrency", label: "Value (Local Currency)", disabled: true, isMultiplied: true, placeholder: "Auto Fill" },
         ].map((field, idx) => (
           <div key={idx} className="flex flex-col w-full">
             <label className="text-sm text-secondary-text mb-1 flex items-center justify-between">
@@ -217,6 +219,7 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
               }
               required
               disabled={isLoading || field.disabled}
+              placeholder={field.placeholder || ""}
             />
           </div>
         ))}
