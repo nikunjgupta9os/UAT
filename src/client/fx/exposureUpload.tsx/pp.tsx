@@ -71,6 +71,80 @@ const fallbackRenderVars: IfPayload["renderVars"] = {
       delivery_date: "2025-08-31T00:00:00.000Z",
       payment_terms: "NET30",
       inco_terms: "FOB",
+      additional_header_details: {
+        input_debitors: [
+          {
+            text: "",
+            company: "Tata Ficosa",
+            customer: "106118",
+            linked_id: "",
+            loaded_at: "2025-08-18T14:37:29.486Z",
+            reference: "SI2104000011",
+            assignment: "939133347",
+            currency_2: "EUR",
+            gl_account: "252101",
+            row_number: 3,
+            // company_code: "1100",
+            net_due_date: "2020-08-11",
+            posting_date: "2020-05-13",
+            // document_date: "2020-05-13",
+            document_type: "RV",
+            bank_reference: "",
+            special_gl_ind: "",
+            document_number: "939133347",
+            upload_batch_id: "7ee1a178-a7e3-445b-9e59-0ea9c5e48c01",
+            clearing_document: "",
+            document_currency: "EUR",
+            processing_status: "Pending",
+            amount_in_doc_curr: "90",
+            amount_in_local_currency: "7263",
+          },
+        ],
+        input_creditors: [
+          {
+            payment_block: "",
+            business_area: "",
+            account: "",
+            pann: "",
+            gl_account: "",
+            net_due_date: "",
+            posting_date: "",
+            document_type: "",
+            posting_key: "",
+            amount_in_doc_curr: "",
+            document_currency: "",
+            local_currency: "",
+            currency_2: "",
+            bank_reference: "",
+            linked_id: "",
+          },
+        ],
+        input_grn: [
+          {
+            account: "",
+            business_area: "",
+            document_type: "",
+            customer: "",
+            assignment: "",
+            document_number: "",
+            posting_date: "",
+            supplier: "",
+            reference: "",
+            amount_in_doc_curr: "",
+            document_currency: "",
+            amount_in_local_currency: "",
+            text: "",
+            clearing_document: "",
+            clearing_date: "",
+            special_gl_ind: "",
+            offsetting_account: "",
+            currency_2: "",
+            company: "",
+            loaded_at: "",
+            linked_id: "",
+          },
+        ],
+      },
     },
   ],
 };
@@ -88,15 +162,15 @@ async function fetchRenderVars(): Promise<IfPayload["renderVars"]> {
 }
 
 // async function fetchUserVars(): Promise<IfPayload["userVars"]> {
-//   const res = await fetch(`${cURLHOST}/exposureUpload/userVars`);
-//   if (!res.ok) throw new Error("Failed to fetch userVars");
-//   return res.json();
+// const res = await fetch(`${cURLHOST}/exposureUpload/userVars`);
+// if (!res.ok) throw new Error("Failed to fetch userVars");
+// return res.json();
 // }
 
 // async function fetchUserJourney(): Promise<IfPayload["userJourney"]> {
-//   const res = await fetch(`${cURLHOST}/exposureUpload/userJourney`);
-//   if (!res.ok) throw new Error("Failed to fetch userJourney");
-//   return res.json();
+// const res = await fetch(`${cURLHOST}/exposureUpload/userJourney`);
+// if (!res.ok) throw new Error("Failed to fetch userJourney");
+// return res.json();
 // }
 
 interface Message {
@@ -133,6 +207,78 @@ interface IfPayload {
     nextPageToCall: string;
     actionCalledFrom: string;
   };
+}
+
+interface AccountDocumentInfo {
+  account: string;
+  // company_code: string;
+  business_area: string;
+  document_type: string;
+  customer: string;
+  assignment: string;
+  document_number: string;
+  // document_date: string;
+  posting_date: string;
+  supplier: string;
+  reference: string;
+  amount_in_doc_curr: string;
+  document_currency: string;
+  amount_in_local_currency: string;
+  text: string;
+  clearing_document: string;
+  clearing_date: string;
+  special_gl_ind: string;
+  offsetting_account: string;
+  currency_2: string;
+  company: string;
+  loaded_at: string;
+  linked_id: string;
+}
+
+interface CreditorInfo {
+  payment_block: string;
+  // company_code: string;
+  business_area: string;
+  account: string;
+  pann: string;
+  gl_account: string;
+  // document_date: string;
+  net_due_date: string;
+  posting_date: string;
+  document_type: string;
+  posting_key: string;
+  amount_in_doc_curr: string;
+  document_currency: string;
+  local_currency: string;
+  currency_2: string;
+  bank_reference: string;
+  linked_id: string;
+}
+interface InputDebitor {
+  text: string;
+  company: string;
+  customer: string;
+  linked_id: string;
+  loaded_at: string;
+  reference: string;
+  assignment: string;
+  currency_2: string;
+  gl_account: string;
+  row_number: number;
+  // company_code: string;
+  net_due_date: string;
+  posting_date: string;
+  // document_date: string;
+  document_type: string;
+  bank_reference: string;
+  special_gl_ind: string;
+  document_number: string;
+  upload_batch_id: string;
+  clearing_document: string;
+  document_currency: string;
+  processing_status: string;
+  amount_in_doc_curr: string;
+  amount_in_local_currency: string;
 }
 
 interface ExposureRequest {
@@ -177,6 +323,11 @@ interface ExposureRequest {
   delivery_date: string;
   payment_terms: string | null;
   inco_terms: string | null;
+  additional_header_details?: {
+    input_debitors?: InputDebitor[];
+    input_creditors?: CreditorInfo[];
+    input_grn?: AccountDocumentInfo[];
+  };
 }
 
 type TabVisibility = {
@@ -199,6 +350,9 @@ const AllExposureRequest: React.FC = () => {
   const [data, setData] = useState<ExposureRequest[]>([]);
   const [statusFilter, setStatusFilter] = useState("All");
   const [loading, setLoading] = useState(true);
+  const [creditorInfo, setCreditorInfo] = useState<CreditorInfo[]>([]);
+  const [grnInfo, setGrnInfo] = useState<AccountDocumentInfo[]>([]);
+  const [debitInfo, setDebitInfo] = useState<InputDebitor[]>([]);
 
   const roleName = localStorage.getItem("userRole");
   const [Visibility, setVisibility] = useState<TabVisibility>({
@@ -247,8 +401,6 @@ const AllExposureRequest: React.FC = () => {
   };
 
   useEffect(() => {
-    // setIsLoading(false);
-
     fetchRenderVars()
       .then((renderVarsRes) => {
         setRenderVars(renderVarsRes);
@@ -256,41 +408,182 @@ const AllExposureRequest: React.FC = () => {
           view: renderVarsRes.btnApprove,
           delete: renderVarsRes.btnApprove,
         });
+
         if (Array.isArray(renderVarsRes.pageData)) {
           setData(renderVarsRes.pageData);
+
+          // Collect all debitors, creditors, and grn info from the new data
+          const allDebitors: InputDebitor[] = [];
+          const allCreditors: CreditorInfo[] = [];
+          const allGrn: AccountDocumentInfo[] = [];
+
+          renderVarsRes.pageData.forEach((exposure) => {
+            const debitors = exposure.additional_header_details?.input_debitors;
+            if (Array.isArray(debitors)) {
+              allDebitors.push(...debitors);
+            } else if (debitors && typeof debitors === "object") {
+              allDebitors.push(debitors);
+            }
+
+            const creditors =
+              exposure.additional_header_details?.input_creditors;
+            if (Array.isArray(creditors)) {
+              allCreditors.push(...creditors);
+            } else if (creditors && typeof creditors === "object") {
+              allCreditors.push(creditors);
+            }
+
+            const grn = exposure.additional_header_details?.input_grn;
+            if (Array.isArray(grn)) {
+              allGrn.push(...grn);
+            } else if (grn && typeof grn === "object") {
+              allGrn.push(grn);
+            }
+          });
+
+          setDebitInfo(allDebitors);
+          setCreditorInfo(allCreditors);
+          setGrnInfo(allGrn);
+          console.log("Debitor Info:", allDebitors);
+          console.log("Creditor Info:", allCreditors);
+          console.log("GRN Info:", allGrn);
           setLoading(false);
         } else {
           setData([]);
+          setDebitInfo([]);
+          setCreditorInfo([]);
+          setGrnInfo([]);
           setLoading(false);
         }
       })
       .catch((err) => {
-        console.error("Error fetching renderVars:", err);
+        // console.error("Error fetching renderVars:", err);
         setRenderVars(fallbackRenderVars);
         setLoading(false);
       });
 
     // fetchUserVars()
-    //   .then((userVarsRes) => {
-    //     setUserVars(userVarsRes);
-    //     if (!userVarsRes?.isLoggedIn) {
-    //       setRenderVars((prev) =>
-    //         prev ? { ...prev, isLoadable: false } : prev
-    //       );
-    //     }
-    //   })
-    //   .catch((err: any) => {
-    //      console.error("Error fetching userVars:", err);
-    //     setUserVars(fallbackUserVars);
-    //   });
+    // .then((userVarsRes) => {
+    // setUserVars(userVarsRes);
+    // if (!userVarsRes?.isLoggedIn) {
+    // setRenderVars((prev) =>
+    // prev ? { ...prev, isLoadable: false } : prev
+    // );
+    // }
+    // })
+    // .catch((err: any) => {
+    // console.error("Error fetching userVars:", err);
+    // setUserVars(fallbackUserVars);
+    // });
 
     // fetchUserJourney()
-    //   .then((userJourneyRes) => setUserJourney(userJourneyRes))
-    //   .catch((err) => {
-    //      console.error("Error fetching userJourney:", err);
-    //     setUserJourney(fallbackUserJourney);
-    //   });
+    // .then((userJourneyRes) => setUserJourney(userJourneyRes))
+    // .catch((err) => {
+    // console.error("Error fetching userJourney:", err);
+    // setUserJourney(fallbackUserJourney);
+    // });
   }, []);
+
+  // Helper to generate columns for array fields
+  function arrayFieldColumns(arrayField, fields, sectionTitle) {
+    return fields.map((field) => ({
+      id: `${arrayField}_${field}`,
+      header: `${sectionTitle}: ${field
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (l) => l.toUpperCase())}`,
+      cell: ({ row }) => {
+        const arrOrObj = row.original.additional_header_details?.[arrayField];
+        if (Array.isArray(arrOrObj) && arrOrObj.length > 0) {
+          return (
+            <span className="text-secondary-text">
+              {arrOrObj[0][field] ?? "—"}
+            </span>
+          );
+        }
+        if (arrOrObj && typeof arrOrObj === "object") {
+          return (
+            <span className="text-secondary-text">
+              {arrOrObj[field] ?? "—"}
+            </span>
+          );
+        }
+        return <span className="text-secondary-text">—</span>;
+      },
+      enableSorting: false,
+    }));
+  }
+
+  // Debitor Details columns
+  const debitorColumns = arrayFieldColumns(
+    "input_debitors",
+    [
+      // "customer",
+      // "company",
+      // "document_number",
+      // "posting_date",
+      // "amount_in_doc_curr",
+      "amount_in_local_currency",
+      "document_currency",
+      "reference",
+      "assignment",
+      "gl_account",
+      "special_gl_ind",
+      "bank_reference",
+      "processing_status",
+    ],
+    "Debitor"
+  );
+
+  // Creditor Details columns
+  const creditorColumns = arrayFieldColumns(
+    "input_creditors",
+    [
+      "account",
+      "business_area",
+      "document_type",
+      "posting_date",
+      "net_due_date",
+      "amount_in_doc_curr",
+      "document_currency",
+      "local_currency",
+      "currency_2",
+      "bank_reference",
+      "gl_account",
+      "payment_block",
+      "posting_key",
+      "pann",
+    ],
+    "Creditor"
+  );
+
+  // GRN Details columns
+  const grnColumns = arrayFieldColumns(
+    "input_grn",
+    [
+      "account",
+      "business_area",
+      "document_type",
+      "customer",
+      "assignment",
+      "document_date",
+      "posting_date",
+      "supplier",
+      "reference",
+      "amount_in_doc_curr",
+      "document_currency",
+      "amount_in_local_currency",
+      "text",
+      "clearing_document",
+      "clearing_date",
+      "special_gl_ind",
+      "offsetting_account",
+      "currency_2",
+      "company",
+      "loaded_at",
+      "linked_id",
+    ],
+    "GRN"
+  );
 
   const columns = useMemo<ColumnDef<ExposureRequest>[]>(
     () => [
@@ -714,6 +1007,9 @@ const AllExposureRequest: React.FC = () => {
           );
         },
       },
+      ...debitorColumns,
+      ...creditorColumns,
+      ...grnColumns,
     ],
     []
   );
@@ -752,6 +1048,60 @@ const AllExposureRequest: React.FC = () => {
     requested_by: false,
     created_at: false,
     updated_at: false,
+
+    // Debitor Details columns
+    input_debitors_customer: true,
+    input_debitors_company: true,
+    input_debitors_document_number: true,
+    input_debitors_posting_date: true,
+    input_debitors_amount_in_doc_curr: true,
+    input_debitors_amount_in_local_currency: false,
+    input_debitors_document_currency: false,
+    input_debitors_reference: false,
+    input_debitors_assignment: false,
+    input_debitors_gl_account: false,
+    input_debitors_special_gl_ind: false,
+    input_debitors_bank_reference: false,
+    input_debitors_processing_status: false,
+
+    // Creditor Details columns
+    input_creditors_account: false,
+    input_creditors_business_area: false,
+    input_creditors_document_type: false,
+    input_creditors_posting_date: false,
+    input_creditors_net_due_date: false,
+    input_creditors_amount_in_doc_curr: false,
+    input_creditors_document_currency: false,
+    input_creditors_local_currency: false,
+    input_creditors_currency_2: false,
+    input_creditors_bank_reference: false,
+    input_creditors_gl_account: false,
+    input_creditors_payment_block: false,
+    input_creditors_posting_key: false,
+    input_creditors_pann: false,
+
+    // GRN Details columns
+    input_grn_account: false,
+    input_grn_business_area: false,
+    input_grn_document_type: false,
+    input_grn_customer: false,
+    input_grn_assignment: false,
+    input_grn_document_date: false,
+    input_grn_posting_date: false,
+    input_grn_supplier: false,
+    input_grn_reference: false,
+    input_grn_amount_in_doc_curr: false,
+    input_grn_document_currency: false,
+    input_grn_amount_in_local_currency: false,
+    input_grn_text: false,
+    input_grn_clearing_document: false,
+    input_grn_clearing_date: false,
+    input_grn_special_gl_ind: false,
+    input_grn_offsetting_account: false,
+    input_grn_currency_2: false,
+    input_grn_company: false,
+    input_grn_loaded_at: false,
+    input_grn_linked_id: false,
   };
 
   const expandedRowConfig = {
@@ -796,7 +1146,74 @@ const AllExposureRequest: React.FC = () => {
           "updated_at",
         ],
       },
+      {
+        title: "Debitor Details",
+        arrayField: "input_debitors",
+        fields: [
+          "debitor_customer",
+          "debitor_company",
+          "debitor_document_number",
+          "debitor_posting_date",
+          "debitor_amount_in_doc_curr",
+          "debitor_amount_in_local_currency",
+          "debitor_document_currency",
+          "debitor_reference",
+          "debitor_assignment",
+          "debitor_gl_account",
+          "debitor_special_gl_ind",
+          "debitor_bank_reference",
+          "debitor_processing_status",
+        ],
+      },
+      {
+        title: "Creditor Details",
+        arrayField: "input_creditors",
+        fields: [
+          "account",
+          "business_area",
+          "document_type",
+          "posting_date",
+          "net_due_date",
+          "amount_in_doc_curr",
+          "document_currency",
+          "local_currency",
+          "currency_2",
+          "bank_reference",
+          "gl_account",
+          "payment_block",
+          "posting_key",
+          "pann",
+        ],
+      },
+      {
+        title: "GRN Details",
+        arrayField: "input_grn",
+        fields: [
+          "account",
+          "business_area",
+          "document_type",
+          "customer",
+          "assignment",
+          "document_date",
+          "posting_date",
+          "supplier",
+          "reference",
+          "amount_in_doc_curr",
+          "document_currency",
+          "amount_in_local_currency",
+          "text",
+          "clearing_document",
+          "clearing_date",
+          "special_gl_ind",
+          "offsetting_account",
+          "currency_2",
+          "company",
+          "loaded_at",
+          "linked_id",
+        ],
+      },
     ],
+
     editableFields: [
       "approval_comment",
       "rejection_comment",
@@ -813,6 +1230,7 @@ const AllExposureRequest: React.FC = () => {
       "line_item_amount",
       "counterparty_code",
     ],
+
     fieldLabels: {
       exposure_header_id: "Exposure Header ID",
       company_code: "Company Code",
@@ -855,6 +1273,54 @@ const AllExposureRequest: React.FC = () => {
       delivery_date: "Delivery Date",
       payment_terms: "Payment Terms",
       inco_terms: "Inco Terms",
+
+      // Debitor Details
+      debitor_customer: "Debitor: Customer",
+      debitor_company: "Debitor: Company",
+      debitor_document_number: "Debitor: Document Number",
+      debitor_posting_date: "Debitor: Posting Date",
+      debitor_amount_in_doc_curr: "Debitor: Amount In Doc Curr",
+      debitor_amount_in_local_currency: "Debitor: Amount In Local Curr",
+      debitor_document_currency: "Debitor: Document Currency",
+      debitor_reference: "Debitor: Reference",
+      debitor_assignment: "Debitor: Assignment",
+      debitor_gl_account: "Debitor: GL Account",
+      debitor_special_gl_ind: "Debitor: Special GL Ind",
+      debitor_bank_reference: "Debitor: Bank Reference",
+      debitor_processing_status: "Debitor: Processing Status",
+
+      // Creditor Details
+      account: "Creditor: Account",
+      business_area: "Creditor: Business Area",
+      document_type: "Creditor: Document Type",
+      posting_date: "Creditor: Posting Date",
+      net_due_date: "Creditor: Net Due Date",
+      c_amount_in_doc_curr: "Creditor: Amount In Doc Curr",
+      document_currency: "Creditor: Document Currency",
+      local_currency: "Creditor: Local Currency",
+      currency_2: "Creditor: Currency 2",
+      bank_reference: "Creditor: Bank Reference",
+      gl_account: "Creditor: GL Account",
+      payment_block: "Creditor: Payment Block",
+      posting_key: "Creditor: Posting Key",
+      pann: "Creditor: PANN",
+
+      // GRN Details
+      customer: "GRN: Customer",
+      assignment: "GRN: Assignment",
+      supplier: "GRN: Supplier",
+      reference: "GRN: Reference",
+      amount_in_doc_curr: "GRN: Amount In Doc Curr",
+      amount_in_local_currency: "GRN: Amount In Local Curr",
+      text: "GRN: Text",
+      clearing_document: "GRN: Clearing Document",
+      clearing_date: "GRN: Clearing Date",
+      special_gl_ind: "GRN: Special GL Ind",
+      offsetting_account: "GRN: Offsetting Account",
+      company: "GRN: Company",
+      loaded_at: "GRN: Loaded At",
+      linked_id: "GRN: Linked Id",
+      // and so on...
     },
   };
 
@@ -886,33 +1352,133 @@ const AllExposureRequest: React.FC = () => {
     return <LoadingSpinner />;
   }
 
+  // Helper to convert snake_case or underscores to Pascal Case
+  function toPascalCase(str: string) {
+    return str
+      .replace(/_/g, " ")
+      .replace(
+        /\w\S*/g,
+        (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+      );
+  }
+
+  // Render a section for non-array fields
   function renderSection(section, rowData, fieldLabels) {
+    const fieldsToShow = section.fields.filter(
+      (field) =>
+        rowData[field] !== null &&
+        rowData[field] !== undefined &&
+        rowData[field] !== ""
+    );
+    if (fieldsToShow.length === 0) return null;
     return (
-      <div key={section.title} style={{ marginBottom: 12 }}>
-        <h4 style={{ fontWeight: 600 }}>{section.title}</h4>
-        <div>
-          {section.fields
-            .filter(
-              (field) =>
-                rowData[field] !== null &&
-                rowData[field] !== undefined &&
-                rowData[field] !== ""
-            )
-            .map((field) => (
-              <div key={field}>
-                <strong>{fieldLabels[field] || field}:</strong> {rowData[field]}
-              </div>
-            ))}
+      <div key={section.title} className="mb-8">
+        <div className="text-primary font-semibold text-base mb-2 bg-gray-50 px-2 py-1 rounded">
+          {section.title}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-y-4 gap-x-8 px-2">
+          {fieldsToShow.map((field) => (
+            <div key={field}>
+              <span className="block text-xs text-gray-500 mb-1">
+                {toPascalCase(fieldLabels[field] || field)}
+              </span>
+              <span className="font-medium text-secondary-text-dark">
+                {rowData[field]}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     );
   }
 
-  function expandedRowRenderer(rowData) {
+  // Render a section for array fields (tables)
+  function renderArraySection(section, rowData, fieldLabels) {
+    let arrayData = rowData.additional_header_details?.[section.arrayField];
+    if (!arrayData) return null;
+    if (!Array.isArray(arrayData)) arrayData = [arrayData];
+    if (arrayData.length === 0) return null;
+    const visibleFields = section.fields.filter((field) =>
+      arrayData.some(
+        (item) =>
+          item[field] !== null &&
+          item[field] !== undefined &&
+          item[field] !== ""
+      )
+    );
+    if (visibleFields.length === 0) return null;
     return (
-      <div>
-        {expandedRowConfig.sections.map((section) =>
-          renderSection(section, rowData, expandedRowConfig.fieldLabels)
+      <div key={section.title} className="mb-8">
+        <div className="text-primary font-semibold text-base mb-2 bg-gray-50 px-2 py-1 rounded">
+          {section.title}
+        </div>
+        <div style={{ overflowX: "auto" }}>
+          <table className="min-w-full text-xs border rounded">
+            <thead>
+              <tr>
+                {visibleFields.map((field) => (
+                  <th
+                    key={field}
+                    className="border px-4 py-2 bg-primary text-white font-bold text-left"
+                  >
+                    {toPascalCase(fieldLabels[field] || field)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {arrayData.map((item, idx) => (
+                <tr key={idx}>
+                  {visibleFields.map((field) => (
+                    <td key={field} className="border px-4 py-2">
+                      {item[field] ?? "—"}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }
+
+  // Only show relevant details section based on exposure_type
+  function expandedRowRenderer(rowData) {
+    const exposureType = (rowData.exposure_type || "").toLowerCase();
+    let detailsSectionTitle = "";
+    if (exposureType.includes("debitor"))
+      detailsSectionTitle = "Debitor Details";
+    else if (exposureType.includes("creditor"))
+      detailsSectionTitle = "Creditor Details";
+    else if (exposureType.includes("grn")) detailsSectionTitle = "GRN Details";
+
+    const alwaysShow = ["Header Details", "Line Item Details"];
+    const approvalSection = expandedRowConfig.sections.find(
+      (section) => section.title === "Approval Information"
+    );
+    const detailsSection = expandedRowConfig.sections.find(
+      (section) => section.title === detailsSectionTitle
+    );
+
+    const sectionsToShow = [
+      ...expandedRowConfig.sections.filter((section) =>
+        alwaysShow.includes(section.title)
+      ),
+      ...(detailsSection ? [detailsSection] : []),
+      ...(approvalSection ? [approvalSection] : []),
+    ];
+
+    return (
+      <div className="px-4 py-4">
+        {sectionsToShow.map((section) =>
+          section.arrayField
+            ? renderArraySection(
+                section,
+                rowData,
+                expandedRowConfig.fieldLabels
+              )
+            : renderSection(section, rowData, expandedRowConfig.fieldLabels)
         )}
       </div>
     );
@@ -1056,3 +1622,21 @@ const AllExposureRequest: React.FC = () => {
 };
 
 export default AllExposureRequest;
+
+// Add this above your renderArraySection
+const arrayFieldKeyMap = {
+  input_debitors_customer: "Customer",
+  input_debitors_company: "Company",
+  input_debitors_document_number: "Document Number",
+  input_debitors_posting_date: "Posting Date",
+  input_debitors_amount_in_doc_curr: "Amount in Document Currency",
+  input_debitors_amount_in_local_currency: "Amount in Local Currency",
+  input_debitors_document_currency: "Document Currency",
+  input_debitors_reference: "Reference",
+  input_debitors_assignment: "Assignment",
+  input_debitors_gl_account: "GL Account",
+  input_debitors_special_gl_ind: "Special GL Indicator",
+  input_debitors_bank_reference: "Bank Reference",
+  input_debitors_processing_status: "Processing Status",
+  // ...add for creditors and grn as needed
+};
