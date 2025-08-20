@@ -31,6 +31,7 @@ interface FinancialDetailsProps {
   currencyPairs: OptionType[];
   isLoading: boolean;
   orderType?: string;
+  partial?: boolean;
 }
 
 const valueTypeOptions: OptionType[] = [
@@ -49,6 +50,7 @@ const mockCurrencyPairs: OptionType[] = [
 const FinancialDetails: React.FC<FinancialDetailsProps> = ({
   formData,
   setFormData,
+  partial,
   isLoading,
   orderType,
 }) => {
@@ -154,7 +156,7 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
       const valueQuoteCurrency = inputValue * totalRate;
       setFormData((prev) => ({ ...prev, valueQuoteCurrency }));
     }
-  }, [formData.inputValue, formData.totalRate, setFormData]);
+  }, [formData.inputValue, formData.totalRate, formData.valueType,setFormData]);
 
   // Auto-fill Intervening Rate (Quote to Local) to 1 and disable if both currencies are INR
   useEffect(() => {
@@ -213,7 +215,7 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
           onChange={(val) =>
             setFormData((prev) => ({ ...prev, currencyPair: val }))
           }
-          isDisabled={isLoading}
+          isDisabled={isLoading || partial}
           isClearable={false}
           placeholder="Choose..."
         />
@@ -226,7 +228,7 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
           onChange={(val) =>
             setFormData((prev) => ({ ...prev, valueType: val }))
           }
-          isDisabled={isLoading}
+          isDisabled={isLoading || partial}
           isClearable={false}
           isRequired
           placeholder="Choose..."
@@ -300,6 +302,8 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
             label: "Input Value",
             disabled: false,
             isMultiplied: true,
+            format: (val: number | null) =>
+              val !== null && !isNaN(val) ? val.toLocaleString("en-IN") : "",
           },
           {
             key: "inputValue",
@@ -341,14 +345,16 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
             disabled: false,
             isMultiplied: true,
             placeholder: "Auto Fill",
+            format: (val: number | null) =>
+              val !== null && !isNaN(val) ? val.toLocaleString("en-IN") : "",
           },
           {
             key: "interveningRateQuoteToLocal",
             label: "Intervening Rate (Quote to Local)",
             // Disable if both quote and base currency are INR
-            disabled:  String(formData.quoteCurrency || "").trim().toLowerCase() ===
-    String(formData.valueBaseCurrency || "").trim().toLowerCase()
-,
+            disabled:
+              String(formData.quoteCurrency || "").trim().toLowerCase() ===
+              String(formData.valueBaseCurrency || "").trim().toLowerCase(),
           },
           {
             key: "valueLocalCurrency",
@@ -356,6 +362,8 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
             disabled: true,
             isMultiplied: true,
             placeholder: "Auto Fill",
+            format: (val: number | null) =>
+              val !== null && !isNaN(val) ? val.toLocaleString("en-IN") : "",
           },
         ].map((field, idx) => (
           <div key={idx} className="flex flex-col w-full">
@@ -379,14 +387,25 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
                   ? field.format(formData[field.key as keyof FinancialDetailsResponse] as number | null)
                   : formData[field.key as keyof FinancialDetailsResponse] ?? ""
               }
-              onChange={(e) =>
-                !field.disabled &&
-                setFormData((prev) => ({
-                  ...prev,
-                  [field.key]:
-                    e.target.value === "" ? null : Number(e.target.value.replace(/,/g, "")),
-                }))
-              }
+              onChange={(e) => {
+                if (!field.disabled) {
+                  let value = e.target.value.replace(/,/g, "");
+                  // For Input Value, allow only numbers
+                  if (field.key === "actualValueBaseCurrency") {
+                    if (/^\d*$/.test(value)) {
+                      setFormData((prev) => ({
+                        ...prev,
+                        [field.key]: value === "" ? null : Number(value),
+                      }));
+                    }
+                  } else {
+                    setFormData((prev) => ({
+                      ...prev,
+                      [field.key]: value === "" ? null : Number(value),
+                    }));
+                  }
+                }
+              }}
               required
               disabled={isLoading || field.disabled}
               placeholder={field.placeholder || ""}
