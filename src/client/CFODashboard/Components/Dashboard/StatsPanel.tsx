@@ -16,7 +16,6 @@ const StatCard = ({ title, value, bgColor }: StatCardProps) => (
       transition-transform duration-200
       hover:scale-100 hover:shadow-xl
       active:scale-95 active:shadow-md
-      cursor-pointer
     `}
   >
     {/* Decorative SVG */}
