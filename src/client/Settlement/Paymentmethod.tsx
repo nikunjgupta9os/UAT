@@ -27,21 +27,23 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
 
   return (
     <div className="space-y-8">
-
-      <div className="flex justify-end mb-4">
-        <div>
-          <Button onClick={() => {
-          navigate("/fx-output");
-        }}>
-          Next
-        </Button>
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center">
+          <span className="font-semibold text-lg text-secondary-text-dark">
+            Total Open Amount :&nbsp;
+            <span className="text-primary">{total_open_amount}</span>
+          </span>
         </div>
-      </div>
-      <div className="flex justify-end mb-4">
-        <span className="font-bold text-lg">
-          Total Open Amount:&nbsp;
-          <span className="text-primary">{total_open_amount}</span>
-        </span>
+        <div>
+          <Button
+            color="Fade"
+            onClick={() => {
+              navigate("/fx-output");
+            }}
+          >
+            Next
+          </Button>
+        </div>
       </div>
 
       <div>
@@ -63,8 +65,6 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
           setTotalSettlementAmount={setTotalAdditionalSettlementAmount} // <-- pass setter as prop
         />
       </div>
-
-    
 
       <div>
         <CashSettlementTable

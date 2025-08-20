@@ -319,13 +319,13 @@ const AdditionalForwardDetail: React.FC<HedgingDetailsProps> = ({
   }, [totalSettlementAmount, setTotalSettlementAmount]);
 
   return (
-    <div className="w-full space-y-4 pt-6">
-      <h2 className="text-2xl font-bold text-secondary-text pl-4">
+    <div className="w-full space-y-4">
+      <h2 className="relative top-8 text-2xl font-bold text-secondary-text pl-4">
         Additional Forward Details
       </h2>
       <div className="flex justify-end mb-2">
-        <span className="font-bold text-lg">
-          Total Selected Settlement Amount:&nbsp;
+        <span className="font-semibold text-lg pr-4 text-secondary-text-dark">
+          Total Selected Settlement Amount :&nbsp;
           <span className="text-primary">
             {totalSettlementAmount.toLocaleString(undefined, {
               minimumFractionDigits: 2,
@@ -404,12 +404,12 @@ const AdditionalForwardDetail: React.FC<HedgingDetailsProps> = ({
               ))
             )}
           </tbody>
-          <tfoot className="bg-gray-50 font-semibold sticky bottom-0 z-10">
+          <tfoot className="bg-primary font-semibold sticky bottom-0 z-10">
             <tr>
               {table.getVisibleLeafColumns().map((col) => (
                 <td
                   key={col.id}
-                  className="px-6 py-2 text-sm text-start border-t border-border"
+                  className="px-6 py-2 text-sm text-start border-t border-primary text-white"
                 >
                   {{
                     select: "Total",

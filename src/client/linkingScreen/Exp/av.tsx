@@ -12,6 +12,7 @@ import {
   type ColumnDef,
 } from "@tanstack/react-table";
 import { set } from "date-fns";
+import Button from "../../ui/Button";
 
 type AvailableForwardsData = {
   bu: string;
@@ -274,7 +275,7 @@ const UnlinkedExposure: React.FC<TableProps> = ({
   ) => {
     return (
       <div key={key} className="flex flex-col space-y-1">
-        <label className="font-bold text-secondary-text capitalize">
+        <label className="font-semibold text-sm text-secondary-text capitalize">
           {key}
         </label>
         {isEditing && isEditable ? (
@@ -298,7 +299,7 @@ const UnlinkedExposure: React.FC<TableProps> = ({
             </span>
           </>
         ) : (
-          <span className="font-medium text-primary-lt">
+          <span className="font-medium text-sm text-primary-lt">
             {typeof value === "number"
               ? value.toLocaleString()
               : String(value ?? "—")}
@@ -631,7 +632,8 @@ const UnlinkedExposure: React.FC<TableProps> = ({
                           <div className="bg-secondary-color-lt rounded-lg p-4 shadow-md border border-border">
                             <div className="flex justify-end mb-4">
                               {edit && (
-                                <button
+                                <div>
+                                <Button
                                   onClick={() => {
                                     if (isEditing) {
                                       setIsSaving(true);
@@ -645,6 +647,7 @@ const UnlinkedExposure: React.FC<TableProps> = ({
                                         );
                                         setIsEditing(false);
                                         setIsSaving(false);
+
                                         if (
                                           onEditHedged &&
                                           typeof editValues.hedged === "number"
@@ -658,15 +661,16 @@ const UnlinkedExposure: React.FC<TableProps> = ({
                                       setIsSaving(false);
                                     }
                                   }}
-                                  className="bg-primary text-white px-4 py-1 rounded shadow hover:bg-primary-dark disabled:opacity-60"
-                                  disabled={isSaving}
+                                  color={isEditing ? "Green" : "Fade"} 
+                                  disabled={isSaving} 
                                 >
-                                  {isEditing
-                                    ? isSaving
-                                      ? "Saving..."
-                                      : "Save"
+                                  {isSaving
+                                    ? "Saving..."
+                                    : isEditing
+                                    ? "Save"
                                     : "Edit"}
-                                </button>
+                                </Button>
+                                </div>
                               )}
                             </div>
                             <div className="mb-6">

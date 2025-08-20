@@ -204,7 +204,7 @@ const CashSettlementTable: React.FC<CashSettlementTableProps> = ({
                 min={0}
                 max={availableAmount}
               />
-              <span>{row.original.settlementAmount}</span>
+              {/* <span>{row.original.settlementAmount}</span> */}
             </>
           );
         },
@@ -279,7 +279,7 @@ const CashSettlementTable: React.FC<CashSettlementTableProps> = ({
   // console.log(totalAdditionalSettlementAmount);
 
   return (
-    <div className="w-full space-y-4 pt-6">
+    <div className="w-full space-y-4 pt-8">
       <h2 className="text-2xl font-bold text-secondary-text pl-4">
         Cash Settlement
       </h2>
@@ -326,7 +326,7 @@ const CashSettlementTable: React.FC<CashSettlementTableProps> = ({
                   {row.getVisibleCells().map((cell) => (
                     <td
                       key={cell.id}
-                      className="px-6 py-4 whitespace-nowrap text-sm border-b border-border"
+                      className="px-6 py-4 text-secondary-text-dark whitespace-nowrap text-sm border-b border-border"
                     >
                       {flexRender(
                         cell.column.columnDef.cell,

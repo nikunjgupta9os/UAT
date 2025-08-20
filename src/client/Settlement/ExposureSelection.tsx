@@ -236,10 +236,10 @@ const ExposureSelection = () => {
   ) => {
     return (
       <div key={key} className="flex flex-col space-y-1">
-        <label className="font-bold text-secondary-text capitalize">
+        <label className="font-semibold text-sm text-secondary-text capitalize">
           {key}
         </label>
-        <span className="font-medium text-primary-lt">
+        <span className="font-medium text-sm text-primary-lt">
           {typeof value === "number"
             ? value.toLocaleString()
             : String(value ?? "—")}
@@ -1259,7 +1259,7 @@ const endIndex = Math.min(
                           >
                             <div className="bg-secondary-color-lt rounded-lg p-4 shadow-md border border-border">
                               <div className="mb-6">
-                                <div className="font-semibold mb-2 text-primary-lt">
+                                <div className="text-md font-medium text-primary mb-3 border-b border-primary-md pb-2">
                                   Header Details
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-8 gap-4">
@@ -1285,7 +1285,7 @@ const endIndex = Math.min(
                               </div>
 
                               <div className="mb-6">
-                                <div className="font-semibold mb-2 text-primary-lt">
+                                <div className="text-md font-medium text-primary mb-3 border-b border-primary-md pb-2">
                                   Line Item Details
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-8 gap-4">

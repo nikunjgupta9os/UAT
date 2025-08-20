@@ -251,11 +251,11 @@ const RateTable: React.FC<ExtendedRateTableProps> = ({
         <table className="w-full border-collapse">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id} className="bg-primary-md">
+              <tr key={headerGroup.id} className="bg-primary-lg text-secondary-text-dark">
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="px-4 py-3 text-left text-sm font-semibold text-header-color border border-border"
+                    className="px-4 py-3 text-left text-sm font-semibold border border-border"
                   >
                     {header.isPlaceholder
                       ? null

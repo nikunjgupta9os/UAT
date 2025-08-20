@@ -129,7 +129,7 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
 
     return (
       <div key={key} className="flex flex-col">
-        <label className="font-bold text-secondary-text">{label}</label>
+        <label className="text-sm font-semibold text-secondary-text">{label}</label>
         {isEditing && isEditable ? (
           typeof row.original[typedKey] === "boolean" ? (
             <div>
@@ -152,7 +152,7 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
             />
           )
         ) : (
-          <span className="font-medium text-primary-lt">{value ?? "—"}</span>
+          <span className="text-sm font-medium text-primary-lt">{value ?? "—"}</span>
         )}
       </div>
     );

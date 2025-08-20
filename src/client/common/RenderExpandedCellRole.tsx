@@ -218,7 +218,7 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
 
     return (
       <div key={key} className="flex flex-col space-y-1">
-        <label className="font-bold text-secondary-text">{label}</label>
+        <label className="text-sm font-semibold text-secondary-text">{label}</label>
         {isEditing && isEditable ? (
           isTimeField ? (
             // Render time input for time fields
@@ -247,7 +247,7 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
             />
           )
         ) : (
-          <span className="font-medium text-primary-lt">{value ?? "—"}</span>
+          <span className="text-sm font-medium text-primary-lt">{value ?? "—"}</span>
         )}
       </div>
     );

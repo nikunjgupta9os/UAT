@@ -492,9 +492,9 @@ const Awaitinguser: React.FC = () => {
             }
           >
             {expandedRows.has(row.id) ? (
-              <ChevronUp className="w-4 h-4 text-secondary-text" />
+              <ChevronUp className="w-4 h-4 text-primary" />
             ) : (
-              <ChevronDown className="w-4 h-4 text-secondary-text" />
+              <ChevronDown className="w-4 h-4 text-primary" />
             )}
           </button>
         ),

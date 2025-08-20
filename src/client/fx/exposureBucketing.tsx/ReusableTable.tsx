@@ -202,7 +202,7 @@ function ExpandedRow<ExposureBucketing extends WithId>({
       else color = "text-red-600";
       return (
         <div key={key} className="flex flex-col space-y-1">
-          <label className="font-bold text-secondary-text">{label}</label>
+          <label className="font-semibold text-sm text-secondary-text">{label}</label>
           <span className={`text-sm font-semibold ${color}`}>
             {percentage.toFixed(2)}%
           </span>
@@ -214,7 +214,7 @@ function ExpandedRow<ExposureBucketing extends WithId>({
 
     return (
       <div key={key} className="flex flex-col space-y-1">
-        <label className="font-bold text-secondary-text">{label}</label>
+        <label className="font-semibold text-sm text-secondary-text">{label}</label>
         {isEditing && isEditable ? (
           key === "inco" ? (
             <>
@@ -275,7 +275,7 @@ function ExpandedRow<ExposureBucketing extends WithId>({
             <span className="text-secondary-text">—</span>
           )
         ) : (
-          <span className="font-medium text-primary-lt">
+          <span className="font-medium text-sm text-primary-lt">
             {String(value ?? "—")}
           </span>
         )}
@@ -289,21 +289,23 @@ function ExpandedRow<ExposureBucketing extends WithId>({
         <div className="bg-secondary-color-lt rounded-lg p-4 shadow-md border border-border">
           <div className="flex justify-end items-end mb-4">
             {edit && 
-              <button
-              onClick={handleEditToggle}
-              className="bg-primary text-white px-4 py-1 rounded shadow hover:bg-primary-dark disabled:opacity-60"
-              disabled={isSaving}
-            >
-              {isEditing ? (isSaving ? "Saving..." : "Save") : "Edit"}
-            </button>
+              <div>
+                <Button
+                  onClick={handleEditToggle}
+                  color={isEditing ? "Green" : "Fade"}
+                  disabled={isSaving}
+                >
+                  {isEditing ? "Save" : "Edit"}
+                </Button>
+              </div>
             }
             
           </div>
           {config.sections.map((section) => (
             <div key={section.title} className="mb-6">
-              <div className="font-semibold mb-2 text-primary-lt">
+              <h5 className="text-md font-medium text-primary mb-3 border-b border-primary-md pb-2">
                 {section.title}
-              </div>
+              </h5>
               <div className="grid grid-cols-1 md:grid-cols-8 gap-4">
                 {section.fields.map((field) => renderField(field))}
               </div>

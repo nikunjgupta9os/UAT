@@ -72,6 +72,7 @@ const CurrencyExposure = () => {
 
     fetchCurrencyData();
   }, []);
+  
   return (
     <div 
     className="w-full h-full bg-gradient-to-br from-[#06923E] to-[#67AE6E] rounded-xl shadow-lg p-4 text-white relative overflow-hidden

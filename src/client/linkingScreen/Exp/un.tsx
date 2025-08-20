@@ -12,6 +12,8 @@ import {
   type ColumnDef,
 } from "@tanstack/react-table";
 import { it } from "date-fns/locale";
+import Button from "../../ui/Button";
+
 // import type AvailableForwards from "../availableForwards";
 
 type LinkedSummaryData = {
@@ -230,7 +232,7 @@ const AvailableForward: React.FC<TableProps> = ({
     const isEditable = true;
     return (
       <div key={key} className="flex flex-col space-y-1">
-        <label className="font-bold text-secondary-text capitalize">
+        <label className="font-semibold text-sm text-secondary-text capitalize">
           {key}
         </label>
         {isEditing && isEditable ? (
@@ -254,7 +256,7 @@ const AvailableForward: React.FC<TableProps> = ({
             </span>
           </>
         ) : (
-          <span className="font-medium text-primary-lt">
+          <span className="font-medium text-sm text-primary-lt">
             {String(value ?? "—")}
           </span>
         )}
@@ -596,35 +598,37 @@ const AvailableForward: React.FC<TableProps> = ({
                           <div className="bg-secondary-color-lt rounded-lg p-4 shadow-md border border-border">
                             <div className="flex justify-end mb-4">
                               {edit && (
-                                <button
-                                  onClick={() => {
-                                    if (isEditing) {
-                                      setIsSaving(true);
-                                      setTimeout(() => {
-                                        setData((prev) =>
-                                          prev.map((item, idx) =>
-                                            idx === row.index
-                                              ? { ...item, ...editValues }
-                                              : item
-                                          )
-                                        );
-                                        setIsEditing(false);
-                                        setIsSaving(false);
-                                      }, 500);
-                                    } else {
-                                      setEditValues(row.original);
-                                      setIsEditing(true);
-                                    }
-                                  }}
-                                  className="bg-primary text-white px-4 py-1 rounded shadow hover:bg-primary-dark disabled:opacity-60"
-                                  disabled={isSaving}
-                                >
-                                  {isEditing
-                                    ? isSaving
+                                <div>
+                                  <Button
+                                    onClick={() => {
+                                      if (isEditing) {
+                                        setIsSaving(true);
+                                        setTimeout(() => {
+                                          setData((prev) =>
+                                            prev.map((item, idx) =>
+                                              idx === row.index
+                                                ? { ...item, ...editValues }
+                                                : item
+                                            )
+                                          );
+                                          setIsEditing(false);
+                                          setIsSaving(false);
+                                        }, 500);
+                                      } else {
+                                        setEditValues(row.original);
+                                        setIsEditing(true);
+                                      }
+                                    }}
+                                    color={isEditing ? "Green" : "Fade"} // dynamic color
+                                    disabled={isSaving} // disables while saving
+                                  >
+                                    {isSaving
                                       ? "Saving..."
-                                      : "Save"
-                                    : "Edit"}
-                                </button>
+                                      : isEditing
+                                      ? "Save"
+                                      : "Edit"}
+                                  </Button>
+                                </div>
                               )}
                             </div>
                             <div className="mb-6">

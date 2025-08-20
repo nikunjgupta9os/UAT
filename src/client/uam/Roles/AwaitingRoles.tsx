@@ -500,15 +500,15 @@ const AwaitingApproval: React.FC = () => {
         cell: ({ row }) => (
           <button
             onClick={() => toggleRowExpansion(row.id)}
-            className="p-2 hover:bg-primary-xl rounded transition-colors"
+            className="p-2 hover:bg-primary-xl text-primary rounded-md transition-colors"
             aria-label={
               expandedRows.has(row.id) ? "Collapse row" : "Expand row"
             }
           >
             {expandedRows.has(row.id) ? (
-              <ChevronUp className="w-4 h-4 text-secondary-text" />
+              <ChevronUp className="w-4 h-4 text-primary" />
             ) : (
-              <ChevronDown className="w-4 h-4 text-secondary-text" />
+              <ChevronDown className="w-4 h-4 text-primary" />
             )}
           </button>
         ),

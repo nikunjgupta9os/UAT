@@ -580,7 +580,7 @@ const TransactionTable: React.FC = () => {
 
     return (
       <div key={key} className="flex flex-col space-y-1">
-        <label className="font-bold text-secondary-text capitalize">
+        <label className="font-semibold text-sm text-secondary-text capitalize">
           {key.replace(/([A-Z])/g, " $1").trim()}
         </label>
         {isEditing && isEditable ? (
@@ -628,7 +628,7 @@ const TransactionTable: React.FC = () => {
             </span>
           </>
         ) : (
-          <span className="font-medium text-primary-lt">
+          <span className="font-medium text-sm text-primary-lt">
             {key === "transactionTimestamp"
               ? new Date(value).toLocaleString()
               : typeof value === "number"
@@ -1230,7 +1230,7 @@ const TransactionTable: React.FC = () => {
 
                             {/* Basic Information */}
                             <div className="mb-6">
-                              <div className="font-semibold mb-2 text-primary-lt">
+                              <div className="text-md font-medium text-primary mb-3 border-b border-primary-md pb-2">
                                 Basic Information
                               </div>
                               <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
@@ -1264,7 +1264,7 @@ const TransactionTable: React.FC = () => {
 
                             {/* Entity Hierarchy */}
                             <div className="mb-6">
-                              <div className="font-semibold mb-2 text-primary-lt">
+                              <div className="text-md font-medium text-primary mb-3 border-b border-primary-md pb-2">
                                 Entity Hierarchy
                               </div>
                               <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
@@ -1290,7 +1290,7 @@ const TransactionTable: React.FC = () => {
 
                             {/* Currency & Rates */}
                             <div className="mb-6">
-                              <div className="font-semibold mb-2 text-primary-lt">
+                              <div className="text-md font-medium text-primary mb-3 border-b border-primary-md pb-2">
                                 Currency & Rates
                               </div>
                               <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
@@ -1325,7 +1325,7 @@ const TransactionTable: React.FC = () => {
 
                             {/* Values */}
                             <div className="mb-6">
-                              <div className="font-semibold mb-2 text-primary-lt">
+                              <div className="text-md font-medium text-primary mb-3 border-b border-primary-md pb-2">
                                 Values
                               </div>
                               <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
@@ -1353,7 +1353,7 @@ const TransactionTable: React.FC = () => {
 
                             {/* Dates & Settlement */}
                             <div className="mb-6">
-                              <div className="font-semibold mb-2 text-primary-lt">
+                              <div className="text-md font-medium text-primary mb-3 border-b border-primary-md pb-2">
                                 Dates & Settlement
                               </div>
                               <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
@@ -1388,7 +1388,7 @@ const TransactionTable: React.FC = () => {
 
                             {/* Additional Details */}
                             <div className="mb-6">
-                              <div className="font-semibold mb-2 text-primary-lt">
+                              <div className="text-md font-medium text-primary mb-3 border-b border-primary-md pb-2">
                                 Additional Details
                               </div>
                               <div className="grid grid-cols-1 md:grid-cols-7 gap-4">

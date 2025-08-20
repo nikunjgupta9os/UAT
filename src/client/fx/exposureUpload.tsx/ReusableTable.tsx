@@ -778,7 +778,7 @@ function ExpandedRow<T extends EditableRowData>({
 
     return (
       <div key={key} className="flex flex-col space-y-1">
-        <label className="font-bold text-secondary-text">{label}</label>
+        <label className="text-sm font-semibold text-secondary-text">{label}</label>
         {isEditing && isEditable ? (
           typeof row.original[key as keyof T] === "boolean" ? (
             <select
@@ -799,7 +799,7 @@ function ExpandedRow<T extends EditableRowData>({
             />
           )
         ) : (
-          <span className="font-medium text-primary-lt">
+          <span className="font-medium text-sm text-primary-lt">
             {String(value ?? "—")}
           </span>
         )}
@@ -817,7 +817,10 @@ function ExpandedRow<T extends EditableRowData>({
             </h4>
             {edit && (
               <div>
-                <Button onClick={handleEditToggle}>
+                <Button
+                  onClick={handleEditToggle}
+                  color={isEditing ? "Green" : "Fade"}
+                >
                   {isEditing ? "Save" : "Edit"}
                 </Button>
               </div>

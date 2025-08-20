@@ -223,7 +223,7 @@ const AllUsers: React.FC = () => {
               <input
                 type="number"
                 defaultValue={value}
-                className="w-24 px-2 py-1 rounded text-sm text-secondary-text bg-secondary-color border border-border"
+                className="w-24 px-2 py-1 rounded text-sm text-secondary-text bg-secondary-color border border-border outline-none "
                 onBlur={(e) => {
                   const newValue = Number(e.target.value);
                   if (newValue !== value) {
@@ -255,7 +255,7 @@ const AllUsers: React.FC = () => {
               <input
                 type="number"
                 defaultValue={value}
-                className="w-24 px-2 py-1 rounded text-sm text-secondary-text bg-secondary-color border border-border"
+                className="w-24 px-2 py-1 rounded text-sm text-secondary-text bg-secondary-color border border-border outline-none"
                 onBlur={(e) => {
                   const newValue = Number(e.target.value);
                   if (newValue !== value) {
@@ -287,7 +287,7 @@ const AllUsers: React.FC = () => {
               <input
                 type="number"
                 defaultValue={value}
-                className="w-24 px-2 py-1 rounded text-sm text-secondary-text bg-secondary-color border border-border"
+                className="w-24 px-2 py-1 rounded text-sm text-secondary-text bg-secondary-color border border-border outline-none"
                 onBlur={(e) => {
                   const newVal = Number(e.target.value);
                   if (newVal !== value) {
@@ -319,7 +319,7 @@ const AllUsers: React.FC = () => {
               <input
                 type="number"
                 defaultValue={value}
-                className="w-24 px-2 py-1 rounded text-sm text-secondary-text bg-secondary-color border border-border"
+                className="w-24 px-2 py-1 rounded text-sm text-secondary-text bg-secondary-color border border-border outline-none"
                 onBlur={(e) => {
                   const newVal = Number(e.target.value);
                   if (newVal !== value) {
@@ -350,7 +350,7 @@ const AllUsers: React.FC = () => {
               <input
                 type="number"
                 defaultValue={value}
-                className="w-24 px-2 py-1 rounded text-sm text-secondary-text bg-secondary-color border border-border"
+                className="w-24 px-2 py-1 rounded text-sm text-secondary-text bg-secondary-color border border-border outline-none"
                 onBlur={(e) => {
                   const newVal = Number(e.target.value);
                   if (newVal !== value) {
@@ -381,7 +381,7 @@ const AllUsers: React.FC = () => {
               <input
                 type="number"
                 defaultValue={value}
-                className="w-24 px-2 py-1 rounded text-sm text-secondary-text bg-secondary-color border border-border"
+                className="w-24 px-2 py-1 rounded text-sm text-secondary-text bg-secondary-color border border-border outline-none"
                 onBlur={(e) => {
                   const newVal = Number(e.target.value);
                   if (newVal !== value) {

@@ -444,9 +444,9 @@ const LinkingScreen = () => {
         </div>
 
         <div className="pt-4 flex flex-wrap justify-end gap-4 items-end">
-          <div className="bg-primary text-white rounded w-[200px] md:w-[200px] lg:w-[200px] flex items-center justify-center">
+          <div className=" rounded w-[200px] md:w-[200px] lg:w-[200px] flex items-center justify-center">
             {Visibility.add && (
-              <Button color="Green" onClick={handleLinked}>Link Selected</Button>
+              <Button color="Fade" onClick={handleLinked}>Link Selected</Button>
             )}
           </div>
         </div>
