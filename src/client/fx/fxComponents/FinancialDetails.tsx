@@ -180,7 +180,6 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
   }, [
     formData.quoteCurrency,
     formData.valueBaseCurrency,
-    formData.interveningRateQuoteToLocal,
     setFormData,
   ]);
 

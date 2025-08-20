@@ -50,8 +50,8 @@ const StatCard = ({ title, value, bgColor }: StatCardProps) => (
           {title}
         </h2>
       </div>
-      <div className="flex justify-center mt-2 items-end flex-1">
-        <span className="text-4xl font-bold text-white">{value}</span>
+      <div className="flex justify-center mt-2 items-end flex-1 ">
+        <span className="text-3xl md:text-4xl font-bold text-white duration-200 ease-in-out hover:scale-[1.05]">{value}</span>
       </div>
     </div>
 
