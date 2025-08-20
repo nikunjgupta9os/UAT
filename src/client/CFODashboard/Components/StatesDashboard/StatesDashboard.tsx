@@ -117,20 +117,20 @@ const FinancialDashboard = () => {
             </div>
           </div>
           <div className="flex justify-center my-2">
-            <span className="inline-flex text-4xl font-bold text-primary bg-white/30 px-8 py-2 rounded-xl shadow-lg">
+            <span className="hover:scale-105 transition-all duration-200 ease-in-out inline-flex text-4xl font-bold text-primary bg-white/30 px-8 py-2 rounded-xl shadow-lg">
               {formatCurrency(totalPayables)}
             </span>
           </div>
           <div className="flex-1 overflow-y-auto mt-2 pr-2 custom-scrollbar">
-            <div className="space-y-1">
+            <div className="space-y-1 px-1">
               {payablesData.map((item) => (
-                <div key={item.currency} className="flex justify-between items-center py-1 px-3 bg-white/70 rounded-lg hover:bg-white/50 transition-colors shadow-sm">
+                <div key={item.currency} className="hover:scale-[1.02] transition-all duration-200 ease-in-out flex justify-between items-center py-1 px-3 bg-white/70 rounded-lg hover:bg-white/50 shadow-sm">
                   <span className="text-slate-600 text-md font-medium flex items-center">
                     <span className="w-3 h-3 bg-primary-lt rounded-full mr-2"></span>
                     {item.currency}
                   </span>
-                  <span className="text-slate-700 text-md font-semibold bg-primary-lg px-2 py-1 rounded text-center" style={{ width: '6.5rem', display: 'inline-block' }}>
-                    {item.amount}
+                  <span className="text-slate-700 text-md font-semibold bg-primary-lg px-2 py-1 rounded text-center 
+             w-20 md:w-26">{item.amount}
                   </span>
                 </div>
               ))}
@@ -164,19 +164,19 @@ const FinancialDashboard = () => {
             </div>
           </div>
           <div className="flex justify-center my-2">
-            <span className="inline-flex text-4xl font-bold text-green-600 bg-white/30 px-8 py-2 rounded-xl shadow-lg">
+            <span className="hover:scale-105 transition-all duration-200 ease-in-out inline-flex text-4xl font-bold text-green-600 bg-white/30 px-8 py-2 rounded-xl shadow-lg">
               {formatCurrency(totalReceivables)}
             </span>
           </div>
           <div className="flex-1 overflow-y-auto mt-2 pr-2 custom-scrollbar">
-            <div className="space-y-1">
+            <div className="space-y-1 px-1">
               {receivablesData.map((item) => (
-                <div key={item.currency} className="flex justify-between items-center py-1 px-3 bg-white/70 rounded-lg hover:bg-[#b9e6cbd0] transition-colors shadow-sm">
+                <div key={item.currency} className="hover:scale-[1.02] transition-all duration-200 ease-in-out flex justify-between items-center py-1 px-3 bg-white/70 rounded-lg hover:bg-[#b9e6cbd0] shadow-sm">
                   <span className="text-slate-700 text-md font-medium flex items-center">
                     <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
                     {item.currency}
                   </span>
-                  <span className="text-slate-700 text-md font-semibold bg-green-400 px-2 py-1 rounded text-center" style={{ width: '6.5rem', display: 'inline-block' }}>
+                  <span className="text-slate-700 text-md font-semibold bg-primary-lg px-2 py-1 rounded text-center w-20 md:w-26">
                     {item.amount}
                   </span>
                 </div>
@@ -217,20 +217,20 @@ const FinancialDashboard = () => {
               {forwardsData.map((bank, index) => (
                 <div 
                   key={index} 
-                  className="bg-white/30 backdrop-blur-sm border border-teal-200/50 rounded-lg py-6 px-4 shadow-sm hover:shadow-md transition-all duration-200"
+                  className="bg-white/30 backdrop-blur-sm border border-teal-200/50 rounded-lg py-6 px-4 shadow-sm hover:shadow-md hover:scale-[scale-1.01] transition-all duration-200"
                 >
                   <div className="text-md font-semibold text-slate-600 mb-2 pb-1 border-b border-teal-200/30 flex items-center">
                     <div className="w-3 h-3 bg-teal-400 rounded-full mr-2"></div>
                     {bank.bank}
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-1 px-1">
                     {bank.trades.map((trade, tradeIndex) => (
                       <div 
                         key={tradeIndex} 
-                        className="flex justify-between items-center py-1 px-2 bg-white/50 rounded hover:bg-white/70 transition-colors"
+                        className="hover:scale-[1.02] transition-all duration-200 ease-in-out flex justify-between items-center py-1 px-2 bg-white/50 rounded hover:bg-white/70 "
                       >
                         <span className="text-sm font-semibold text-slate-700">{trade}</span>
-                        <span className="text-md font-semibold text-[#2d6341] bg-white/50 px-2 py-0.5 rounded" style={{ width: '6rem', display: 'inline-block' }}>
+                        <span className="text-md font-semibold text-[#2d6341] bg-white/50 px-2 py-0.5 rounded  text-center w-20 md:w-26">
                           {bank.amounts[tradeIndex]}
                         </span>
                       </div>
@@ -268,9 +268,9 @@ const FinancialDashboard = () => {
             </div>
           </div>
           <div className="flex-1 overflow-y-auto pr-2 mt-2 custom-scrollbar">
-            <div className="space-y-1">
+            <div className="space-y-1 px-1">
               {rolloversData.map((item, index) => (
-                <div key={index} className="flex justify-between items-center py-1 px-3 bg-white/70 rounded-lg hover:bg-white transition-colors shadow-sm">
+                <div key={index} className="hover:scale-[1.02] transition-all duration-200 ease-in-out flex justify-between items-center py-1 px-3 bg-white/70 rounded-lg hover:bg-white shadow-sm">
                   <span className="text-slate-700 text-sm font-semibold flex items-center">
                     {index === 0 ? (
                       <span className="w-3 h-3 bg-emerald-500 rounded-full mr-2 animate-pulse"></span>

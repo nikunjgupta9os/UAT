@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-
 interface StatCardProps {
   title: string;
   value: string;
@@ -13,9 +12,8 @@ const StatCard = ({ title, value, bgColor }: StatCardProps) => (
     className={`
       ${bgColor}
       text-secondary-color rounded-2xl shadow-md p-4 w-full relative my-2
-      transition-transform duration-200
-      hover:scale-100 hover:shadow-xl
       active:scale-95 active:shadow-md
+      cursor-pointer hover:scale-105 transition-all duration-200 ease-in-out 
     `}
   >
     {/* Decorative SVG */}
@@ -49,13 +47,13 @@ const StatCard = ({ title, value, bgColor }: StatCardProps) => (
           {title}
         </h2>
       </div>
-      <div className="flex justify-center mt-2 items-end flex-1 ">
-        <span className="text-3xl md:text-4xl font-bold text-white duration-200 ease-in-out hover:scale-[1.05]">{value}</span>
+      <div className="flex justify-center mt-2 items-end flex-1">
+        <span className="text-3xl md:text-4xl font-bold text-white">{value}</span>
       </div>
     </div>
-
   </div>
 );
+
 const StatsPanel = () => {
   const [hedgedExposure, setHedgedExposure] = useState("Loading...");
   const [unhedgedExposure, setUnhedgedExposure] = useState("Loading...");
@@ -85,16 +83,24 @@ const StatsPanel = () => {
           waetRes,
           waftRes,
         ] = await Promise.all([
-          axios.get("https://backend-slqi.onrender.com/api/forwardDash/hedge-ratio"),
-          axios.get("https://backend-slqi.onrender.com/api/forwardDash/total-usd"),
-          axios.get("https://backend-slqi.onrender.com/api/exposureUpload/USDsum-headers"),
-          axios.get("https://backend-slqi.onrender.com/api/forwardDash/total-bankmargin"),
-          axios.get("https://backend-slqi.onrender.com/api/forwardDash/buysell"),
+          axios.get(
+            "https://backend-slqi.onrender.com/api/forwardDash/hedge-ratio"
+          ),
+          axios.get(
+            "https://backend-slqi.onrender.com/api/forwardDash/total-usd"
+          ),
+          axios.get(
+            "https://backend-slqi.onrender.com/api/exposureUpload/USDsum-headers"
+          ),
+          axios.get(
+            "https://backend-slqi.onrender.com/api/forwardDash/total-bankmargin"
+          ),
+          axios.get(
+            "https://backend-slqi.onrender.com/api/forwardDash/buysell"
+          ),
           axios.get("https://backend-slqi.onrender.com/api/forwardDash/waet"),
           axios.get("https://backend-slqi.onrender.com/api/forwardDash/waht"),
         ]);
-
-
 
         // Hedge Ratio
         setHedgeRatio(
@@ -112,18 +118,23 @@ const StatsPanel = () => {
         setUnhedgedExposure(`$${(unhedgedVal - hedgedVal).toFixed(2)}M`);
 
         // Bank Margin
-        const bankMarginVal = (bankMarginRes.data?.totalBankmargin ?? 0) / 1_000_000;
+        const bankMarginVal =
+          (bankMarginRes.data?.totalBankmargin ?? 0) / 1_000_000;
         setBankMargin(`$${bankMarginVal.toFixed(4)}M`);
 
         // Buy/Sell Forwards
         setBuyForwards(
           buySellRes.data?.buyForwardsUSD
-            ? `$${(parseFloat(buySellRes.data.buyForwardsUSD) / 1_000_000).toFixed(2)}M`
+            ? `$${(
+                parseFloat(buySellRes.data.buyForwardsUSD) / 1_000_000
+              ).toFixed(2)}M`
             : "N/A"
         );
         setSellForwards(
           buySellRes.data?.sellForwardsUSD
-            ? `$${(parseFloat(buySellRes.data.sellForwardsUSD) / 1_000_000).toFixed(2)}M`
+            ? `$${(
+                parseFloat(buySellRes.data.sellForwardsUSD) / 1_000_000
+              ).toFixed(2)}M`
             : "N/A"
         );
 
@@ -157,9 +168,8 @@ const StatsPanel = () => {
   }, []);
 
   return (
-    <div className="space-y-2 w-full">
-      {/* Row 1 */}
-      <div className="grid grid-cols-5 gap-x-3 w-full">
+    <div className="flex flex-wrap gap-3 w-full">
+      <div className="flex w-full gap-3">
         <StatCard
           title="Overall Hedge Ratio"
           value={loading ? "Loading..." : hedgeRatio}
@@ -186,33 +196,33 @@ const StatsPanel = () => {
           bgColor="bg-gradient-to-tr from-[#80ed99] to-[#5c4d7a]"
         />
       </div>
-      {/* Row 2 */}
-      <div className="grid grid-cols-5 gap-x-3 w-full">
-        <StatCard
-          title="Mark-to-Market P&L"
-          value={markToMarketPL}
-          bgColor="bg-gradient-to-b from-teal-500 to-teal-600"
-        />
-        <StatCard
-          title="Cost of Premium Paid (YTD)"
-          value={costOfPremiumPaid}
-          bgColor="bg-gradient-to-bl from-green-400 to-green-700"
-        />
-        <StatCard
-          title="Cost of Bank Margin (YTD)"
-          value={loading ? "Loading..." : bankMargin}
-          bgColor="bg-gradient-to-l from-[#429d5c] to-[#68ba7fe9]"
-        />
-        <StatCard //
-          title="Avg Exposure Maturity"
-          value={loading ? "Loading..." : avgExposureMaturity}
-         bgColor="bg-gradient-to-r from-[#65b67cf7] to-green-700"
-        />
-        <StatCard //
-          title="Avg Forward Maturity"
-          value={loading ? "Loading..." : avgForwardMaturity}
-          bgColor="bg-gradient-to-r from-[#65b67cf7] to-green-700"
-        />
+
+      <div className="flex w-full gap-3">
+      <StatCard
+        title="Mark-to-Market P&L"
+        value={markToMarketPL}
+        bgColor="bg-gradient-to-b from-teal-500 to-teal-600"
+      />
+      <StatCard
+        title="Cost of Premium Paid (YTD)"
+        value={costOfPremiumPaid}
+        bgColor="bg-gradient-to-bl from-green-400 to-green-700"
+      />
+      <StatCard
+        title="Cost of Bank Margin (YTD)"
+        value={loading ? "Loading..." : bankMargin}
+        bgColor="bg-gradient-to-l from-[#429d5c] to-[#68ba7fe9]"
+      />
+      <StatCard //
+        title="Avg Exposure Maturity"
+        value={loading ? "Loading..." : avgExposureMaturity}
+        bgColor="bg-gradient-to-r from-[#65b67cf7] to-green-700"
+      />
+      <StatCard //
+        title="Avg Forward Maturity"
+        value={loading ? "Loading..." : avgForwardMaturity}
+        bgColor="bg-gradient-to-r from-[#65b67cf7] to-green-700"
+      />
       </div>
     </div>
   );

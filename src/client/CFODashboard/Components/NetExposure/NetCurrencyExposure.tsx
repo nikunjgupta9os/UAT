@@ -121,9 +121,9 @@ const CurrencyExposure = () => {
         {/* Currency List */}
         <div className="max-h-[460px] overflow-y-auto">
           <div 
-          className="space-y-3">
+          className="space-y-3 px-1 py-1">
             {currencyData.map((currency, _) => (
-              <div key={currency.currency} className="bg-white/20 backdrop-blur-sm rounded-lg p-3 border border-white/10">
+              <div key={currency.currency} className="bg-white/20 hover:scale-[1.02] transition-all duration-200 ease-in-out  backdrop-blur-sm rounded-lg p-3 border border-white/10">
                 {/* Currency Header */}
                 <div className="flex justify-between items-center mb-1">
                   <div className="flex items-center gap-2">
@@ -148,7 +148,7 @@ const CurrencyExposure = () => {
         </div>
         {/* Summary Footer */}
         <div>
-          <div className="mt-5 p-3 items-end bg-white/30 backdrop-blur-sm rounded-lg border border-white/10">
+          <div className="mt-5 p-3 items-end bg-white/30 backdrop-blur-sm rounded-lg border hover:scale-[1.02] transition-all duration-200 ease-in-out border-white/10">
             <div className="flex justify-between items-center text-md">
               <span className="text-white font-medium">Total Net Exposure</span>
               <span className="text-white font-medium text-xl">{formatCurrency(totalNetExposure)}</span>
