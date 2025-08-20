@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { Handshake } from "lucide-react";
 
 type CurrencyData = {
   code: string;
@@ -61,41 +62,46 @@ const BusinessUnitExposureCard: React.FC = () => {
     return colors[code] || "text-gray-600";
   };
 
-  const getCardGradient = (index: number) => {
-    const gradients = [
-      "bg-gradient-to-br from-[#129990CC] to-teal-500",
-      "bg-gradient-to-tl from-[#129990CC] to-teal-500",
-      "bg-gradient-to-b from-[#129990CC] to-teal-500",
-      "bg-gradient-to-t from-[#129990CC] to-teal-500",
-    ];
-    return gradients[index % gradients.length];
-  };
-
-  if (loading) {
-    return (
-      <div className="bg-white rounded-xl shadow-sm border border-primary-lg p-6 text-center">
-        <p>Loading business unit data...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-white rounded-xl shadow-sm border border-primary-lg p-6 text-center text-red-500">
-        <p>{error}</p>
-      </div>
-    );
-  }
 
   return (
-    <div className="bg-gradient-to-bl from-[#b2ffe2] to-[#cdffec] rounded-xl shadow-sm border border-primary-lg overflow-hidden">
-      <div className="bg-gradient-to-br from-[#488987] to-[#4CC2B9] px-6 py-4 border-b border-primary-lt">
-        <h3 className="text-xl font-semibold text-white">
-          Business Unit Exposure
-        </h3>
-        <p className="text-md text-white">
-          Net exposure and hedging status by business unit
-        </p>
+    <div className="bg-gradient-to-bl from-[#76c893] to-[#02c39a] rounded-xl shadow-sm border border-primary-lg overflow-hidden pb-4">
+      <div className="absolute inset-0 opacity-10">
+        <svg
+          className="w-full h-full"
+          width="100%"
+          height="100%"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <pattern
+              id="currency-grid-pattern"
+              width="40"
+              height="40"
+              patternUnits="userSpaceOnUse"
+            >
+              <path
+                d="M 40 0 L 0 0 0 40"
+                fill="none"
+                stroke="#ffffff"
+                strokeWidth="1"
+              />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#currency-grid-pattern)" />
+        </svg>
+      </div>
+      <div className="flex items-center pt-4 pl-6 gap-2 mb-4">
+        <div className="w-12 h-12 bg-white/40 backdrop-blur-md rounded-lg border border-emerald-400/30 shadow-md flex items-center justify-center">
+          <Handshake className="w-8 h-8 text-white" />
+        </div>
+        <div className="text-left ">
+          <h2 className="text-xl font-semibold text-white">
+            Business Unit Exposure
+          </h2>
+          <p className="text-white text-md">
+            Net exposure and hedging status by business unit
+          </p>
+        </div>
       </div>
 
       <div
@@ -108,14 +114,13 @@ const BusinessUnitExposureCard: React.FC = () => {
         {businessUnits.map((unit, index) => (
           <div
             key={unit.name}
-            className={`border border-primary-lg rounded-lg p-4 hover:shadow-md transition-shadow ${getCardGradient(
-              index
-            )}`}
+            className={`border border-white/30 rounded-lg p-4 hover:shadow-md transition-shadow bg-gray-900/20`}
           >
             <div className="flex justify-between items-center mb-3">
-              <h4 className="font-medium text-lg text-white">
-                {unit.name}
-              </h4>
+              <div className="flex items-center">
+              <div className="w-3 h-3 bg-[#7FEB98] rounded-full mr-2"></div>
+              <h4 className="font-medium text-lg text-white">{unit.name}</h4>
+              </div>
               <span className="text-2xl font-bold text-white">
                 {unit.total}
               </span>
@@ -130,19 +135,19 @@ const BusinessUnitExposureCard: React.FC = () => {
               {unit.currencies.map((currency) => (
                 <div
                   key={`${unit.name}-${currency.code}`}
-                  className="flex justify-between items-center p-2 bg-white/20 backdrop-blur-sm rounded-lg border-2 border-white/30"
+                  className="flex justify-between items-center p-2 bg-white/20 backdrop-blur-sm rounded-lg border-2 border-white/30 transition-all duration-200 ease-in-out hover:scale-[1.01] hover:shadow-lg hover:bg-white/30"
                 >
                   <div className="flex items-center">
                     <span
                       className={`w-3 h-3 rounded-full mr-2 ${getCurrencyColor(
                         currency.code
-                      )} bg-opacity-30`}
+                      )}`}
                     ></span>
                     <span className="text-md text-white font-medium">
-                      <span className="text-white pr-2">
-                        {currency.code}
-                      </span>{" "}
-                      : <span className="text-md ml-2 text-white font-medium">{currency.amount}</span>
+                      <span className="text-white pr-2">{currency.code}</span> :{" "}
+                      <span className="text-md ml-2 text-white font-medium">
+                        {currency.amount}
+                      </span>
                     </span>
                   </div>
                   {currency.hedgeRatio && (
@@ -159,11 +164,6 @@ const BusinessUnitExposureCard: React.FC = () => {
             </div>
           </div>
         ))}
-      </div>
-
-      {/* Card Footer */}
-      <div className="bg-gradient-to-br from-[#488987] to-[#4CC2B9] px-6 py-3 text-xs text-white border-t border-primary-lg">
-        Last updated: {new Date().toLocaleDateString()}
       </div>
     </div>
   );
