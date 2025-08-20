@@ -129,18 +129,18 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
   ]);
 
   // Auto-calculate Value (Base Currency) = Input Value × Multiplier
-  // useEffect(() => {
-  //   const { actualValueBaseCurrency, valueType } = formData;
-  //   if (
-  //     actualValueBaseCurrency !== null &&
-  //     valueType &&
-  //     !isNaN(actualValueBaseCurrency)
-  //   ) {
-  //     const multiplier = getValueTypeMultiplier(valueType);
-  //     const inputValue = actualValueBaseCurrency * multiplier;
-  //     setFormData((prev) => ({ ...prev, inputValue }));
-  //   }
-  // }, [formData.actualValueBaseCurrency, formData.valueType, setFormData]);
+  useEffect(() => {
+    const { actualValueBaseCurrency, valueType } = formData;
+    if (
+      actualValueBaseCurrency !== null &&
+      valueType &&
+      !isNaN(actualValueBaseCurrency)
+    ) {
+      const multiplier = getValueTypeMultiplier(valueType);
+      const inputValue = actualValueBaseCurrency * multiplier;
+      setFormData((prev) => ({ ...prev, inputValue }));
+    }
+  }, [formData.actualValueBaseCurrency, formData.valueType, setFormData]);
 
   // // Auto-calculate Value (Quote Currency) = Value (Base Currency) × Total Rate
   useEffect(() => {
