@@ -27,6 +27,7 @@ interface Transaction {
   entityLevel3: string;
   localCurrency: string;
   orderType: string;
+  valueBaseCurrency:string;
   transactionType: string;
   counterparty: string;
   modeOfDelivery: string;
@@ -58,14 +59,14 @@ interface Transaction {
   bankConfirmationDate: string;
   status: string;
 }
-
-type FinancialDetailsResponse = {
+interface FinancialDetailsResponse {
   currencyPair: string;
   valueType: string;
   actualValueBaseCurrency: number | null;
+  inputValue: number | null;
   spotRate: number | null;
   forwardPoints: number | null;
-  inputValue: number | null; // Added inputValue for booking amount
+  valueBaseCurrency: string | null;
   bankMargin: number | null;
   totalRate: number | null;
   valueQuoteCurrency: number | null;
@@ -73,7 +74,7 @@ type FinancialDetailsResponse = {
   valueLocalCurrency: number | null;
   baseCurrency: string;
   quoteCurrency: string;
-};
+}
 
 type ConfirmationDetails = {
   bankTransactionId: string;
@@ -193,6 +194,7 @@ const FxBookingForm: React.FC = () => {
     spotRate: 0,
     forwardPoints: 0,
     bankMargin: 0,
+    valueBaseCurrency: "",
     totalRate: 0,
     valueQuoteCurrency: 0,
     interveningRateQuoteToLocal: 0,
@@ -346,6 +348,7 @@ const FxBookingForm: React.FC = () => {
           actualValueBaseCurrency: selectedTransaction.actualValueBaseCurrency,
           spotRate: selectedTransaction.spotRate,
           forwardPoints: selectedTransaction.forwardPoints,
+          valueBaseCurrency: selectedTransaction.valueBaseCurrency,
           bankMargin: selectedTransaction.bankMargin,
           totalRate: selectedTransaction.totalRate,
           valueQuoteCurrency: selectedTransaction.valueQuoteCurrency,
@@ -354,6 +357,7 @@ const FxBookingForm: React.FC = () => {
           valueLocalCurrency: selectedTransaction.valueLocalCurrency,
           baseCurrency: selectedTransaction.baseCurrency,
           quoteCurrency: selectedTransaction.quoteCurrency,
+
         });
 
         setDealerInfo({
@@ -549,6 +553,7 @@ const FxBookingForm: React.FC = () => {
       forwardPoints: 0,
       bankMargin: 0,
       totalRate: 0,
+      valueBaseCurrency: "",
       valueQuoteCurrency: 0,
       interveningRateQuoteToLocal: 0,
       valueLocalCurrency: 0,

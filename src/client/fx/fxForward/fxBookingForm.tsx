@@ -26,6 +26,7 @@ type FinancialDetailsResponse = {
   spotRate: number | null;
   forwardPoints: number | null;
   bankMargin: number | null;
+  valueBaseCurrency: string | null;
   totalRate: number | null;
   valueQuoteCurrency: number | null;
   interveningRateQuoteToLocal: number | null;
@@ -91,6 +92,7 @@ type ApiPayload = {
   actual_value_base_currency: number;
   spot_rate: number;
   forward_points: number;
+  valueBaseCurrency: string | null; // Changed from inputValue to valueBaseCurrency
   bank_margin: number;
   total_rate: number;
   value_quote_currency: number;
@@ -134,6 +136,7 @@ const FxBookingForm: React.FC = () => {
     valueType: "",
     actualValueBaseCurrency: null,
     spotRate: null,
+    valueBaseCurrency: "",
     forwardPoints: null,
     bankMargin: null,
     totalRate: null,
@@ -269,6 +272,7 @@ const FxBookingForm: React.FC = () => {
       currency_pair: financialData.currencyPair.trim(),
       base_currency: (financialData.baseCurrency || base_currency).trim(),
       quote_currency: (financialData.quoteCurrency || quote_currency).trim(),
+      valueBaseCurrency : financialData.valueBaseCurrency?.trim() || "",
       booking_amount: getMultipliedValue(financialData.inputValue),
       value_type: financialData.valueType.trim(),
       actual_value_base_currency: getMultipliedValue(
@@ -420,6 +424,7 @@ const FxBookingForm: React.FC = () => {
       actualValueBaseCurrency: null,
       spotRate: null,
       forwardPoints: null,
+      valueBaseCurrency: "",
       bankMargin: null,
       totalRate: null,
       valueQuoteCurrency: null,

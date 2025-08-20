@@ -12,10 +12,10 @@ interface FinancialDetailsResponse {
   currencyPair: string;
   valueType: string;
   actualValueBaseCurrency: number | null;
-  valueBaseCurrency: number | null;
+  inputValue: number | null;
   spotRate: number | null;
   forwardPoints: number | null;
-  inputValue: string | null;
+  valueBaseCurrency: string | null;
   bankMargin: number | null;
   totalRate: number | null;
   valueQuoteCurrency: number | null;
@@ -129,38 +129,38 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
   ]);
 
   // Auto-calculate Value (Base Currency) = Input Value × Multiplier
-  useEffect(() => {
-    const { actualValueBaseCurrency, valueType } = formData;
-    if (
-      actualValueBaseCurrency !== null &&
-      valueType &&
-      !isNaN(actualValueBaseCurrency)
-    ) {
-      const multiplier = getValueTypeMultiplier(valueType);
-      const valueBaseCurrency = actualValueBaseCurrency * multiplier;
-      setFormData((prev) => ({ ...prev, valueBaseCurrency }));
-    }
-  }, [formData.actualValueBaseCurrency, formData.valueType, setFormData]);
+  // useEffect(() => {
+  //   const { actualValueBaseCurrency, valueType } = formData;
+  //   if (
+  //     actualValueBaseCurrency !== null &&
+  //     valueType &&
+  //     !isNaN(actualValueBaseCurrency)
+  //   ) {
+  //     const multiplier = getValueTypeMultiplier(valueType);
+  //     const inputValue = actualValueBaseCurrency * multiplier;
+  //     setFormData((prev) => ({ ...prev, inputValue }));
+  //   }
+  // }, [formData.actualValueBaseCurrency, formData.valueType, setFormData]);
 
-  // Auto-calculate Value (Quote Currency) = Value (Base Currency) × Total Rate
-  useEffect(() => {
-    const { valueBaseCurrency, totalRate } = formData;
-    if (
-      valueBaseCurrency !== null &&
-      totalRate !== null &&
-      !isNaN(valueBaseCurrency) &&
-      !isNaN(totalRate)
-    ) {
-      const valueQuoteCurrency = valueBaseCurrency * totalRate;
-      setFormData((prev) => ({ ...prev, valueQuoteCurrency }));
-    }
-  }, [formData.valueBaseCurrency, formData.totalRate, setFormData]);
+  // // Auto-calculate Value (Quote Currency) = Value (Base Currency) × Total Rate
+  // useEffect(() => {
+  //   const { inputValue, totalRate } = formData;
+  //   if (
+  //     inputValue !== null &&
+  //     totalRate !== null &&
+  //     !isNaN(inputValue) &&
+  //     !isNaN(totalRate)
+  //   ) {
+  //     const valueQuoteCurrency = inputValue * totalRate;
+  //     setFormData((prev) => ({ ...prev, valueQuoteCurrency }));
+  //   }
+  // }, [formData.inputValue, formData.totalRate, setFormData]);
 
   // Auto-fill Intervening Rate (Quote to Local) to 1 and disable if both currencies are INR
   useEffect(() => {
     const isSame =
       String(formData.quoteCurrency || "").trim().toLowerCase() ===
-      String(formData.inputValue || "").trim().toLowerCase();
+      String(formData.valueBaseCurrency || "").trim().toLowerCase();
 
     if (isSame) {
       if (formData.interveningRateQuoteToLocal !== 1) {
@@ -179,21 +179,21 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
     }
   }, [
     formData.quoteCurrency,
-    formData.inputValue,
+    formData.valueBaseCurrency,
     formData.interveningRateQuoteToLocal,
     setFormData,
   ]);
 
-  // Fetch default local currency from API and autopopulate inputValue if empty
+  // Fetch default local currency from API and autopopulate valueBaseCurrency if empty
   useEffect(() => {
-    if (!formData.inputValue) {
+    if (!formData.valueBaseCurrency) {
       fetch("https://backend-slqi.onrender.com/api/forwardDash/localcurr")
         .then((res) => res.json())
         .then((data) => {
           if (data?.defaultCurrency) {
             setFormData((prev) => ({
               ...prev,
-              inputValue: data.defaultCurrency,
+              valueBaseCurrency: data.defaultCurrency,
             }));
           }
         })
@@ -201,7 +201,7 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
           // fallback: do nothing if API fails
         });
     }
-  }, [formData.inputValue, setFormData]);
+  }, [formData.valueBaseCurrency, setFormData]);
 
   return (
     <SectionCard title="Financial Details">
@@ -287,7 +287,7 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
           </label>
           <input
             type="text"
-            value={formData.inputValue || ""}
+            value={formData.valueBaseCurrency || ""}
             disabled
             className="h-[37px] border p-2 bg-secondary-color-lt text-secondary-text-dark rounded border-border"
             placeholder="Auto Fill"
@@ -302,12 +302,12 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
             disabled: false,
             isMultiplied: true,
           },
-          {
-            key: "valueBaseCurrency",
-            label: "Booking Amount",
-            disabled: true,
-            placeholder: "Auto Fill",
-          },
+          // {
+          //   key: "inputValue",
+          //   label: "Booking Amount",
+          //   disabled: true,
+          //   placeholder: "Auto Fill",
+          // },
 
           {
             key: "spotRate",
@@ -346,7 +346,7 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
             label: "Intervening Rate (Quote to Local)",
             // Disable if both quote and base currency are INR
             disabled:  String(formData.quoteCurrency || "").trim().toLowerCase() ===
-    String(formData.inputValue || "").trim().toLowerCase()
+    String(formData.valueBaseCurrency || "").trim().toLowerCase()
 ,
           },
           {
