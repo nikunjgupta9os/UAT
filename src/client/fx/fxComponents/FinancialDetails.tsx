@@ -143,18 +143,18 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
   // }, [formData.actualValueBaseCurrency, formData.valueType, setFormData]);
 
   // // Auto-calculate Value (Quote Currency) = Value (Base Currency) × Total Rate
-  // useEffect(() => {
-  //   const { inputValue, totalRate } = formData;
-  //   if (
-  //     inputValue !== null &&
-  //     totalRate !== null &&
-  //     !isNaN(inputValue) &&
-  //     !isNaN(totalRate)
-  //   ) {
-  //     const valueQuoteCurrency = inputValue * totalRate;
-  //     setFormData((prev) => ({ ...prev, valueQuoteCurrency }));
-  //   }
-  // }, [formData.inputValue, formData.totalRate, setFormData]);
+  useEffect(() => {
+    const { inputValue, totalRate } = formData;
+    if (
+      inputValue !== null &&
+      totalRate !== null &&
+      !isNaN(inputValue) &&
+      !isNaN(totalRate)
+    ) {
+      const valueQuoteCurrency = inputValue * totalRate;
+      setFormData((prev) => ({ ...prev, valueQuoteCurrency }));
+    }
+  }, [formData.inputValue, formData.totalRate, setFormData]);
 
   // Auto-fill Intervening Rate (Quote to Local) to 1 and disable if both currencies are INR
   useEffect(() => {
