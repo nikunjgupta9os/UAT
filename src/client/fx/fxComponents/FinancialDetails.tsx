@@ -1,6 +1,7 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import SectionCard from "./SectionCard";
 import CustomSelect from "../../common/SearchSelect";
+import { _lowercase } from "zod/v4/core";
 
 type OptionType = {
   value: string;
@@ -11,9 +12,10 @@ interface FinancialDetailsResponse {
   currencyPair: string;
   valueType: string;
   actualValueBaseCurrency: number | null;
+  valueBaseCurrency: number | null;
   spotRate: number | null;
   forwardPoints: number | null;
-  inputValue: number | null;
+  inputValue: string | null;
   bankMargin: number | null;
   totalRate: number | null;
   valueQuoteCurrency: number | null;
@@ -85,7 +87,12 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
   // Calculate total rate
   useEffect(() => {
     const { spotRate, forwardPoints, bankMargin } = formData;
-    if (orderType && spotRate !== null && forwardPoints !== null && bankMargin !== null) {
+    if (
+      orderType &&
+      spotRate !== null &&
+      forwardPoints !== null &&
+      bankMargin !== null
+    ) {
       let totalRate: number;
       if (orderType.toLowerCase() === "buy") {
         totalRate = spotRate + forwardPoints + bankMargin;
@@ -94,27 +101,107 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
       } else return;
       setFormData((prev) => ({ ...prev, totalRate }));
     }
-  }, [formData.spotRate, formData.forwardPoints, formData.bankMargin, orderType, setFormData]);
+  }, [
+    formData.spotRate,
+    formData.forwardPoints,
+    formData.bankMargin,
+    orderType,
+    setFormData,
+  ]);
 
   // Value Quote + Local
   useEffect(() => {
-    const { inputValue, spotRate, valueType } = formData;
-    if (inputValue && spotRate && valueType) {
-      const multiplier = getValueTypeMultiplier(valueType);
-      const valueQuoteCurrency = inputValue * multiplier * spotRate;
-      const valueLocalCurrency = inputValue * multiplier * valueQuoteCurrency;
-      setFormData((prev) => ({ ...prev, valueQuoteCurrency, valueLocalCurrency }));
+    const { valueQuoteCurrency, interveningRateQuoteToLocal } = formData;
+    if (
+      valueQuoteCurrency !== null &&
+      interveningRateQuoteToLocal !== null &&
+      !isNaN(valueQuoteCurrency) &&
+      !isNaN(interveningRateQuoteToLocal)
+    ) {
+      const valueLocalCurrency =
+        interveningRateQuoteToLocal * valueQuoteCurrency;
+      setFormData((prev) => ({ ...prev, valueLocalCurrency }));
     }
-  }, [formData.inputValue, formData.spotRate, formData.valueType, setFormData]);
+  }, [
+    formData.valueQuoteCurrency,
+    formData.interveningRateQuoteToLocal,
+    setFormData,
+  ]);
 
-  // Booking amount
+  // Auto-calculate Value (Base Currency) = Input Value × Multiplier
   useEffect(() => {
-    const { actualValueBaseCurrency, totalRate } = formData;
-    if (actualValueBaseCurrency && totalRate) {
-      const inputValue = actualValueBaseCurrency * totalRate;
-      setFormData((prev) => ({ ...prev, inputValue }));
+    const { actualValueBaseCurrency, valueType } = formData;
+    if (
+      actualValueBaseCurrency !== null &&
+      valueType &&
+      !isNaN(actualValueBaseCurrency)
+    ) {
+      const multiplier = getValueTypeMultiplier(valueType);
+      const valueBaseCurrency = actualValueBaseCurrency * multiplier;
+      setFormData((prev) => ({ ...prev, valueBaseCurrency }));
     }
-  }, [formData.actualValueBaseCurrency, formData.totalRate, setFormData]);
+  }, [formData.actualValueBaseCurrency, formData.valueType, setFormData]);
+
+  // Auto-calculate Value (Quote Currency) = Value (Base Currency) × Total Rate
+  useEffect(() => {
+    const { valueBaseCurrency, totalRate } = formData;
+    if (
+      valueBaseCurrency !== null &&
+      totalRate !== null &&
+      !isNaN(valueBaseCurrency) &&
+      !isNaN(totalRate)
+    ) {
+      const valueQuoteCurrency = valueBaseCurrency * totalRate;
+      setFormData((prev) => ({ ...prev, valueQuoteCurrency }));
+    }
+  }, [formData.valueBaseCurrency, formData.totalRate, setFormData]);
+
+  // Auto-fill Intervening Rate (Quote to Local) to 1 and disable if both currencies are INR
+  useEffect(() => {
+    const isSame =
+      String(formData.quoteCurrency || "").trim().toLowerCase() ===
+      String(formData.inputValue || "").trim().toLowerCase();
+
+    if (isSame) {
+      if (formData.interveningRateQuoteToLocal !== 1) {
+        setFormData((prev) => ({
+          ...prev,
+          interveningRateQuoteToLocal: 1,
+        }));
+      }
+    } else {
+      if (formData.interveningRateQuoteToLocal !== null) {
+        setFormData((prev) => ({
+          ...prev,
+          interveningRateQuoteToLocal: null,
+        }));
+      }
+    }
+  }, [
+    formData.quoteCurrency,
+    formData.inputValue,
+    formData.interveningRateQuoteToLocal,
+    setFormData,
+  ]);
+
+  // Fetch default local currency from API and autopopulate inputValue if empty
+  useEffect(() => {
+    if (!formData.inputValue) {
+      fetch("https://backend-slqi.onrender.com/api/forwardDash/localcurr")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.defaultCurrency) {
+            setFormData((prev) => ({
+              ...prev,
+              inputValue: data.defaultCurrency,
+            }));
+          }
+        })
+        .catch(() => {
+          // fallback: do nothing if API fails
+        });
+    }
+  }, [formData.inputValue, setFormData]);
 
   return (
     <SectionCard title="Financial Details">
@@ -124,7 +211,9 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
           label="Currency Pair"
           options={mockCurrencyPairs}
           selectedValue={formData.currencyPair}
-          onChange={(val) => setFormData((prev) => ({ ...prev, currencyPair: val }))}
+          onChange={(val) =>
+            setFormData((prev) => ({ ...prev, currencyPair: val }))
+          }
           isDisabled={isLoading}
           isClearable={false}
           placeholder="Choose..."
@@ -135,7 +224,9 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
           label="Value Type"
           options={valueTypeOptions}
           selectedValue={formData.valueType}
-          onChange={(val) => setFormData((prev) => ({ ...prev, valueType: val }))}
+          onChange={(val) =>
+            setFormData((prev) => ({ ...prev, valueType: val }))
+          }
           isDisabled={isLoading}
           isClearable={false}
           isRequired
@@ -144,12 +235,16 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
 
         {/* Multiplier Applied - stays in grid but empty when no valueType */}
         <div className="flex flex-col">
-          <label className="text-sm text-secondary-text mb-1">Multiplier Applied</label>
+          <label className="text-sm text-secondary-text mb-1">
+            Multiplier Applied
+          </label>
           <input
             type="text"
             value={
               formData.valueType
-                ? `×${getValueTypeMultiplier(formData.valueType).toLocaleString()}`
+                ? `×${getValueTypeMultiplier(
+                    formData.valueType
+                  ).toLocaleString()}`
                 : "—"
             }
             className="h-[37px] border p-2 bg-blue-50 text-blue-800 rounded border-border"
@@ -159,7 +254,9 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
 
         {/* Base Currency */}
         <div className="flex flex-col">
-          <label className="text-sm text-secondary-text mb-1">Base Currency</label>
+          <label className="text-sm text-secondary-text mb-1">
+            Base Currency
+          </label>
           <input
             type="text"
             value={formData.baseCurrency || ""}
@@ -171,7 +268,9 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
 
         {/* Quote Currency */}
         <div className="flex flex-col">
-          <label className="text-sm text-secondary-text mb-1">Quote Currency</label>
+          <label className="text-sm text-secondary-text mb-1">
+            Quote Currency
+          </label>
           <input
             type="text"
             value={formData.quoteCurrency || ""}
@@ -181,17 +280,82 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
           />
         </div>
 
+        {/* Local Currency */}
+        <div className="flex flex-col">
+          <label className="text-sm text-secondary-text mb-1">
+            Local Currency
+          </label>
+          <input
+            type="text"
+            value={formData.inputValue || ""}
+            disabled
+            className="h-[37px] border p-2 bg-secondary-color-lt text-secondary-text-dark rounded border-border"
+            placeholder="Auto Fill"
+          />
+        </div>
+
         {/* Dynamic fields */}
         {[
-          { key: "actualValueBaseCurrency", label: "Actual Value", disabled: false, isMultiplied: true },
-          { key: "spotRate", label: "Spot Rate", disabled: false, isMultiplied: false },
-          { key: "forwardPoints", label: "Forward Points", disabled: false, isMultiplied: false },
-          { key: "bankMargin", label: "Bank Margin", disabled: false, isMultiplied: false },
-          { key: "totalRate", label: "Total Rate", disabled: true, isMultiplied: false, placeholder: "Auto Fill" },
-          { key: "valueQuoteCurrency", label: "Value (Quote Currency)", disabled: false, isMultiplied: true, placeholder: "Auto Fill" },
-          { key: "interveningRateQuoteToLocal", label: "Intervening Rate (Quote to Local)", disabled: false, isMultiplied: false },
-          { key: "inputValue", label: "Booking Amount", disabled: false, isMultiplied: true, placeholder: "Auto Fill" },
-          { key: "valueLocalCurrency", label: "Value (Local Currency)", disabled: true, isMultiplied: true, placeholder: "Auto Fill" },
+          {
+            key: "actualValueBaseCurrency",
+            label: "Input Value",
+            disabled: false,
+            isMultiplied: true,
+          },
+          {
+            key: "valueBaseCurrency",
+            label: "Booking Amount",
+            disabled: true,
+            placeholder: "Auto Fill",
+          },
+
+          {
+            key: "spotRate",
+            label: "Spot Rate",
+            disabled: false,
+            isMultiplied: false,
+          },
+          {
+            key: "forwardPoints",
+            label: "Forward Points",
+            disabled: false,
+            isMultiplied: false,
+          },
+          {
+            key: "bankMargin",
+            label: "Bank Margin",
+            disabled: false,
+            isMultiplied: false,
+          },
+          {
+            key: "totalRate",
+            label: "Total Rate",
+            disabled: true,
+            isMultiplied: false,
+            placeholder: "Auto Fill",
+          },
+          {
+            key: "valueQuoteCurrency",
+            label: "Value (Quote Currency)",
+            disabled: false,
+            isMultiplied: true,
+            placeholder: "Auto Fill",
+          },
+          {
+            key: "interveningRateQuoteToLocal",
+            label: "Intervening Rate (Quote to Local)",
+            // Disable if both quote and base currency are INR
+            disabled:  String(formData.quoteCurrency || "").trim().toLowerCase() ===
+    String(formData.inputValue || "").trim().toLowerCase()
+,
+          },
+          {
+            key: "valueLocalCurrency",
+            label: "Value (Local Currency)",
+            disabled: true,
+            isMultiplied: true,
+            placeholder: "Auto Fill",
+          },
         ].map((field, idx) => (
           <div key={idx} className="flex flex-col w-full">
             <label className="text-sm text-secondary-text mb-1 flex items-center justify-between">
@@ -209,12 +373,15 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
                   ? "bg-secondary-color-lt text-secondary-text-dark"
                   : "text-secondary-text-dark"
               }`}
-              value={formData[field.key as keyof FinancialDetailsResponse] ?? ""}
+              value={
+                formData[field.key as keyof FinancialDetailsResponse] ?? ""
+              }
               onChange={(e) =>
                 !field.disabled &&
                 setFormData((prev) => ({
                   ...prev,
-                  [field.key]: e.target.value === "" ? null : Number(e.target.value),
+                  [field.key]:
+                    e.target.value === "" ? null : Number(e.target.value),
                 }))
               }
               required
