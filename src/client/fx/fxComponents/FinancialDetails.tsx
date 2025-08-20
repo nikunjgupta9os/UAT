@@ -262,7 +262,7 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
             type="text"
             value={formData.baseCurrency || ""}
             disabled
-            className="h-[37px] border p-2 bg-secondary-color-lt text-secondary-text-dark rounded border-border"
+            className="h-[37px] border p-2 bg-secondary-color-dark text-secondary-text-dark rounded border-border"
             placeholder="Auto Fill"
           />
         </div>
@@ -276,7 +276,7 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
             type="text"
             value={formData.quoteCurrency || ""}
             disabled
-            className="h-[37px] border p-2 bg-secondary-color-lt text-secondary-text-dark rounded border-border"
+            className="h-[37px] border p-2 bg-secondary-color-dark text-secondary-text-dark rounded border-border"
             placeholder="Auto Fill"
           />
         </div>
@@ -290,7 +290,7 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
             type="text"
             value={formData.valueBaseCurrency || ""}
             disabled
-            className="h-[37px] border p-2 bg-secondary-color-lt text-secondary-text-dark rounded border-border"
+            className="h-[37px] border p-2 bg-secondary-color-dark text-secondary-text-dark rounded border-border"
             placeholder="Auto Fill"
           />
         </div>
@@ -342,7 +342,7 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
           {
             key: "valueQuoteCurrency",
             label: "Value (Quote Currency)",
-            disabled: false,
+            disabled: true,
             isMultiplied: true,
             placeholder: "Auto Fill",
             format: (val: number | null) =>
@@ -378,8 +378,8 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
             <input
               type="text"
               className={`h-[37px] border p-2 rounded border-border w-full ${
-                field.disabled
-                  ? "bg-secondary-color-lt text-secondary-text-dark"
+                field.disabled || isLoading
+                  ? "bg-secondary-color-dark text-secondary-text-dark"
                   : "text-secondary-text-dark"
               }`}
               value={
