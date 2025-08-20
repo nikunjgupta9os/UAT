@@ -40,17 +40,17 @@ const ExposureUpload = () => {
     const fetchPermissions = async () => {
       try {
         const response = await axios.post(
-          "https://backend-slqi.onrender.com/api/permissions/permissionJSON",
+          "https://backend-slqi.onrender.com/api/permissions/permissionjson",
           { roleName }
         );
-        console.log("Permissions response:", response.data);
+        // console.log("Permissions response:", response.data);
         const pages = response.data?.pages;
         const userTabs = pages?.["exposure-upload"]?.tabs;
         if (userTabs) {
           setVisibility({
-            allTab: userTabs?.allTab?.hasAccess || false,
-            uploadTab: userTabs?.allTab?.hasAccess || false,
-            pendingTab: userTabs?.allTab?.hasAccess || false,
+            allTab: userTabs.allTab.hasAccess || false,
+            uploadTab: userTabs.uploadTab.hasAccess || false,
+            pendingTab: userTabs.pendingTab.hasAccess || false,
           });
         }
       } catch (error) {
