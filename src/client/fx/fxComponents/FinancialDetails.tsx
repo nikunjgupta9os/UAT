@@ -306,6 +306,8 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
             label: "Booking Amount",
             disabled: true,
             placeholder: "Auto Fill",
+            format: (val: number | null) =>
+              val !== null && !isNaN(val) ? val.toLocaleString("en-IN") : "",
           },
 
           {
@@ -366,21 +368,23 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
               )}
             </label>
             <input
-              type="number"
+              type="text"
               className={`h-[37px] border p-2 rounded border-border w-full ${
                 field.disabled
                   ? "bg-secondary-color-lt text-secondary-text-dark"
                   : "text-secondary-text-dark"
               }`}
               value={
-                formData[field.key as keyof FinancialDetailsResponse] ?? ""
+                field.format
+                  ? field.format(formData[field.key as keyof FinancialDetailsResponse] as number | null)
+                  : formData[field.key as keyof FinancialDetailsResponse] ?? ""
               }
               onChange={(e) =>
                 !field.disabled &&
                 setFormData((prev) => ({
                   ...prev,
                   [field.key]:
-                    e.target.value === "" ? null : Number(e.target.value),
+                    e.target.value === "" ? null : Number(e.target.value.replace(/,/g, "")),
                 }))
               }
               required
