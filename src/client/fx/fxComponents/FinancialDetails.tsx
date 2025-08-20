@@ -302,12 +302,12 @@ const FinancialDetails: React.FC<FinancialDetailsProps> = ({
             disabled: false,
             isMultiplied: true,
           },
-          // {
-          //   key: "inputValue",
-          //   label: "Booking Amount",
-          //   disabled: true,
-          //   placeholder: "Auto Fill",
-          // },
+          {
+            key: "inputValue",
+            label: "Booking Amount",
+            disabled: true,
+            placeholder: "Auto Fill",
+          },
 
           {
             key: "spotRate",
