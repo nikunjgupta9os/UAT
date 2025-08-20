@@ -135,7 +135,7 @@ const BusinessUnitExposureCard: React.FC = () => {
               {unit.currencies.map((currency) => (
                 <div
                   key={`${unit.name}-${currency.code}`}
-                  className="flex justify-between items-center p-2 bg-white/20 backdrop-blur-sm rounded-lg border-2 border-white/30 transition-all duration-200 ease-in-out hover:scale-[1.01] hover:shadow-lg hover:bg-white/30"
+                  className="flex justify-between items-center p-2 bg-white/20 backdrop-blur-sm rounded-lg border-2 border-white/30 hover:bg-white/30"
                 >
                   <div className="flex items-center">
                     <span
