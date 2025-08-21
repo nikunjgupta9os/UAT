@@ -667,12 +667,7 @@ function NyneOSTable<ExposureBucketing extends WithId>({
                             />
                           </svg>
                         </div>
-                        <p className="text-xl font-medium text-primary mb-1">
-                          No users found
-                        </p>
-                        <p className="text-md font-normal text-primary">
-                          There are no users to display at the moment.
-                        </p>
+                        
                       </div>
                     </td>
                   </tr>
