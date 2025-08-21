@@ -1097,17 +1097,17 @@ const TransactionTable: React.FC = () => {
         </div>
 
         {/* Search Results Info */}
-        {searchTerm && (
+{/*         {searchTerm && (
           <div className="text-sm text-gray-600">
-            Found {filteredData.length} result(s) for "{searchTerm}"
-            <button
-              onClick={() => setSearchTerm("")}
-              className="ml-2 text-primary hover:underline"
-            >
-              Clear
-            </button>
-          </div>
-        )}
+{/*             Found {filteredData.length} result(s) for "{searchTerm}" */}
+        //     <button
+        //       onClick={() => setSearchTerm("")}
+        //       className="ml-2 text-primary hover:underline"
+        //     >
+        //       Clear
+        //     </button>
+        //   </div>
+        // )} */}
       </div>
 
       <div className="shadow-lg border border-border">
