@@ -1,6 +1,27 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import SectionCard from "./SectionCard";
 import CustomSelect from "../../common/SearchSelect";
+
+// Add this type import if needed
+// import { SelectedForwardContract } from "../fxWizard/fxRollover"; // adjust path if needed
+
+type SelectedForwardContract = {
+  exposure_header_id: string;
+  deal_id: string;
+  fx_pair: string;
+  original_amount: string;
+  amount_to_cancel_rollover: string;
+  original_rate: string;
+  maturity: string;
+  counterparty: string;
+  order_type: string;
+  company: string;
+  entity: string;
+};
+
+interface NewForwardProps {
+  selectedUsers: SelectedForwardContract[];
+}
 
 const fxPairOptions = [
   { value: "USD/INR", label: "USD/INR" },
@@ -14,7 +35,7 @@ const orderTypeOptions = [
   { value: "Sell", label: "Sell" },
 ];
 
-const NewForward: React.FC = () => {
+const NewForward: React.FC<NewForwardProps> = ({ selectedUsers }) => {
   const [form, setForm] = useState({
     fxPair: "",
     orderType: "",
@@ -26,9 +47,37 @@ const NewForward: React.FC = () => {
     netRate: "",
   });
 
+  // Calculate sum of amount_to_cancel_rollover
+  useEffect(() => {
+    const sum = selectedUsers.reduce(
+      (acc, curr) => acc + Number(curr.amount_to_cancel_rollover || 0),
+      0
+    );
+    setForm(prev => ({ ...prev, amount: sum ? sum.toString() : "" }));
+  }, [selectedUsers]);
+
+  useEffect(() => {
+    const spot = Number(form.spotRate) || 0;
+    const premium = Number(form.premiumDiscount) || 0;
+    const margin = Number(form.marginRate) || 0;
+    let net = 0;
+
+    if (form.orderType === "Buy") {
+      net = spot + premium + margin;
+    } else if (form.orderType === "Sell") {
+      net = spot + premium - margin;
+    }
+    setForm(prev => ({
+      ...prev,
+      netRate: net ? net.toFixed(4) : "",
+    }));
+  }, [form.spotRate, form.premiumDiscount, form.marginRate, form.orderType]);
+
   const handleChange = (field: string) => (value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
+
+  // You can now use selectedUsers inside this component
 
   return (
     <SectionCard title="New Forward Booking Details">
@@ -73,6 +122,7 @@ const NewForward: React.FC = () => {
             onChange={e => setForm(prev => ({ ...prev, amount: e.target.value }))}
             className="w-full h-[37px] px-2 pr-3 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             required
+            disabled
           />
         </div>
 

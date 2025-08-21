@@ -127,7 +127,7 @@ const FxCancellation = () => {
       </div>
       <SelectFx setSelectedUsers={setSelectedUsers} />
       <CancellationDetail form={form} setForm={setForm} />
-      <NewForward />
+      <NewForward  selectedUsers={selectedUsers}/>
 
       <h2 className="text-2xl font-bold text-secondary-text pt-10">
         Processing: Calculations & Linkages

@@ -24,7 +24,6 @@ import Button from "../ui/Button";
 import { useNotification } from "../Notification/Notification";
 import * as XLSX from "xlsx";
 import {
-  flexRender,
   getCoreRowModel,
   getPaginationRowModel,
   useReactTable,
