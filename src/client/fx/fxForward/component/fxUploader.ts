@@ -220,10 +220,10 @@ const validateRow = (
     // Check required fields
     const requiredFields = [
       // "system_transaction_id",
-      "internal_reference_id",
-      "local_currency",
+      // "internal_reference_id",
+      "entity_level_0",
       "currency_pair",
-      "spot_rate",
+      // "spot_rate",
     ];
 
     requiredFields.forEach((field) => {

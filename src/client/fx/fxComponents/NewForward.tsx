@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import SectionCard from "./SectionCard";
 import CustomSelect from "../../common/SearchSelect";
 
@@ -21,6 +21,17 @@ type SelectedForwardContract = {
 
 interface NewForwardProps {
   selectedUsers: SelectedForwardContract[];
+  form: {
+    fxPair: string;
+    orderType: string;
+    maturityDate: string;
+    amount: string;
+    spotRate: string;
+    premiumDiscount: string;
+    marginRate: string;
+    netRate: string;
+  };
+  handleRollover: (field: string, value: string) => void;
 }
 
 const fxPairOptions = [
@@ -35,25 +46,14 @@ const orderTypeOptions = [
   { value: "Sell", label: "Sell" },
 ];
 
-const NewForward: React.FC<NewForwardProps> = ({ selectedUsers }) => {
-  const [form, setForm] = useState({
-    fxPair: "",
-    orderType: "",
-    maturityDate: "",
-    amount: "",
-    spotRate: "",
-    premiumDiscount: "",
-    marginRate: "",
-    netRate: "",
-  });
-
+const NewForward: React.FC<NewForwardProps> = ({ selectedUsers, form, handleRollover }) => {
   // Calculate sum of amount_to_cancel_rollover
   useEffect(() => {
     const sum = selectedUsers.reduce(
       (acc, curr) => acc + Number(curr.amount_to_cancel_rollover || 0),
       0
     );
-    setForm(prev => ({ ...prev, amount: sum ? sum.toString() : "" }));
+    handleRollover("amount", sum ? sum.toString() : "");
   }, [selectedUsers]);
 
   useEffect(() => {
@@ -67,14 +67,11 @@ const NewForward: React.FC<NewForwardProps> = ({ selectedUsers }) => {
     } else if (form.orderType === "Sell") {
       net = spot + premium - margin;
     }
-    setForm(prev => ({
-      ...prev,
-      netRate: net ? net.toFixed(4) : "",
-    }));
+    handleRollover("netRate", net ? net.toFixed(4) : "");
   }, [form.spotRate, form.premiumDiscount, form.marginRate, form.orderType]);
 
   const handleChange = (field: string) => (value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    handleRollover(field, value);
   };
 
   // You can now use selectedUsers inside this component
@@ -105,7 +102,7 @@ const NewForward: React.FC<NewForwardProps> = ({ selectedUsers }) => {
           <input
             type="date"
             value={form.maturityDate}
-            onChange={e => setForm(prev => ({ ...prev, maturityDate: e.target.value }))}
+            onChange={e => handleRollover("maturityDate", e.target.value)}
             className="w-full h-[37px] px-2 pr-3 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             required
           />
@@ -119,7 +116,7 @@ const NewForward: React.FC<NewForwardProps> = ({ selectedUsers }) => {
             type="number"
             step="0.01"
             value={form.amount}
-            onChange={e => setForm(prev => ({ ...prev, amount: e.target.value }))}
+            onChange={e => handleRollover("amount", e.target.value)}
             className="w-full h-[37px] px-2 pr-3 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             required
             disabled
@@ -134,7 +131,7 @@ const NewForward: React.FC<NewForwardProps> = ({ selectedUsers }) => {
             type="number"
             step="0.0001"
             value={form.spotRate}
-            onChange={e => setForm(prev => ({ ...prev, spotRate: e.target.value }))}
+            onChange={e => handleRollover("spotRate", e.target.value)}
             className="w-full h-[37px] px-2 pr-3 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             required
           />
@@ -148,7 +145,7 @@ const NewForward: React.FC<NewForwardProps> = ({ selectedUsers }) => {
             type="number"
             step="0.0001"
             value={form.premiumDiscount}
-            onChange={e => setForm(prev => ({ ...prev, premiumDiscount: e.target.value }))}
+            onChange={e => handleRollover("premiumDiscount", e.target.value)}
             className="w-full h-[37px] px-2 pr-3 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
@@ -161,7 +158,7 @@ const NewForward: React.FC<NewForwardProps> = ({ selectedUsers }) => {
             type="number"
             step="0.0001"
             value={form.marginRate}
-            onChange={e => setForm(prev => ({ ...prev, marginRate: e.target.value }))}
+            onChange={e => handleRollover("marginRate", e.target.value)}
             className="w-full h-[37px] px-2 pr-3 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>

@@ -188,59 +188,6 @@ const ExposureLinkageStatus: React.FC<{
           </table>
         </div>
       </div>
-      <h2 className="text-2xl font-bold text-secondary-text pt-8">
-        New Forward Details (Post-Rollover)
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 px-4">
-        <div className="flex flex-col">
-          <span className="text-sm font-medium text-secondary-text">
-            New FX Pair:
-          </span>
-          <span className="font-semibold text-primary">N/A</span>
-        </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-medium text-secondary-text">
-            New Order Type:
-          </span>
-          <span className="font-semibold text-primary">N/A</span>
-        </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-medium text-secondary-text">
-            New Amount:
-          </span>
-          <span className="font-semibold text-primary">$1,225,000.00</span>
-        </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-medium text-secondary-text">
-            New Maturity Date:
-          </span>
-          <span className="font-semibold text-primary">N/A</span>
-        </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-medium text-secondary-text">
-            New Spot Rate:
-          </span>
-          <span className="font-semibold text-primary">N/A</span>
-        </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-medium text-secondary-text">
-            New Premium/Discount:
-          </span>
-          <span className="font-semibold text-primary">N/A</span>
-        </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-medium text-secondary-text">
-            New Margin Rate:
-          </span>
-          <span className="font-semibold text-primary">N/A</span>
-        </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-medium text-secondary-text">
-            New Net Rate:
-          </span>
-          <span className="font-semibold text-primary">0.0000</span>
-        </div>
-      </div>
     </div>
   );
 };

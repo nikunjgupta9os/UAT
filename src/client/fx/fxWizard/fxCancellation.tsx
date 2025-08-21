@@ -137,7 +137,7 @@ const FxCancellation = () => {
             form={form}
             setOldForwardsData={setOldForwardsData}
           />
-          <ExposureLinkageStatus selectedUsers={selectedUsers} />
+          <ExposureLinkageStatus selectedUsers={selectedUsers}/>
         </>
       ) : (
         <div className="py-8 flex justify-center">

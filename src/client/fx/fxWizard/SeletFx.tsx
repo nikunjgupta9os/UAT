@@ -361,7 +361,7 @@ const ForwardContractSelection: React.FC<ForwardContractSelectionProps> = ({
         </h3>
 
         <div className="shadow-lg border border-border">
-          {currencyPair && orderType ? (
+          {currencyPair && orderType && counterparty && entity? (
             <>
               <table className="min-w-[800px] w-full table-auto">
                 <thead className="bg-secondary-color rounded-xl">
@@ -452,7 +452,7 @@ const ForwardContractSelection: React.FC<ForwardContractSelectionProps> = ({
           ) : (
             <div className="text-center text-primary py-12">
               <p className="text-lg">
-                Please select both Currency Pair and Order Type.
+                Please select both Currency Pair, Entity, Counterparty and Order Type.
               </p>
             </div>
           )}

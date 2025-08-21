@@ -46,6 +46,16 @@ const FxCancellation = () => {
   });
 
   const [oldForwardsData, setOldForwardsData] = useState<OldForward[]>([]);
+  const [newForwardForm, setNewForwardForm] = useState({
+    fxPair: "",
+    orderType: "",
+    maturityDate: "",
+    amount: "",
+    spotRate: "",
+    premiumDiscount: "",
+    marginRate: "",
+    netRate: "",
+  });
   const navigate = useNavigate();
 
   // Helper to sum numbers from string fields
@@ -114,6 +124,13 @@ const FxCancellation = () => {
     }
   };
 
+  const handleRollover = (field: string, value: string) => {
+    setNewForwardForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between pb-4">
@@ -127,7 +144,11 @@ const FxCancellation = () => {
       </div>
       <SelectFx setSelectedUsers={setSelectedUsers} />
       <CancellationDetail form={form} setForm={setForm} />
-      <NewForward  selectedUsers={selectedUsers}/>
+      <NewForward
+        selectedUsers={selectedUsers}
+        form={newForwardForm}
+        handleRollover={handleRollover}
+      />
 
       <h2 className="text-2xl font-bold text-secondary-text pt-10">
         Processing: Calculations & Linkages
@@ -140,6 +161,83 @@ const FxCancellation = () => {
             setOldForwardsData={setOldForwardsData}
           />
           <ExposureLinkageStatus selectedUsers={selectedUsers} />
+          <h2 className="text-2xl font-bold text-secondary-text pt-8">
+            New Forward Details (Post-Rollover)
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 px-4">
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-secondary-text">
+                New FX Pair:
+              </span>
+              <span className="font-semibold text-primary">
+                {newForwardForm.fxPair || "N/A"}
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-secondary-text">
+                New Order Type:
+              </span>
+              <span className="font-semibold text-primary">
+                {newForwardForm.orderType || "N/A"}
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-secondary-text">
+                New Amount:
+              </span>
+              <span className="font-semibold text-primary">
+                {newForwardForm.amount
+                  ? Number(newForwardForm.amount).toLocaleString(undefined, {
+                      style: "currency",
+                      currency: "USD",
+                      minimumFractionDigits: 2,
+                    })
+                  : "N/A"}
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-secondary-text">
+                New Maturity Date:
+              </span>
+              <span className="font-semibold text-primary">
+                {newForwardForm.maturityDate || "N/A"}
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-secondary-text">
+                New Spot Rate:
+              </span>
+              <span className="font-semibold text-primary">
+                {newForwardForm.spotRate || "N/A"}
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-secondary-text">
+                New Premium/Discount:
+              </span>
+              <span className="font-semibold text-primary">
+                {newForwardForm.premiumDiscount || "N/A"}
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-secondary-text">
+                New Margin Rate:
+              </span>
+              <span className="font-semibold text-primary">
+                {newForwardForm.marginRate || "N/A"}
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-secondary-text">
+                New Net Rate:
+              </span>
+              <span className="font-semibold text-primary">
+                {newForwardForm.netRate
+                  ? Number(newForwardForm.netRate).toFixed(4)
+                  : "0.0000"}
+              </span>
+            </div>
+          </div>
         </>
       ) : (
         <div className="py-8 flex justify-center">

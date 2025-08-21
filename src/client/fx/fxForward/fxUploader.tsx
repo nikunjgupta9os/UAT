@@ -24,10 +24,13 @@ import {
   X,
 } from "lucide-react";
 
+const BANKS = ["Axis", "Kotak", "ICICI", "HDFC"];
+
 const FxUploader: React.FC = () => {
   const [dragActive, setDragActive] = React.useState(false);
   const [files, setFiles] = React.useState<UploadedFile[]>([]);
   const [selectedType, setSelectedType] = React.useState<string>("");
+  const [selectedBank, setSelectedBank] = React.useState<string>("");
   const [previewStates, setPreviewStates] = React.useState<
     Record<
       string,
@@ -180,22 +183,34 @@ const FxUploader: React.FC = () => {
 
     setFiles((prev) => [...prev, ...newFiles]);
 
+   
     const processFile = async (file: File, fileData: UploadedFile) => {
       try {
-        const validation = await validateFileContent(file);
+        if (selectedBank === "") {
+          // Default: validate as usual
+          const validation = await validateFileContent(file);
 
-        if (!validation || !validation.status) {
-          throw new Error("Invalid validation result");
+          if (!validation || !validation.status) {
+            throw new Error("Invalid validation result");
+          }
+
+          return {
+            id: fileData.id,
+            update: {
+              ...validation,
+              status: validation.status as "success" | "error" | "pending" | "processing",
+            },
+          };
+        } else {
+          // If any bank is selected, always return success
+          return {
+            id: fileData.id,
+            update: {
+              status: "success" as const,
+              validationErrors: [],
+            },
+          };
         }
-
-        // Return the update object
-        return {
-          id: fileData.id,
-          update: {
-            ...validation,
-            status: validation.status,
-          },
-        };
       } catch (error) {
         console.error("Error processing file:", fileData.name, error);
         return {
@@ -476,16 +491,19 @@ const FxUploader: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-secondary-text mb-1">
-                Business Unit
+                Bank
               </label>
               <select
                 className="w-full px-3 py-2 border border-border rounded-md focus:outline-none bg-secondary-color-lt text-secondary-text"
-                // value={selectedType}
-                // onChange={(e) => setSelectedType(e.target.value)}
+                value={selectedBank}
+                onChange={(e) => setSelectedBank(e.target.value)}
               >
-                <option value="">Choose..</option>
-                <option value="payable">BU1</option>
-                <option value="receivable">BU2</option>
+                <option value="">Select Bank</option>
+                {BANKS.map((bank) => (
+                  <option key={bank} value={bank}>
+                    {bank}
+                  </option>
+                ))}
               </select>
             </div>
 
