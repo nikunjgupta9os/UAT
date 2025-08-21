@@ -679,7 +679,7 @@ const parseExcel = (arrayBuffer: ArrayBuffer): string[][] => {
 
         console.log(formData, "FormData for upload", fieldName);
 
-        notify(`Uploading ${fileName}...`, "info");
+        // notify(`Uploading ${fileName}...`, "info");
 
         const res = await axios.post(
           "https://backend-slqi.onrender.com/api/exposureUpload/batch-upload",
