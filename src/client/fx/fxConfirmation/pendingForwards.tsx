@@ -1175,9 +1175,8 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ tag }) => {
         const now = new Date();
         now.setMonth(now.getMonth() + monthsToAdd);
 
-        // Clamp to today + 5 years
-        const maxDate = new Date();
-        maxDate.setFullYear(maxDate.getFullYear() + 5);
+        // Clamp to 2025-12-31
+        const maxDate = new Date("2025-12-31");
         if (now > maxDate) now.setTime(maxDate.getTime());
 
         const maturityDate = now.toISOString().slice(0, 10);
@@ -1426,7 +1425,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ tag }) => {
 
                             {/* Basic Information */}
                             <div className="mb-6">
-                              <div className="text-md font-medium text-primary mb-3 border-b border-primary-md pb-2">
+                              <div className="text-md font-medium text-primary mb-3 pb-2">
                                 Basic Information
                               </div>
                               <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
@@ -1460,7 +1459,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ tag }) => {
 
                             {/* Entity Hierarchy */}
                             <div className="mb-6">
-                              <div className="text-md font-medium text-primary mb-3 border-b border-primary-md pb-2">
+                              <div className="text-md font-medium text-primary mb-3 pb-2">
                                 Entity Hierarchy
                               </div>
                               <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
@@ -1486,7 +1485,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ tag }) => {
 
                             {/* Currency & Rates */}
                             <div className="mb-6">
-                              <div className="text-md font-medium text-primary mb-3 border-b border-primary-md pb-2">
+                              <div className="text-md font-medium text-primary mb-3 pb-2">
                                 Currency & Rates
                               </div>
                               <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
@@ -1521,7 +1520,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ tag }) => {
 
                             {/* Values */}
                             <div className="mb-6">
-                              <div className="text-md font-medium text-primary mb-3 border-b border-primary-md pb-2">
+                              <div className="text-md font-medium text-primary mb-3 pb-2">
                                 Values
                               </div>
                               <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
@@ -1549,7 +1548,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ tag }) => {
 
                             {/* Dates & Settlement */}
                             <div className="mb-6">
-                              <div className="text-md font-medium text-primary mb-3 border-b border-primary-md pb-2">
+                              <div className="text-md font-medium text-primary mb-3 pb-2">
                                 Dates & Settlement
                               </div>
                               <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
@@ -1584,7 +1583,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ tag }) => {
 
                             {/* Additional Details */}
                             <div className="mb-6">
-                              <div className="text-md font-medium text-primary mb-3 border-b border-primary-md pb-2">
+                              <div className="text-md font-medium text-primary mb-3 pb-2">
                                 Additional Details
                               </div>
                               <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
