@@ -83,7 +83,7 @@ const NotificationItem = ({
   useEffect(() => {
     if (notification.persistent || notification.type === "loading") return;
 
-    const duration = notification.duration || 10000;
+    const duration = notification.type === "error" ? notification.duration || 10000 : 4000;
     const interval = 50;
     const decrement = (interval / duration) * 100;
 
