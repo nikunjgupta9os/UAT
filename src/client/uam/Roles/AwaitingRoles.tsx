@@ -45,6 +45,16 @@ type BackendResponse = {
   roleData?: Role[];
 };
 
+type TabVisibility = {
+  // add:boolean,
+  // edit:boolean,
+  // delete: boolean;
+  approve: boolean;
+  reject: boolean;
+  view: boolean;
+  // upload:boolean,
+};
+
 const AwaitingApproval: React.FC = () => {
   // const [data] = useState<UserType[]>(sampleUsers);
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
@@ -66,19 +76,11 @@ const AwaitingApproval: React.FC = () => {
   //   showApproveButton: false,
   //   showRejectButton: false,
   // });
-  type TabVisibility = {
-    // add:boolean,
-    // edit:boolean,
-    // delete: boolean;
-    approve: boolean;
-    reject: boolean;
-    view: boolean;
-    // upload:boolean,
-  };
+
   const roleName = localStorage.getItem("userRole");
   const [Visibility, setVisibility] = useState<TabVisibility>({
-    approve: true,
-    reject: true,
+    approve: false,
+    reject: false,
     view: true,
   });
   useEffect(() => {
@@ -94,9 +96,9 @@ const AwaitingApproval: React.FC = () => {
 
         if (userTabs) {
           setVisibility({
-            approve: userTabs?.tabs?.allTab?.showApproveButton,
-            reject: userTabs?.tabs?.allTab?.showRejectButton,
-            view: userTabs?.tabs?.allTab?.hasAccess,
+            approve: userTabs.tabs.allTab.showApproveButton || false,
+            reject: userTabs.tabs.allTab.showRejectButton || false,
+            view: userTabs.tabs.allTab.hasAccess || false,
             // delete: userTabs?.allTab?.showDeleteButton || false,
           });
         }
@@ -569,8 +571,8 @@ const AwaitingApproval: React.FC = () => {
 
   return (
     <>
-      <div className="space-y-6">
-        <div className="mt-14 flex flex-col gap-6 w-full">
+      <div className="space-y-3">
+        <div className="mt-14 flex flex-col gap-3 w-full">
           {/* First row */}
           <div className="flex items-center gap-4 w-full md:w-auto justify-end">
             <button
@@ -606,7 +608,7 @@ const AwaitingApproval: React.FC = () => {
             </button>
 
             <form
-              className="relative flex items-center w-full md:w-64"
+              className="relative flex items-center w-full md:w-[220px]"
               onSubmit={(e) => e.preventDefault()}
             >
               <input
@@ -708,7 +710,7 @@ const AwaitingApproval: React.FC = () => {
                               ) : (
                                 <Draggable id={header.column.id}>
                                   <div className="cursor-move border-border hover:bg-primary-lg rounded px-1 py-1 transition duration-150 ease-in-out">
-                                  {flexRender(
+                                    {flexRender(
                                       header.column.columnDef.header,
                                       header.getContext()
                                     )}

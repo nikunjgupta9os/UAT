@@ -63,13 +63,13 @@ const ExposureUpload = () => {
 
   const tabButtons = useMemo(() => {
     const tabConfig = [
-      { id: 'existing', label: 'All Exposure Request', icon: List, visible: Visibility.allTab },
-      { id: 'forwards', label: 'Pending Exposure Request', icon: Contrast, visible: Visibility.pendingTab },
-      { id: 'add', label: 'Add Exposure', icon: UploadCloud, visible: Visibility.uploadTab },
+      { id: 'existing', label: 'All Exposure Request', icon: List, visibility: Visibility.allTab },
+      { id: 'forwards', label: 'Pending Exposure Request', icon: Contrast, visibility: Visibility.pendingTab },
+      { id: 'add', label: 'Add Exposure', icon: UploadCloud, visibility: Visibility.uploadTab },
     ];
 
     return tabConfig
-      .filter(tab => tab.visible)
+      .filter(tab => tab.visibility)
       .map(tab => (
         <button
           key={tab.id}

@@ -25,6 +25,17 @@ import { exportToExcel } from "../../ui/exportToExcel";
 //   Status: string;
 // }
 
+type TabVisibility = {
+  // add:boolean,
+  // edit:boolean,
+  approve: boolean;
+  // approve:boolean,
+  // reject:boolean,
+  reject: boolean;
+  // edit: boolean;
+  // upload:boolean,
+};
+
 const TableContent: React.FC<{
   data: PermissionData[];
   searchTerm: string;
@@ -44,27 +55,26 @@ const TableContent: React.FC<{
   const roleName = localStorage.getItem("userRole");
 
   const [Visibility, setVisibility] = useState<TabVisibility>({
-    allTab: false,
-    uploadTab: false,
-    pendingTab: false,
+    approve: false,
+    reject: false,
   });
 
   useEffect(() => {
     const fetchPermissions = async () => {
       try {
         const response = await axios.post(
-          "https://backend-slqi.onrender.com/api/permissions/permissionJSON",
+          "https://backend-slqi.onrender.com/api/permissions/permissionjson",
           { roleName }
         );
 
         const pages = response.data?.pages;
-        const userTabs = pages?.["permissions"];
+        const userTabs = pages?.["permissions"]?.tabs;
 
         if (userTabs) {
           setVisibility({
-            allTab: userTabs?.allTab?.hasAccess || false,
-            uploadTab: userTabs?.uploadTab?.hasAccess || false,
-            pendingTab: userTabs?.pendingTab?.hasAccess || false,
+            approve: userTabs.pendingTab.showApproveButton || false,
+            reject: userTabs.pendingTab.showRejectButton || false,
+            // pendingTab: userTabs?.pendingTab?.hasAccess || false,
           });
         }
       } catch (error) {
@@ -327,9 +337,9 @@ const TableContent: React.FC<{
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Header Controls - Two rows on mobile, one row on desktop */}
-      <div className="mt-14 flex flex-col gap-6 w-full">
+      <div className="mt-14 flex flex-col gap-3 w-full">
         <div className="flex justify-end w-full">
           <div className="flex items-center gap-4 w-2xl justify-end">
             <button
@@ -365,7 +375,7 @@ const TableContent: React.FC<{
             </button>
 
             <form
-              className="relative flex items-center w-full md:w-64"
+              className="relative flex items-center w-full md:w-[220px]"
               onSubmit={(e) => e.preventDefault()}
             >
               <input
@@ -403,10 +413,14 @@ const TableContent: React.FC<{
         {isPending && (
           <div className="flex justify-end w-full">
             <div className="flex items-center gap-2 w-2xl justify-end">
-              <Button onClick={handleApprove}>Approve</Button>
-              <Button color="Green" onClick={handleReject}>
-                Reject
-              </Button>
+              {Visibility.approve && (
+                <Button onClick={handleApprove}>Approve</Button>
+              )}
+              {Visibility.reject && (
+                <Button color="Green" onClick={handleReject}>
+                  Reject
+                </Button>
+              )}
             </div>
           </div>
         )}

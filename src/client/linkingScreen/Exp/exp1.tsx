@@ -43,8 +43,23 @@ type TabVisibility = {
   edit: boolean;
 };
 
+import { useLocation } from "react-router-dom";
+
 const LinkingScreen = () => {
   const { notify } = useNotification(); // Add this hook
+  const location = useLocation();
+  // Scroll to Linking Summary if hash is #summary
+  useEffect(() => {
+    if (location.hash === "#summary") {
+      // Use setTimeout to ensure DOM is rendered
+      setTimeout(() => {
+        const summarySection = document.getElementById("summary");
+        if (summarySection) {
+          summarySection.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 2000);
+    }
+  }, [location.hash]);
 
   // const [selectedEntity, setSelectedEntity] = useState("");
   const [entityOptions, setEntityOptions] = useState<
@@ -452,7 +467,7 @@ const LinkingScreen = () => {
         </div>
 
         {/* Linked Summary */}
-        <div className="w-full space-y-4 pt-6">
+  <div id="summary" className="w-full space-y-4 pt-6">
           <h2 className="text-2xl font-bold text-secondary-text">
             Linking Summary
           </h2>

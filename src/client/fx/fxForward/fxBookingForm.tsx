@@ -67,6 +67,7 @@ type OptionType = {
   label: string;
 };
 
+
 // API payload type matching the backend requirements
 type ApiPayload = {
   internal_reference_id: string;
@@ -686,7 +687,7 @@ const FxBookingForm: React.FC = () => {
     <React.Fragment>
       <div className="mb-6 pt-4">
         <div className="transition-opacity duration-300">
-          <div className="min-h-screen space-y-2 w-full">
+          <div className="min-h-screen w-full">
             {/* Error and Success Messages */}
 
             <div className="flex items-center relative top-2 justify-end gap-2">
@@ -698,9 +699,9 @@ const FxBookingForm: React.FC = () => {
               <div className="w-15rem">
                 <Button color="Fade" onClick={handlePrintForm}>Print Form</Button>
               </div>
-              <div className="w-15rem">
+              {/* <div className="w-15rem">
                 <Button color="Disable">Save Draft</Button>
-              </div>
+              </div> */}
               <div className="w-15rem">
                 <Button color="Fade" onClick={handleResetForm}>Reset Form</Button>
               </div>

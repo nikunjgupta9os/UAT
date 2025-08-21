@@ -1,14 +1,31 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 interface StatCardProps {
   title: string;
   value: string;
   bgColor: string;
+  drillPath?: string;       
+  withFilter?: boolean;
+  scrollable?: boolean;
 }
 
-const StatCard = ({ title, value, bgColor }: StatCardProps) => (
+const StatCard = ({ title, value, bgColor, drillPath, withFilter, scrollable }: StatCardProps) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    if (!drillPath) return; // not drillable
+
+    if (withFilter) {
+      navigate(`${drillPath}?search=${encodeURIComponent(title)}`);
+    } else {
+      navigate(drillPath);
+    }
+  };
+return(
   <div
+  onClick={handleClick}
     className={`
       ${bgColor}
       text-secondary-color rounded-2xl shadow-md p-4 w-full relative my-2
@@ -52,7 +69,8 @@ const StatCard = ({ title, value, bgColor }: StatCardProps) => (
       </div>
     </div>
   </div>
-);
+)
+};
 
 const StatsPanel = () => {
   const [hedgedExposure, setHedgedExposure] = useState("Loading...");
@@ -174,16 +192,22 @@ const StatsPanel = () => {
           title="Overall Hedge Ratio"
           value={loading ? "Loading..." : hedgeRatio}
           bgColor="bg-gradient-to-tl from-[#4dc9bf] to-[#073f40CC]"
+
         />
         <StatCard
           title="Total Hedged Exposure"
           value={loading ? "Loading..." : hedgedExposure}
           bgColor="bg-gradient-to-r from-[#65b67cf7] to-green-700"
+          drillPath="/linking-screen#summary"
+          withFilter={false}
+          scrollable={true}
         />
         <StatCard
           title="Total Unhedged Exposure"
           value={loading ? "Loading..." : unhedgedExposure}
           bgColor="bg-gradient-to-br from-[#0d6d69CC] to-[#0a5755B3]"
+          drillPath="/linking-screen"
+          withFilter={false}
         />
         <StatCard //
           title="Buy Forwards"
@@ -217,6 +241,8 @@ const StatsPanel = () => {
         title="Avg Exposure Maturity"
         value={loading ? "Loading..." : avgExposureMaturity}
         bgColor="bg-gradient-to-r from-[#65b67cf7] to-green-700"
+        drillPath="/exposure-upload"
+        withFilter={false}
       />
       <StatCard //
         title="Avg Forward Maturity"

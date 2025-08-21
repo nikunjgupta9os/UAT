@@ -4,7 +4,6 @@ import axios from "axios";
 import type { Row } from "@tanstack/react-table";
 import { useNotification } from "../Notification/Notification"; // Add this import
 
-
 type ExpandedRowProps = {
   row: Row<Role>;
   columnVisibility: Record<string, boolean>;
@@ -22,6 +21,7 @@ type ExpandedRowProps = {
   approvalFields: string[];
   showDetailsSection?: boolean;
   showApprovalSection?: boolean;
+  canEdit?: boolean;
 };
 
 const ExpandedRow: React.FC<ExpandedRowProps> = ({
@@ -29,6 +29,7 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
   editStates,
   setEditStates,
   editingRows,
+  canEdit,
   setEditingRows,
   fieldLabels,
   visibleColumnCount,
@@ -126,22 +127,26 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
     edited: Record<string, any>
   ): Record<string, any> => {
     const changes: Record<string, any> = {};
-    
+
     console.log("Original data:", original);
     console.log("Edited data:", edited);
-    
+
     for (const key in edited) {
       const originalValue = (original as any)[key];
       const editedValue = edited[key];
-      
-      console.log(`Comparing ${key}: original="${originalValue}" vs edited="${editedValue}"`);
-      
+
+      console.log(
+        `Comparing ${key}: original="${originalValue}" vs edited="${editedValue}"`
+      );
+
       if (editedValue !== originalValue) {
         changes[key] = editedValue;
-        console.log(`Field ${key} changed from "${originalValue}" to "${editedValue}"`);
+        console.log(
+          `Field ${key} changed from "${originalValue}" to "${editedValue}"`
+        );
       }
     }
-    
+
     console.log("Final changes:", changes);
     return changes;
   };
@@ -151,7 +156,7 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
       console.log("isEditing:", isEditing);
       const changedFields = getChangedFields(row.original, editValues);
       console.log("Changed fields:", changedFields);
-      
+
       if (Object.keys(changedFields).length === 0) {
         // No changes made
         setEditingRows((prev) => {
@@ -202,9 +207,7 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
     const isEditable = editableKeys.includes(key);
     const isTimeField = timeFields.includes(key);
 
-    let value = isEditing 
-      ? editValues[key] 
-      : (row.original as any)[key];
+    let value = isEditing ? editValues[key] : (row.original as any)[key];
 
     // Format time fields for display
     if (!isEditing && isTimeField) {
@@ -218,7 +221,9 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
 
     return (
       <div key={key} className="flex flex-col space-y-1">
-        <label className="text-sm font-semibold text-secondary-text">{label}</label>
+        <label className="text-sm font-semibold text-secondary-text">
+          {label}
+        </label>
         {isEditing && isEditable ? (
           isTimeField ? (
             // Render time input for time fields
@@ -247,7 +252,9 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
             />
           )
         ) : (
-          <span className="text-sm font-medium text-primary-lt">{value ?? "—"}</span>
+          <span className="text-sm font-medium text-primary-lt">
+            {value ?? "—"}
+          </span>
         )}
       </div>
     );
@@ -261,14 +268,16 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
             <h4 className="text-lg font-semibold text-secondary-text">
               Additional Information
             </h4>
-            <div>
-              <Button
+            {canEdit && (
+              <div>
+                <Button
                   onClick={handleEditToggle}
                   color={isEditing ? "Green" : "Fade"}
                 >
                   {isEditing ? "Save" : "Edit"}
                 </Button>
-            </div>
+              </div>
+            )}
           </div>
           {/* Details Section */}
           {showDetailsSection && visibleDetailsKeys.length > 0 && (

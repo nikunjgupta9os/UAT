@@ -19,7 +19,7 @@ type ExpandedRowProps = {
   approvalFields: string[];
   showDetailsSection?: boolean;
   showApprovalSection?: boolean;
-  edit?: boolean; // Add this new prop
+  canEdit?: boolean; // Add this new prop
 };
 
 const ExpandedRow: React.FC<ExpandedRowProps> = ({
@@ -27,6 +27,7 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
   editStates,
   setEditStates,
   editingRows,
+  canEdit,
   setEditingRows,
   fieldLabels,
   visibleColumnCount,
@@ -35,7 +36,6 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
   approvalFields,
   showDetailsSection = true,
   showApprovalSection = true,
-  edit = true, // Default to true to maintain backward compatibility
 }) => {
   const rowId = row.id;
   const isEditing = editingRows.has(rowId);
@@ -194,7 +194,7 @@ const ExpandedRow: React.FC<ExpandedRowProps> = ({
               Additional Information
             </h4>
             {/* Show edit button only if both edit prop and Visibility.edit are true */}
-            {edit && (
+            {canEdit && (
               <div>
                 <Button
                   onClick={handleEditToggle}

@@ -579,7 +579,7 @@ const TransactionTable: React.FC = () => {
     const isEditable = !nonEditableFields.includes(key) && isFieldEditable;
 
     return (
-      <div key={key} className="flex flex-col space-y-1">
+      <div key={key} className="flex flex-col">
         <label className="font-semibold text-sm text-secondary-text capitalize">
           {key.replace(/([A-Z])/g, " $1").trim()}
         </label>
@@ -988,7 +988,7 @@ const TransactionTable: React.FC = () => {
   };
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-2">
       <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Status Filter */}
         <div className="flex flex-col">

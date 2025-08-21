@@ -60,26 +60,22 @@ const Awaitinguser: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   type TabVisibility = {
-    // add:boolean,
-    // edit:boolean,
-    // delete:boolean,
     approve: boolean;
     reject: boolean;
     view: boolean;
-    // upload:boolean,
   };
   const roleName = localStorage.getItem("userRole");
   const [Visibility, setVisibility] = useState<TabVisibility>({
-    approve: true,
-    reject: true,
-    view: true,
+    approve: false,
+    reject: false,
+    view: false,
     // delete: true,
   });
   useEffect(() => {
     const fetchPermissions = async () => {
       try {
         const response = await axios.post(
-          "https://backend-slqi.onrender.com/api/permissions/permissionJSON",
+          "https://backend-slqi.onrender.com/api/permissions/permissionjson",
           { roleName }
         );
 
@@ -88,9 +84,9 @@ const Awaitinguser: React.FC = () => {
 
         if (userTabs) {
           setVisibility({
-            approve: userTabs?.tabs?.allTab?.showApproveButton,
-            reject: userTabs?.tabs?.allTab?.showRejectButton,
-            view: userTabs?.tabs?.allTab?.hasAccess,
+            approve: userTabs.tabs.allTab.showApproveButton,
+            reject: userTabs.tabs.allTab.showRejectButton,
+            view: userTabs.tabs.allTab.hasAccess,
             // delete: userTabs?.allTab?.showDeletebutton || false,
           });
         }
@@ -542,8 +538,8 @@ const Awaitinguser: React.FC = () => {
 
   return (
     <>
-      <div className="space-y-6">
-        <div className="mt-14 flex flex-col gap-6 w-full">
+      <div className="space-y-3">
+        <div className="mt-14 flex flex-col gap-3 w-full">
           <div className="flex justify-end w-full">
             <div className="flex items-center gap-4 w-2xl justify-end">
               <button
@@ -579,7 +575,7 @@ const Awaitinguser: React.FC = () => {
               </button>
 
               <form
-                className="relative flex items-center w-full md:w-64"
+                className="relative flex items-center w-full md:w-[220px]"
                 onSubmit={(e) => e.preventDefault()}
               >
                 <input
@@ -749,7 +745,7 @@ const Awaitinguser: React.FC = () => {
                       {expandedRows.has(row.id) && (
                         <ExpandedRow
                           row={row}
-                          edit={false}
+                          canEdit={false}
                           columnVisibility={columnVisibility}
                           editStates={editStates}
                           setEditStates={setEditStates}

@@ -50,6 +50,17 @@ type BackendResponse = {
   roleData?: Role[];
 };
 
+  type TabVisibility = {
+    // add:boolean,
+    // edit:boolean,
+    delete: boolean;
+    // approve:boolean,
+    // reject:boolean,
+    view: boolean;
+    edit: boolean;
+    // upload:boolean,
+  };
+
 const AllRoles: React.FC = () => {
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
@@ -80,19 +91,12 @@ const AllRoles: React.FC = () => {
       key: "selection",
     },
   ]);
-  type TabVisibility = {
-    // add:boolean,
-    // edit:boolean,
-    delete: boolean;
-    // approve:boolean,
-    // reject:boolean,
-    view: boolean;
-    // upload:boolean,
-  };
+
   const roleName = localStorage.getItem("userRole");
   const [Visibility, setVisibility] = useState<TabVisibility>({
-    view: true,
-    delete: true,
+    view: false,
+    delete: false,
+    edit: false
   });
 
   const { notify, confirm } = useNotification();
@@ -109,8 +113,10 @@ const AllRoles: React.FC = () => {
 
         if (userTabs) {
           setVisibility({
-            view: userTabs?.tabs?.allTab?.hasAccess || false,
-            delete: userTabs?.tabs?.allTab?.showDeleteButton || false,
+            view: userTabs.tabs.allTab.hasAccess || false,
+            delete: userTabs.tabs.allTab.showDeleteButton || false,
+            edit: userTabs.tabs.allTab.showEditButton || false,
+            // edit: false,
           });
         }
       } catch (error) {
@@ -801,6 +807,7 @@ const AllRoles: React.FC = () => {
                           visibleColumnCount={
                             table.getVisibleLeafColumns().length
                           }
+                          canEdit={Visibility.edit}
                           editableKeys={["startTime", "description", "endTime"]}
                           timeFields={["startTime", "endTime"]} // Add this line for time fields
                           detailsFields={[

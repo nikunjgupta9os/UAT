@@ -41,6 +41,10 @@ interface ExpandedRowConfig {
   editableFields?: string[];
   fieldLabels?: Record<string, string>;
 }
+type TabVisibility = {
+  approve:boolean,
+  reject:boolean,
+};
 
 interface TableProps<T extends EditableRowData> {
   data: T[];
@@ -135,7 +139,9 @@ function ExpandedRow<T extends EditableRowData>({
 
     return (
       <div key={key} className="flex flex-col space-y-1">
-        <label className="font-semibold text-sm text-secondary-text">{label}</label>
+        <label className="font-semibold text-sm text-secondary-text">
+          {label}
+        </label>
         {isEditing && isEditable ? (
           typeof row.original[key as keyof T] === "boolean" ? (
             <select
@@ -220,6 +226,39 @@ function NyneOSTable<T extends EditableRowData>({
     defaultColumnVisibility
   );
   const [sorting, setSorting] = useState<any[]>([]);
+
+  const roleName = localStorage.getItem("userRole");
+  const [Visibility, setVisibility] = useState<TabVisibility>({
+    approve: false,
+    reject: false,
+    // edit: false,
+  });
+
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      try {
+        const response = await axios.post(
+          "https://backend-slqi.onrender.com/api/permissions/permissionjson",
+          { roleName }
+        );
+
+        const pages = response.data?.pages;
+        const userTabs = pages?.["exposure-upload"];
+
+        if (userTabs) {
+          setVisibility({
+            approve: userTabs.tabs.pendingTab.showApproveButton || false,
+            reject: userTabs.tabs.pendingTab.showRejectButton || false,
+            // edit: userTabs.tabs.allTab.showEditButton || false,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching permissions:", error);
+      }
+    };
+
+    fetchPermissions();
+  }, []);
 
   // Enhanced columns with sorting capability
   const enhancedColumns: ColumnDef<T>[] = columns.map((col) => {
@@ -512,11 +551,15 @@ function NyneOSTable<T extends EditableRowData>({
   return (
     <>
       <div className="flex items-center justify-end">
-        <div className="flex items-center py-2.5 gap-2 min-w-[12rem]">
-          <Button onClick={handleApprove}>Approve</Button>
-          <Button color="Green" onClick={handleReject}>
-            Reject
-          </Button>
+        <div className="flex items-center gap-2 justify-end">
+          {Visibility.approve && (
+            <Button onClick={handleApprove}>Approve</Button>
+          )}
+          {Visibility.reject && (
+            <Button color="Green" onClick={handleReject}>
+              Reject
+            </Button>
+          )}
         </div>
       </div>
       <div className={`w-full overflow-x-auto ${className}`}>

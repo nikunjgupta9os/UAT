@@ -39,9 +39,9 @@ const Roles = () => {
   const roleName = localStorage.getItem("userRole");
   const [Visibility, setVisibility] = useState<TabVisibility>({
     // approve: true,
-    allTab: true,
-    uploadTab: true,
-    pendingTab: true,
+    allTab: false,
+    uploadTab: false,
+    pendingTab: false,
     // reject: true,
     // view: true,
   });
@@ -62,9 +62,9 @@ const Roles = () => {
         //  console.log(userTabs.allTab.hasAccess);
         if (userTabs) {
           setVisibility({
-            allTab: userTabs?.tabs?.allTab?.hasAccess || false,
-            uploadTab: userTabs?.tabs?.uploadTab?.hasAccess || false,
-            pendingTab: userTabs?.tabs?.pendingTab?.hasAccess || false,
+            allTab: userTabs.tabs.allTab.hasAccess || false,
+            uploadTab: userTabs.tabs.uploadTab.hasAccess || false,
+            pendingTab: userTabs.tabs.pendingTab.hasAccess || false,
           });
         }
       } catch (error) {
@@ -79,18 +79,18 @@ const Roles = () => {
     id: "all",
     label: "All Roles",
     icon: Users,
-    Visbility: Visibility.allTab,
+    visibility: Visibility.allTab,
   },
   {
     id: "awaiting",
     label: "Awaiting Approval",
     icon: Contrast,
-    Visbility: Visibility.pendingTab,
+    visibility: Visibility.pendingTab,
   },
   ];
 
   const tabButtons = useMemo(() => {
-    return TAB_CONFIG.map((tab) => (
+    return TAB_CONFIG.filter(tab => tab.visibility).map((tab) => (
       <button
         key={tab.id}
         onClick={() => switchTab(tab.id)}

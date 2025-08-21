@@ -594,7 +594,7 @@ const FxBookingForm: React.FC = () => {
     <React.Fragment>
       <div className="mb-6 pt-4">
         <div className="transition-opacity duration-300">
-          <div className="min-h-screen space-y-4 w-full">
+          <div className="min-h-screen space-y-2 w-full">
             {/* Error and Success Messages */}
 
             <div className="flex relative top-4 items-center justify-end gap-2">
@@ -609,9 +609,9 @@ const FxBookingForm: React.FC = () => {
               <div className="w-15rem">
                 <Button color="Fade">Print Form</Button>
               </div>
-              <div className="w-15rem">
+              {/* <div className="w-15rem">
                 <Button color="Fade">Save Draft</Button>
-              </div>
+              </div> */}
               <div className="w-15rem">
                 <Button color="Fade" onClick={handleResetForm}>Reset Form</Button>
               </div>

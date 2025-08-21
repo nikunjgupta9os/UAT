@@ -85,9 +85,9 @@ const AllUser: React.FC = () => {
   };
   const roleName = localStorage.getItem("userRole");
   const [Visibility, setVisibility] = useState<TabVisibility>({
-    view: true,
-    delete: true,
-    edit: true,
+    view: false,
+    delete: false,
+    edit: false,
   });
   useEffect(() => {
     const fetchPermissions = async () => {
@@ -847,13 +847,13 @@ const AllUser: React.FC = () => {
                     {expandedRows.has(row.id) && (
                       <ExpandedRow
                         row={row}
-                        edit={Visibility.edit}
                         columnVisibility={columnVisibility}
                         editStates={editStates}
                         setEditStates={setEditStates}
                         editingRows={editingRows}
                         setEditingRows={setEditingRows}
                         fieldLabels={fieldLabels}
+                        canEdit={Visibility.edit}
                         visibleColumnCount={
                           table.getVisibleLeafColumns().length
                         }

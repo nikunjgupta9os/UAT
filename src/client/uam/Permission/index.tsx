@@ -49,18 +49,18 @@ const Permission = () => {
     const fetchPermissions = async () => {
       try {
         const response = await axios.post(
-          "https://backend-slqi.onrender.com/api/permissions/permissionJSON",
+          "https://backend-slqi.onrender.com/api/permissions/permissionjson",
           { roleName }
         );
 
         const pages = response.data?.pages;
-        const userTabs = pages?.["permissions"];
+        const userTabs = pages?.["permissions"]?.tabs;
 
         if (userTabs) {
           setVisibility({
-            allTab: userTabs?.allTab?.hasAccess || false,
-            uploadTab: userTabs?.uploadTab?.hasAccess || false,
-            pendingTab: userTabs?.pendingTab?.hasAccess || false,
+            allTab: userTabs.allTab.hasAccess,
+            uploadTab: userTabs.uploadTab.hasAccess,
+            pendingTab: userTabs.pendingTab.hasAccess,
           });
         }
       } catch (error) {
@@ -75,13 +75,13 @@ const Permission = () => {
       id: "all",
       label: "Assign Permissions",
       icon: Users,
-      visibility: Visibility.allTab,
+      visibility: Visibility.uploadTab,
     },
     {
       id: "Awaiting",
       label: "Pending Permissions",
       icon: Contrast,
-      visibility: Visibility.allTab,
+      visibility: Visibility.pendingTab,
     },
     {
       id: "AllPermission",
@@ -91,7 +91,7 @@ const Permission = () => {
     },
   ];
   const tabButtons = useMemo(() => {
-    return TAB_CONFIG.map((tab) => (
+    return TAB_CONFIG.filter(tab => tab.visibility).map((tab) => (
       <button
         key={tab.id}
         onClick={() => switchTab(tab.id)}
@@ -113,6 +113,14 @@ const Permission = () => {
   }, [Visibility, activeTab, switchTab, isActiveTab]);
 
   const currentContent = useMemo(() => {
+
+    //  // Check if current active tab has visibility
+    // const currentTabConfig = TAB_CONFIG.find(tab => tab.id === activeTab);
+    
+    // if (!currentTabConfig || !currentTabConfig.visibility) {
+    //   return <div className="p-4 text-primary">No accessible tabs available.</div>;
+    // }
+
     switch (activeTab) {
       case "all":
         return <AssignPermission />;
@@ -121,9 +129,10 @@ const Permission = () => {
       case "AllPermission":
         return <AllPermission />;
       default:
-        return <AssignPermission />;
+        return <div className="p-4 text-gray-600">This tab is not available.</div>;
     }
   }, [activeTab]);
+
 
   return (
     <>

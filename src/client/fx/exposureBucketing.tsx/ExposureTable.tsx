@@ -785,7 +785,7 @@ const ExposureBucketing: React.FC = () => {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3.5">
       <div className="-mt-2 grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Status Filter */}
         <div className="flex flex-col">
@@ -807,7 +807,7 @@ const ExposureBucketing: React.FC = () => {
       </div>
 
       {/* Row 2: Search */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-3">
         <div className="col-span-1 md:col-span-4 flex items-center justify-end gap-4">
           {/* Search Form */}
           <form
