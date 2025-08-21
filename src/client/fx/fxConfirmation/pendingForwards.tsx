@@ -568,6 +568,29 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ tag }) => {
     }
   };
 
+  // Add these options at the top of your file or inside the component
+  const orderTypeOptions = [
+    { value: "Buy", label: "Buy" },
+    { value: "Sell", label: "Sell" },
+  ];
+
+  const modeOfDeliveryOptions = [
+    { value: "Cash", label: "Cash" },
+    { value: "TOM", label: "TOM" },
+    { value: "Spot", label: "Spot" },
+    { value: "Forward", label: "Forward" },
+  ];
+
+  const deliveryPeriodOptions = [
+    { value: "1M", label: "1 Month" },
+    { value: "2M", label: "2 Months" },
+    { value: "3M", label: "3 Months" },
+    { value: "4M", label: "4 Months" },
+    { value: "5M", label: "5 Months" },
+    { value: "6M", label: "6 Months" },
+  ];
+
+  // Update renderField for Delivery Period and Mode of Delivery
   const renderField = (
     key: keyof Transaction,
     value: any,
@@ -588,6 +611,103 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ tag }) => {
 
     const isEditable = !nonEditableFields.includes(key) && isFieldEditable;
 
+    // Dropdown for Order Type
+    if (isEditing && isEditable && key === "orderType") {
+      return (
+        <div key={key} className="flex flex-col">
+          <label className="font-semibold text-sm text-secondary-text capitalize">
+            Order Type
+          </label>
+          <select
+            className="border rounded px-2 py-1 text-sm bg-white shadow-sm"
+            value={editValues.orderType || value || ""}
+            onChange={(e) => {
+              const newValue = e.target.value;
+              setEditValues((prev) => ({
+                ...prev,
+                orderType: newValue,
+                totalRate: calculateTotalRate({ ...prev, orderType: newValue }),
+              }));
+            }}
+          >
+            <option value="">Select</option>
+            {orderTypeOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <span className="text-xs text-gray-500">
+            Old: {String(originalValue ?? "—")}
+          </span>
+        </div>
+      );
+    }
+
+    // Dropdown for Delivery Period (Months)
+    if (isEditing && isEditable && key === "deliveryPeriod") {
+      return (
+        <div key={key} className="flex flex-col">
+          <label className="font-semibold text-sm text-secondary-text capitalize">
+            Delivery Period
+          </label>
+          <select
+            className="border rounded px-2 py-1 text-sm bg-white shadow-sm"
+            value={editValues.deliveryPeriod || value || ""}
+            onChange={(e) => {
+              const newValue = e.target.value;
+              setEditValues((prev) => ({
+                ...prev,
+                deliveryPeriod: newValue,
+              }));
+            }}
+          >
+            <option value="">Select</option>
+            {deliveryPeriodOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <span className="text-xs text-gray-500">
+            Old: {String(originalValue ?? "—")}
+          </span>
+        </div>
+      );
+    }
+
+    // Dropdown for Mode of Delivery
+    if (isEditing && isEditable && key === "modeOfDelivery") {
+      return (
+        <div key={key} className="flex flex-col">
+          <label className="font-semibold text-sm text-secondary-text capitalize">
+            Mode of Delivery
+          </label>
+          <select
+            className="border rounded px-2 py-1 text-sm bg-white shadow-sm"
+            value={editValues.modeOfDelivery || value || ""}
+            onChange={(e) => {
+              const newValue = e.target.value;
+              setEditValues((prev) => ({
+                ...prev,
+                modeOfDelivery: newValue,
+              }));
+            }}
+          >
+            <option value="">Select</option>
+            {modeOfDeliveryOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <span className="text-xs text-gray-500">
+            Old: {String(originalValue ?? "—")}
+          </span>
+        </div>
+      );
+    }
+
     return (
       <div key={key} className="flex flex-col">
         <label className="font-semibold text-sm text-secondary-text capitalize">
@@ -606,19 +726,24 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ tag }) => {
                   : "text"
               }
               step={typeof originalValue === "number" ? "0.0001" : undefined}
+              max={key.includes("Date") ? getMaxDate() : undefined}
               onChange={(e) => {
-                const newValue =
+                let newValue =
                   typeof originalValue === "number"
                     ? parseFloat(e.target.value) || 0
                     : e.target.value;
 
-                // Create updated values object
+                // Clamp date input to 2025-12-31
+                const maxDate = getMaxDate();
+                if (key.includes("Date") && newValue > maxDate) {
+                  newValue = maxDate;
+                }
+
                 const updatedValues = {
                   ...editValues,
                   [key]: newValue,
                 };
 
-                // If the changed field affects total rate, recalculate it
                 if (
                   [
                     "spotRate",
@@ -688,14 +813,47 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ tag }) => {
       },
       {
         id: "select",
-        header: ({ table }) => (
-          <input
-            type="checkbox"
-            checked={table.getIsAllRowsSelected()}
-            onChange={table.getToggleAllRowsSelectedHandler()}
-            className="accent-primary w-4 h-4 bg-gray-100 border-gray-300 rounded focus:ring-primary-lt focus:ring-2"
-          />
-        ),
+        header: ({ table }) => {
+          // Calculate the current page's data slice
+          const pageRows = table.getPaginationRowModel().rows;
+          const allPageSelected = pageRows.every((row) => row.getIsSelected());
+          const somePageSelected = pageRows.some((row) => row.getIsSelected());
+
+          // Ref for the checkbox
+          const selectAllRef = React.useRef<HTMLInputElement>(null);
+
+          // Set indeterminate state
+          React.useEffect(() => {
+            if (selectAllRef.current) {
+              selectAllRef.current.indeterminate = somePageSelected && !allPageSelected;
+            }
+          }, [somePageSelected, allPageSelected]);
+
+          return (
+            <input
+              type="checkbox"
+              ref={selectAllRef}
+              checked={allPageSelected}
+              onChange={() => {
+                if (allPageSelected) {
+                  // Deselect all rows on this page only
+                  const newSelected = { ...selectedRowIds };
+                  pageRows.forEach((row) => {
+                    delete newSelected[row.id];
+                  });
+                  setSelectedRowIds(newSelected);
+                } else {
+                  // Select all rows on this page only
+                  const newSelected = { ...selectedRowIds };
+                  pageRows.forEach((row) => {
+                    newSelected[row.id] = true;
+                  });
+                  setSelectedRowIds(newSelected);
+                }
+              }}
+              className="accent-primary w-4 h-4 bg-gray-100 border-gray-300 rounded focus:ring-primary-lt focus:ring-2"
+            />
+   ) },
         cell: ({ row }) => (
           <input
             type="checkbox"
@@ -712,14 +870,14 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ tag }) => {
         header: "Action",
         cell: ({ row }) => (
           <div className="flex items-center justify-center gap-1">
-            {Visibility.delete && (
+           
               <button
                 onClick={() => handleForwardDelete()}
                 className="flex items-center gap-1 px-2 py-2 text-xs font-semibold rounded text-red-600 hover:bg-primary-xl transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
-            )}
+          
           </div>
         ),
       },
@@ -878,7 +1036,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ tag }) => {
 
   const defaultColumnVisibility: Record<string, boolean> = {
     select: true,
-    action: true,
+    action: Visibility.delete,
     systemTransactionId: false,
     internalReferenceId: true,
     orderType: true,
@@ -897,6 +1055,14 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ tag }) => {
   const [columnVisibility, setColumnVisibility] = useState<
     Record<string, boolean>
   >(defaultColumnVisibility);
+
+  // Add this useEffect to sync action column visibility with permissions
+  useEffect(() => {
+    setColumnVisibility((prev) => ({
+      ...prev,
+      action: Visibility.delete,
+    }));
+  }, [Visibility.delete]);
 
   const table = useReactTable({
     data: filteredData,
@@ -995,6 +1161,39 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ tag }) => {
       return (spotRate || 0) + (forwardPoints || 0) - (bankMargin || 0);
     }
     return values.totalRate || 0;
+  };
+
+  // Add this useEffect for auto-calculate Maturity Date for 1M, 3M
+  useEffect(() => {
+    if (
+      editValues.deliveryPeriod &&
+      /^\d+M$/.test(editValues.deliveryPeriod)
+    ) {
+      const match = editValues.deliveryPeriod.match(/^(\d+)M$/);
+      if (match) {
+        const monthsToAdd = parseInt(match[1], 10);
+        const now = new Date();
+        now.setMonth(now.getMonth() + monthsToAdd);
+
+        // Clamp to today + 5 years
+        const maxDate = new Date();
+        maxDate.setFullYear(maxDate.getFullYear() + 5);
+        if (now > maxDate) now.setTime(maxDate.getTime());
+
+        const maturityDate = now.toISOString().slice(0, 10);
+        if (editValues.maturityDate !== maturityDate) {
+          setEditValues((prev) => ({ ...prev, maturityDate }));
+        }
+      }
+    }
+    // eslint-disable-next-line
+  }, [editValues.deliveryPeriod]);
+
+  // Helper to get date string for today + 5 years
+  const getMaxDate = () => {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() + 5);
+    return date.toISOString().slice(0, 10);
   };
 
   return (
