@@ -1095,19 +1095,6 @@ const TransactionTable: React.FC = () => {
             </Button>
           )}
         </div>
-
-        {/* Search Results Info */}
-{/*         {searchTerm && (
-          <div className="text-sm text-gray-600">
-{/*             Found {filteredData.length} result(s) for "{searchTerm}" */}
-        //     <button
-        //       onClick={() => setSearchTerm("")}
-        //       className="ml-2 text-primary hover:underline"
-        //     >
-        //       Clear
-        //     </button>
-        //   </div>
-        // )} */}
       </div>
 
       <div className="shadow-lg border border-border">
