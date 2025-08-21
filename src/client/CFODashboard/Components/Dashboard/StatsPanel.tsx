@@ -9,21 +9,21 @@ interface StatCardProps {
   drillPath?: string;       
   withFilter?: boolean;
   scrollable?: boolean;
+  state?: any;
 }
 
-const StatCard = ({ title, value, bgColor, drillPath, withFilter, scrollable }: StatCardProps) => {
+const StatCard = ({ title, value, bgColor, drillPath, withFilter, scrollable, state }: StatCardProps) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    if (!drillPath) return; // not drillable
-
+    if (!drillPath) return;
     if (withFilter) {
-      navigate(`${drillPath}?search=${encodeURIComponent(title)}`);
+      navigate(drillPath, { state });
     } else {
       navigate(drillPath);
     }
   };
-return(
+  return(
   <div
   onClick={handleClick}
     className={`
@@ -213,11 +213,17 @@ const StatsPanel = () => {
           title="Buy Forwards"
           value={loading ? "Loading..." : buyForwards}
           bgColor="bg-gradient-to-tr from-[#40916c] to-[#52b788]"
+          drillPath="/fx-confirmation"
+          withFilter={true}
+          state={{ tag: "Buy" }}
         />
         <StatCard //
           title="Sell Forwards"
           value={loading ? "Loading..." : sellForwards}
           bgColor="bg-gradient-to-tr from-[#80ed99] to-[#5c4d7a]"
+          drillPath="/fx-confirmation"
+          withFilter={true}
+          state={{ tag: "Sell" }}
         />
       </div>
 
@@ -236,6 +242,8 @@ const StatsPanel = () => {
         title="Cost of Bank Margin (YTD)"
         value={loading ? "Loading..." : bankMargin}
         bgColor="bg-gradient-to-l from-[#429d5c] to-[#68ba7fe9]"
+        drillPath="/fx-confirmation"
+        withFilter={false}
       />
       <StatCard //
         title="Avg Exposure Maturity"
@@ -248,6 +256,8 @@ const StatsPanel = () => {
         title="Avg Forward Maturity"
         value={loading ? "Loading..." : avgForwardMaturity}
         bgColor="bg-gradient-to-r from-[#65b67cf7] to-green-700"
+        drillPath="/fx-confirmation"
+        withFilter={false}
       />
       </div>
     </div>

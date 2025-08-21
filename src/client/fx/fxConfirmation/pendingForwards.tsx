@@ -79,7 +79,11 @@ type TabVisibility = {
 
 const nonDraggableColumns = ["expand", "action", "select"];
 
-const TransactionTable: React.FC = () => {
+interface TransactionTableProps {
+  tag?: string | null;
+}
+
+const TransactionTable: React.FC<TransactionTableProps> = ({ tag }) => {
   const { notify, confirm } = useNotification();
   const [selectedRowIds, setSelectedRowIds] = useState<Record<string, boolean>>(
     {}
@@ -118,9 +122,15 @@ const TransactionTable: React.FC = () => {
     return ["All", ...Array.from(options)];
   }, [data]);
 
-  // Filter data based on status filter and search term
+  // Filter data based on status filter, search term, and tag prop (Buy/Sell)
   const filteredData = useMemo(() => {
     let result = [...data];
+
+    if (tag === "Buy") {
+      result = result.filter((item) => item.orderType === "Buy");
+    } else if (tag === "Sell") {
+      result = result.filter((item) => item.orderType === "Sell");
+    }
 
     if (searchTerm.trim()) {
       const lowerSearch = searchTerm.toLowerCase();
@@ -140,7 +150,7 @@ const TransactionTable: React.FC = () => {
     }
 
     return result;
-  }, [data, searchTerm, statusFilter]);
+  }, [data, searchTerm, statusFilter, tag]);
 
   // Export to Excel functionality
   const exportToExcel = (dataToExport: Transaction[], filename: string) => {

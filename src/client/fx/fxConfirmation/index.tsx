@@ -4,6 +4,7 @@ import Layout from "../../common/Layout";
 import FxConfirmation from "./fxConfirmation";
 import FxUploadForm from "./fxUpload";
 import TransactionTable from "./pendingForwards";
+import { useLocation } from "react-router-dom";
 import LoadingSpinner from "../../ui/LoadingSpinner";
 import axios from "axios";
 
@@ -35,8 +36,11 @@ const useTabNavigation = (initialTab: string = "Form") => {
 };
 
 const FxConfirmationPage = () => {
-  const { activeTab, switchTab, isActiveTab } = useTabNavigation("Form");
+  const { activeTab, switchTab, isActiveTab } = useTabNavigation("add");
   const roleName = localStorage.getItem("userRole");
+  const location = useLocation();
+  // Store tag in state so it can be reset when switching tabs
+  const [tag, setTag] = useState(() => (location.state && location.state.tag) || null);
 
   const [Visibility, setVisibility] = useState<TabVisibility>({
     fxForm: false,
@@ -76,6 +80,12 @@ const FxConfirmationPage = () => {
 
   const TAB_CONFIG = [
     {
+      id: "add",
+      label: "Pending Forwards",
+      icon: Contrast,
+      visibility: Visibility.pendingForwards,
+    },
+    {
       id: "Form",
       label: "Fx Confirmation Form",
       icon: FileEdit,
@@ -87,31 +97,32 @@ const FxConfirmationPage = () => {
       icon: UploadCloud,
       visibility: Visibility.fxUpload,
     },
-    {
-      id: "add",
-      label: "Pending Forwards",
-      icon: Contrast,
-      visibility: Visibility.pendingForwards,
-    },
+    
   ];
 
   const tabButtons = useMemo(() => {
-    return TAB_CONFIG.filter(tab => tab.visibility).map((tab) => (
+    return TAB_CONFIG.filter(tab => tab.visibility).map((tabConfig) => (
       <button
-        key={tab.id}
-        onClick={() => switchTab(tab.id)}
+        key={tabConfig.id}
+        onClick={() => {
+          switchTab(tabConfig.id);
+          // Remove tag filter when switching away from Pending Forwards
+          if (tabConfig.id !== "add") {
+            setTag(null);
+          }
+        }}
         className={`
           flex items-center space-x-2 px-6 py-3 text-sm font-medium rounded-t-lg border-b-2 transition-all duration-200
           ${
-            isActiveTab(tab.id)
+            isActiveTab(tabConfig.id)
               ? "bg-primary-lt text-white border-primary shadow-sm"
               : "bg-body-hover text-secondary-text border-body-hover hover:bg-body-active hover:text-primary"
           }
         `}
       >
         <span className="flex items-center">
-          <tab.icon size={20} className="mr-2" />
-          {tab.label}
+          <tabConfig.icon size={20} className="mr-2" />
+          {tabConfig.label}
         </span>
       </button>
     ));
@@ -131,11 +142,11 @@ const FxConfirmationPage = () => {
       case "Upload":
         return <FxUploadForm />;
       case "add":
-        return <TransactionTable />;
+        return <TransactionTable tag={tag} />;
       default:
         return <div className="p-4 text-gray-600">This tab is not available.</div>;
     }
-  }, [activeTab, Visibility.fxForm, Visibility.fxUpload, Visibility.pendingForwards]);
+  }, [activeTab, Visibility.fxForm, Visibility.fxUpload, Visibility.pendingForwards, tag]);
 
   // Only show content if there are visible tabs
   const hasVisibleTabs = TAB_CONFIG.some(tab => tab.visibility);
