@@ -652,7 +652,7 @@ const ApprovedUser: React.FC = () => {
                           editingRows={editingRows}
                           setEditingRows={setEditingRows}
                           fieldLabels={fieldLabels}
-                          edit={false}
+                          canEdit={false}
                           visibleColumnCount={
                             table.getVisibleLeafColumns().length
                           }
