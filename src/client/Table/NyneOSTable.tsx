@@ -1,15 +1,15 @@
 import React, { useRef, useEffect, useState } from "react";
 import { DndContext, type DragEndEvent } from "@dnd-kit/core";
 import { restrictToFirstScrollableAncestor } from "@dnd-kit/modifiers";
-import { Draggable } from "../../common/Draggable";
-import { Droppable } from "../../common/Droppable";
+import { Draggable } from "../common/Draggable";
+import { Droppable } from "../common/Droppable";
 import {
   flexRender,
   type Row,
   type Table,
   type ColumnDef,
 } from "@tanstack/react-table";
-import Button from "../../ui/Button";
+import Button from "../ui/Button";
 import RenderField from "./renderFeild";
 
 type Section<T> = {
