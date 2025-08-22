@@ -26,6 +26,13 @@ import {
 
 const BANKS = ["Axis", "Kotak", "ICICI", "HDFC"];
 
+const bankTypeMap: Record<string, string> = {
+  ICICI: "forward_icici",
+  Axis: "forward_axis",
+  HDFC: "forward_hdfc",
+  Kotak: "forward_kotak",
+};
+
 const FxUploader: React.FC = () => {
   const [dragActive, setDragActive] = React.useState(false);
   const [files, setFiles] = React.useState<UploadedFile[]>([]);
@@ -183,7 +190,6 @@ const FxUploader: React.FC = () => {
 
     setFiles((prev) => [...prev, ...newFiles]);
 
-   
     const processFile = async (file: File, fileData: UploadedFile) => {
       try {
         if (selectedBank === "") {
@@ -198,7 +204,11 @@ const FxUploader: React.FC = () => {
             id: fileData.id,
             update: {
               ...validation,
-              status: validation.status as "success" | "error" | "pending" | "processing",
+              status: validation.status as
+                | "success"
+                | "error"
+                | "pending"
+                | "processing",
             },
           };
         } else {
@@ -270,6 +280,14 @@ const FxUploader: React.FC = () => {
     }
 
     try {
+      const userId = localStorage.getItem("userId") || "";
+      const bankTypeMap: Record<string, string> = {
+        ICICI: "forward_icici",
+        Axis: "forward_axis",
+        HDFC: "forward_hdfc",
+        Kotak: "forward_kotak",
+      };
+
       for (const file of validFiles) {
         let blob: Blob | File | undefined;
         let fileName: string;
@@ -293,23 +311,34 @@ const FxUploader: React.FC = () => {
         }
 
         const formData = new FormData();
-        formData.append(
-          "files",
-          new File([blob], fileName, { type: "text/csv" })
-        );
 
-        // Add this line to skip duplicates
-        formData.append("skipDuplicates", "true");
+        const isBankApi = selectedBank !== "";
+        const apiUrl = isBankApi
+          ? "https://backend-slqi.onrender.com/api/forwards/bank-forward-bookings/upload-multi"
+          : "https://backend-slqi.onrender.com/api/forwards/forward-bookings/upload-multi";
 
-        const response = await axios.post(
-          "https://backend-slqi.onrender.com/api/forwards/forward-bookings/upload-multi",
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
+        const fieldName = isBankApi ? bankTypeMap[selectedBank] || "" : "files";
+
+        if (isBankApi) {
+          formData.append("userId", userId);
+          formData.append(
+            fieldName,
+            new File([blob], fileName, { type: "text/csv" })
+          );
+        } else {
+          formData.append(
+            "files",
+            new File([blob], fileName, { type: "text/csv" })
+          );
+          formData.append("skipDuplicates", "true");
+        }
+
+        console.log([...formData.entries()]); //
+        const response = await axios.post(apiUrl, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
 
         // Check if the overall upload was successful
         if (response.data.success && response.data.results) {
