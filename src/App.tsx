@@ -8,6 +8,8 @@ import NotificationProvider from "./client/Notification/Notification.tsx";
 import MTMCalculator from './client/MTMCalculator/MTMCalculator';
 import MTMRateInput from './client/MTMRateInput/MTMRateInput';
 
+
+const CounterPartyScreen = lazy(() => import("./client/MASTER/counterPartyMaster/index.tsx"));
 const TransactionScreen = lazy(() => import("./client/CASH/Transaction/index.tsx"));
 // Lazy load components
 const Users = lazy(() => import("./client/uam/Users"));
@@ -89,6 +91,7 @@ function App() {
               <Route path="/transaction-screen" element={<TransactionScreen />} />
               {/* <Route path="/fxbooking" element={<FXForwardBookingForm />} /> */}
               <Route path="/linking-screen" element={<LinkingScreen />} />
+              <Route path="/counterparty-master" element={<CounterPartyScreen />} />
               {/* <Route path="/exposure-selection" element={<ExposureSelection />} /> */}
               <Route path="/fx-confirmation" element={<FxConfirmationPage />} />
               <Route path="/fxbooking" element={<FxForward />} />

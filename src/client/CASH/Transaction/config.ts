@@ -75,54 +75,9 @@ const templates: Template[] = [
       "Customer XYZ Co", "INV002", "2025-07-21", "2025-08-21", "37500", "USD"
     ],
   },
-  // Add other templates here similarly...
 ];
 
-const RECEIVABLE_TEMPLATE = {
-  id: "receivable",
-  name: "Receivable Template",
-  headers: [
-    "customer_name",
-    "invoice",
-    "invoice_date",
-    "due_date",
-    "invoice_amount",
-    "currency"
-  ],
-  sampleRow: [
-    "Customer XYZ Co",
-    "INV002",
-    "2025-07-21",
-    "2025-08-21",
-    "37500",
-    "USD"
-  ]
-};
-
-const PAYABLE_TEMPLATE = {
-  id: "payables",
-  name: "Payables Template",
-  headers: [
-    "vendor_name",
-    "invoice",
-    "invoice_date",
-    "due_date",
-    "invoice_amount",
-    "currency"
-  ],
-  sampleRow: [
-    "Vendor ABC Ltd",
-    "INV001",
-    "2025-07-21",
-    "2025-08-21",
-    "50000",
-    "USD"
-  ]
-};
-
 export {
-    PAYABLE_TEMPLATE,
-    RECEIVABLE_TEMPLATE,
     templates,
     payablesValidationConfig,
     receivablesValidationConfig

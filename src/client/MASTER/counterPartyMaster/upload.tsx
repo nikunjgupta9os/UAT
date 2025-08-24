@@ -7,9 +7,9 @@ import {
   validateFileContent,
   validatePreviewData,
 } from "../../fx/exposureUpload.tsx/UPLOADER/realValidation.ts";
-import TemplateGrid from "./templateGrid.tsx";
-import handleDownload  from "./handleDownload.ts";
-import { templates, receivablesValidationConfig, payablesValidationConfig} from "./config.ts";
+import TemplateGrid from "../../CASH/Transaction/templateGrid.tsx";
+import handleDownload  from "../../CASH/Transaction/handleDownload.ts";
+import { templates,counterpartyValidationConfig} from "./config.ts";
 import type {
   PreviewState,
   UploadedFile,
@@ -17,16 +17,7 @@ import type {
 // import convertToCSVBlob from "../../fx/exposureUpload.tsx/UPLOADER/convertToCSVBlob.ts";
 // import parseExcel from "../../fx/exposureUpload.tsx/UPLOADER/parseExcel.ts";
 
-const getValidationConfigFromSelected = (selectedType: string) => {
-  switch (selectedType) {
-    case "payables":
-      return payablesValidationConfig;
-    case "receivables":
-      return receivablesValidationConfig;
-    default:
-      return receivablesValidationConfig;
-  }
-};
+
 
 
 const EXPOSURE_OPTIONS = [
@@ -110,7 +101,7 @@ const UploadFile: React.FC = () => {
 
     const processFile = async (file: File, fileData: UploadedFile) => {
       try {
-        const validationConfig = getValidationConfigFromSelected(selectedType);
+        const validationConfig = counterpartyValidationConfig;
         const validation = await validateFileContent(file, validationConfig);
 
         if (!validation || !validation.status) {
@@ -177,196 +168,6 @@ const UploadFile: React.FC = () => {
     event.target.value = "";
   };
 
-//   const handleSetManually = async () => {
-//     if (!selectedType) {
-//       notify("Please select an exposure type before submitting.", "error");
-//       return;
-//     }
-
-//     // Check if there are any files with validation errors
-//     const filesWithErrors = files.filter(
-//       (file) => file.validationErrors && file.validationErrors.length > 0
-//     );
-
-//     if (filesWithErrors.length > 0) {
-//       notify(
-//         "Please resolve all validation errors before submitting.",
-//         "error"
-//       );
-//       return;
-//     }
-
-//     notify("Uploading files...", "info");
-
-//     let successCount = 0;
-//     let errorCount = 0;
-
-//     for (const file of files) {
-//       try {
-//         let blob: Blob | File | undefined;
-//         let fileName: string;
-
-//         // Check if file is Excel format
-//         const isExcelFile =
-//           file.name.toLowerCase().endsWith(".xlsx") ||
-//           file.name.toLowerCase().endsWith(".xls");
-
-//         // Use edited preview data if available
-//         if (
-//           (file as any).previewEdited &&
-//           previewStates[file.id]?.headers &&
-//           previewStates[file.id]?.data
-//         ) {
-//           // Convert preview data to CSV
-//           blob = convertToCSVBlob(
-//             previewStates[file.id].headers,
-//             previewStates[file.id].data
-//           );
-//           fileName = `${file.name.replace(
-//             /\.(csv|xlsx|xls)$/i,
-//             ""
-//           )}_modified.csv`;
-//         } else if (isExcelFile && file.file) {
-//           // Convert Excel file to CSV for upload
-//           try {
-//             const arrayBuffer = await file.file.arrayBuffer();
-//             const excelData = parseExcel(arrayBuffer);
-
-//             if (excelData.length === 0) {
-//               throw new Error("Excel file appears to be empty");
-//             }
-
-//             const [headers, ...rows] = excelData;
-//             blob = convertToCSVBlob(headers, rows);
-//             fileName = `${file.name.replace(
-//               /\.(xlsx|xls)$/i,
-//               ""
-//             )}_converted.csv`;
-
-//             // notify(`Converting ${file.name} to CSV format...`, "info");
-//           } catch (excelError) {
-//             errorCount++;
-
-//             continue;
-//           }
-//         } else if (file.file) {
-//           // Use original file (CSV)
-//           blob = file.file;
-//           fileName = file.name;
-//         } else {
-//           errorCount++;
-//           notify(`No file data found for ${file.name}`, "error");
-//           continue;
-//         }
-
-//         const formData = new FormData();
-//         const fieldName =
-//           selectedType === "PO"
-//             ? "input_purchase_orders"
-//             : selectedType === "LC"
-//             ? "input_letters_of_credit"
-//             : selectedType === "GRN"
-//             ? "input_grn"
-//             : selectedType === "Creditor"
-//             ? "input_creditors"
-//             : selectedType === "Debtors"
-//             ? "input_debitors"
-//             : "input_sales_orders";
-
-//         formData.append(
-//           fieldName,
-//           new File([blob], fileName, { type: "text/csv" }) // Always set type as CSV
-//         );
-
-//         console.log(formData, "FormData for upload", fieldName);
-
-//         // notify(`Uploading ${fileName}...`, "info");
-
-//         const res = await axios.post(
-//           "https://backend-slqi.onrender.com/api/exposureUpload/batch-upload",
-//           formData,
-//           {
-//             headers: {
-//               "Content-Type": "multipart/form-data",
-//             },
-//             timeout: 30000, // 30 second timeout
-//           }
-//         );
-
-//         if (res.data.results && res.data.results[0]?.success) {
-//           successCount++;
-//           notify(`✓ ${file.name} uploaded successfully`, "success");
-//         } else if (res.data.results && res.data.results[0]) {
-//           errorCount++;
-//           const errorMsg = res.data.results[0]?.error || "Unknown error";
-
-//           // Handle specific error types
-//           if (errorMsg.includes("duplicate key")) {
-//             notify(
-//               `✗ Upload failed for ${file.name}: Duplicate data found`,
-//               "error"
-//             );
-//           } else if (errorMsg.includes("validation")) {
-//             notify(
-//               `✗ Upload failed for ${file.name}: Data validation error`,
-//               "error"
-//             );
-//           } else {
-//             notify(`✗ Upload failed for ${file.name}: ${errorMsg}`, "error");
-//           }
-//         } else {
-//           errorCount++;
-//           notify(
-//             `✗ Upload failed for ${file.name}: Invalid response from server`,
-//             "error"
-//           );
-//         }
-//       } catch (err) {
-//         errorCount++;
-//         console.error(`Error uploading ${file.name}:`, err);
-
-//         if (axios.isAxiosError(err)) {
-//           if (err.code === "ECONNABORTED") {
-//             notify(
-//               `✗ Upload timeout for ${file.name}. Please try again.`,
-//               "error"
-//             );
-//           } else if (err.response?.status === 413) {
-//             notify(`✗ File ${file.name} is too large`, "error");
-//           } else if (err.response?.status >= 500) {
-//             notify(
-//               `✗ Server error occurred during upload for ${file.name}`,
-//               "error"
-//             );
-//           } else {
-//             notify(
-//               `✗ Network error occurred during upload for ${file.name}`,
-//               "error"
-//             );
-//           }
-//         } else {
-//           notify(
-//             `✗ Unexpected error occurred during upload for ${file.name}`,
-//             "error"
-//           );
-//         }
-//       }
-//     }
-
-//     // Final summary
-//     if (successCount > 0 && errorCount === 0) {
-//       notify(`All ${successCount} file(s) uploaded successfully!`, "success");
-//       setFiles([]);
-//       setPreviewStates({});
-//     } else if (successCount > 0) {
-//       notify(
-//         `${successCount} file(s) uploaded successfully, ${errorCount} failed`,
-//         "warning"
-//       );
-//     } else if (errorCount > 0) {
-//       notify(`All ${errorCount} file(s) failed to upload`, "error");
-//     }
-//   };
 
   return (
     <React.Fragment>
@@ -464,7 +265,7 @@ const UploadFile: React.FC = () => {
             setFiles={setFiles}
             setPreviewStates={setPreviewStates}
             previewStates={previewStates}
-            validationConfig={getValidationConfigFromSelected(selectedType)}
+            validationConfig={counterpartyValidationConfig}
             validatePreviewData={validatePreviewData}
           />
         )}
