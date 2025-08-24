@@ -9,6 +9,8 @@ import MTMCalculator from './client/MTMCalculator/MTMCalculator';
 import MTMRateInput from './client/MTMRateInput/MTMRateInput';
 
 
+const CostProfitCenterMaster = lazy(() => import("./client/MASTER/costProfitCenterMaster/index.tsx"));
+const GLMasterScreen = lazy(() => import("./client/MASTER/glAccpuntMaster/index.tsx"));
 const CounterPartyScreen = lazy(() => import("./client/MASTER/counterPartyMaster/index.tsx"));
 const TransactionScreen = lazy(() => import("./client/CASH/Transaction/index.tsx"));
 // Lazy load components
@@ -87,6 +89,8 @@ function App() {
               <Route path="/forgot-password" element={<ForgotPassword />} />
 
               {/* Protected Routes */}
+              <Route path="/gl-master" element={<GLMasterScreen />} />
+              <Route path="/costprofit-master" element={<CostProfitCenterMaster />} />
               <Route path="/hedging-dashboard" element={<NetExposure />} />
               <Route path="/transaction-screen" element={<TransactionScreen />} />
               {/* <Route path="/fxbooking" element={<FXForwardBookingForm />} /> */}
