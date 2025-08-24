@@ -192,7 +192,7 @@ const CashSettlementTable: React.FC<CashSettlementTableProps> = ({
                 //   handleInputChange(row.index, "settlementAmount", val);
                 // }}
                 onBlur={(val) => {
-                  console.log("Settlement Amount onBlur:", val);
+                  // console.log("Settlement Amount onBlur:", val);
                   const safeVal = Math.max(
                     0,
                     Math.min(val ?? 0, calculateAvailableAmount())

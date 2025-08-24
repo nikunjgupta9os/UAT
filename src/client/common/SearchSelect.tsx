@@ -1,7 +1,6 @@
 import React from "react";
 import Select from "react-select";
 
-
 type OptionType = {
   value: string;
   label: string;
@@ -32,7 +31,6 @@ interface CustomSelectMultiProps extends CustomSelectPropsBase {
 
 type CustomSelectProps = CustomSelectSingleProps | CustomSelectMultiProps;
 
-
 const CustomSelect: React.FC<CustomSelectProps> = (props) => {
   const {
     label,
@@ -56,9 +54,10 @@ const CustomSelect: React.FC<CustomSelectProps> = (props) => {
       : [];
   } else {
     const selectedValue = (props as CustomSelectSingleProps).selectedValue;
-    selectedOption = typeof selectedValue === 'string'
-      ? options.find((opt) => opt.value === selectedValue) || null
-      : null;
+    selectedOption =
+      typeof selectedValue === "string"
+        ? options.find((opt) => opt.value === selectedValue) || null
+        : null;
   }
 
   return (
@@ -67,7 +66,7 @@ const CustomSelect: React.FC<CustomSelectProps> = (props) => {
         {label}
       </label>
       <Select
-        className="w-full text-sm rounded z-39"
+        className="w-full text-sm rounded z-39 hover:z-auto h-[36px] hover:border-black"
         classNamePrefix="react-select"
         options={options}
         value={selectedOption}
@@ -90,7 +89,18 @@ const CustomSelect: React.FC<CustomSelectProps> = (props) => {
         isClearable={isClearable}
         isSearchable={isSearchable}
         required={isRequired}
-        menuPlacement={menuPlacement}
+        // menuPlacement={menuPlacement}
+        menuPortalTarget={document.body}
+        styles={{
+          menuPortal: (base) => ({
+            ...base,
+            zIndex: 99999, // make sure it's on top
+          }),
+          menu: (base) => ({
+            ...base,
+            zIndex: 99999,
+          }),
+        }}
       />
     </div>
   );

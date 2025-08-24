@@ -8,6 +8,7 @@ import NotificationProvider from "./client/Notification/Notification.tsx";
 import MTMCalculator from './client/MTMCalculator/MTMCalculator';
 import MTMRateInput from './client/MTMRateInput/MTMRateInput';
 
+const TransactionScreen = lazy(() => import("./client/CASH/Transaction/index.tsx"));
 // Lazy load components
 const Users = lazy(() => import("./client/uam/Users"));
 const UserCreationForm = lazy(
@@ -85,7 +86,7 @@ function App() {
 
               {/* Protected Routes */}
               <Route path="/hedging-dashboard" element={<NetExposure />} />
-
+              <Route path="/transaction-screen" element={<TransactionScreen />} />
               {/* <Route path="/fxbooking" element={<FXForwardBookingForm />} /> */}
               <Route path="/linking-screen" element={<LinkingScreen />} />
               {/* <Route path="/exposure-selection" element={<ExposureSelection />} /> */}
