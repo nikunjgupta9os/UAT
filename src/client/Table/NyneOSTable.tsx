@@ -10,7 +10,6 @@ import {
   type ColumnDef,
 } from "@tanstack/react-table";
 import Button from "../ui/Button";
-import RenderField from "./renderFeild";
 
 type Section<T> = {
   title: string;
@@ -185,7 +184,7 @@ function NyneOSTable<T>({
                       <span className="text-primary text-2xl">—</span>
                     </div>
                     <p className="text-xl font-medium text-primary mb-1">
-                      No Transactions Available
+                      No Data Available
                     </p>
                   </div>
                 </td>
@@ -265,21 +264,76 @@ function NyneOSTable<T>({
                                 {title}
                               </div>
                               <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
-                                {fields.map((key) => (
-                                  <RenderField
-                                    key={String(key)}
-                                    field={key}
-                                    value={
-                                      isEditing
-                                        ? editValues[key] ?? row.original[key]
-                                        : row.original[key]
-                                    }
-                                    originalValue={row.original[key]}
-                                    editableFields={editableKeys ?? []}
-                                    isEditing={isEditing}
-                                    onChange={safeOnChange}
-                                  />
-                                ))}
+                                {fields.map((key) => {
+                                  const value = isEditing
+                                    ? editValues[key] ?? row.original[key]
+                                    : row.original[key];
+                                  const originalValue = row.original[key];
+                                  const isEditable = editableKeys?.includes(key);
+
+                                  return (
+                                    <div
+                                      className="flex flex-col space-y-1"
+                                      key={String(key)}
+                                    >
+                                      {/* Label */}
+                                      <label className="font-bold text-secondary-text capitalize">
+                                        {String(key).replace(/([A-Z])/g, " $1").trim()}
+                                      </label>
+
+                                      {/* Editing Mode */}
+                                      {isEditing && isEditable ? (
+                                        <>
+                                          <input
+                                            className="border rounded px-2 py-1 text-sm bg-white shadow-sm"
+                                            value={String(value ?? "")}
+                                            type={
+                                              typeof originalValue === "number"
+                                                ? "number"
+                                                : String(key).toLowerCase().includes(
+                                                    "date"
+                                                  )
+                                                ? "date"
+                                                : "text"
+                                            }
+                                            step={
+                                              typeof originalValue === "number"
+                                                ? "0.0001"
+                                                : undefined
+                                            }
+                                            onChange={(e) => {
+                                              let newValue: any;
+                                              if (typeof originalValue === "number") {
+                                                newValue = parseFloat(e.target.value) || 0;
+                                              } else {
+                                                newValue = e.target.value;
+                                              }
+                                              safeOnChange?.(key, newValue);
+                                            }}
+                                          />
+                                          {originalValue !== undefined && (
+                                            <span className="text-xs text-gray-500">
+                                              Old: {String(originalValue ?? "—")}
+                                            </span>
+                                          )}
+                                        </>
+                                      ) : (
+                                        // Display Mode
+                                        <span className="font-medium text-primary-lt">
+                                          {String(key) === "transactionTimestamp"
+                                            ? new Date(
+                                                value as string | number | Date
+                                              ).toLocaleString()
+                                            : typeof value === "number"
+                                            ? String(key) === "totalRate"
+                                              ? Number(value).toFixed(4)
+                                              : value.toLocaleString()
+                                            : String(value ?? "—")}
+                                        </span>
+                                      )}
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </div>
                           ))}
