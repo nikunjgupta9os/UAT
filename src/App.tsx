@@ -8,16 +8,12 @@ import NotificationProvider from "./client/Notification/Notification.tsx";
 import MTMCalculator from './client/MTMCalculator/MTMCalculator';
 import MTMRateInput from './client/MTMRateInput/MTMRateInput';
 
-
-const CostProfitCenterMaster = lazy(() => import("./client/MASTER/costProfitCenterMaster/index.tsx"));
-const GLMasterScreen = lazy(() => import("./client/MASTER/glAccpuntMaster/index.tsx"));
-const CounterPartyScreen = lazy(() => import("./client/MASTER/counterPartyMaster/index.tsx"));
-const TransactionScreen = lazy(() => import("./client/CASH/Transaction/index.tsx"));
 // Lazy load components
 const Users = lazy(() => import("./client/uam/Users"));
 const UserCreationForm = lazy(
   () => import("./client/uam/Users/UserCreationForm")
 );
+const NewDashboard = lazy(() => import("./client/NewDashboard/Dashboard"));
 const Roles = lazy(() => import("./client/uam/Roles/index"));
 const RoleCreation = lazy(() => import("./client/uam/Roles/RoleCreationForm"));
 const FxWizard = lazy(() => import("./client/fx/fxWizard/index.tsx"));
@@ -89,13 +85,11 @@ function App() {
               <Route path="/forgot-password" element={<ForgotPassword />} />
 
               {/* Protected Routes */}
-              <Route path="/gl-master" element={<GLMasterScreen />} />
-              <Route path="/costprofit-master" element={<CostProfitCenterMaster />} />
               <Route path="/hedging-dashboard" element={<NetExposure />} />
-              <Route path="/transaction-screen" element={<TransactionScreen />} />
+
               {/* <Route path="/fxbooking" element={<FXForwardBookingForm />} /> */}
               <Route path="/linking-screen" element={<LinkingScreen />} />
-              <Route path="/counterparty-master" element={<CounterPartyScreen />} />
+              <Route path="/new-dashboard" element={<NewDashboard />} />
               {/* <Route path="/exposure-selection" element={<ExposureSelection />} /> */}
               <Route path="/fx-confirmation" element={<FxConfirmationPage />} />
               <Route path="/fxbooking" element={<FxForward />} />

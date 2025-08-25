@@ -16,7 +16,7 @@ const Form: React.FC = () => {
   } = useForm();
 
   const onSubmit = (data: any) => {
-    console.log(data); // handle Centre submission
+    console.log(data); 
   };
 
   return (
