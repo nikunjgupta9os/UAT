@@ -81,10 +81,10 @@ const FinancialDashboard = () => {
 
 
   const rolloversData = [
-    { label: 'Total Rollovers:', value: '5' },
-    { label: 'USD Rollovers:', value: '3' },
-    { label: 'EUR Rollovers:', value: '2' },
-    { label: 'JPY Rollovers:', value: '1' },
+    { label: 'Total Rollovers:', value: '0' },
+    { label: 'USD Rollovers:', value: '0' },
+    { label: 'EUR Rollovers:', value: '0' },
+    { label: 'JPY Rollovers:', value: '0' },
   ];
 
   return (
