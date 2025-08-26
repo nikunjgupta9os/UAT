@@ -1,7 +1,7 @@
 import Layout from "../../common/Layout";
 import { useMemo, useState, useCallback, useEffect } from "react";
 import PendingRequest from "./PendingRequest";
-import AddExposure from "./Upload";
+import AddExposure from "./UPLOADER/uploader";
 import AllExposureRequest from "./pp";
 import axios from "axios";
 import { List, Clock, UploadCloud, Contrast } from "lucide-react";
