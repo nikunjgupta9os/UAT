@@ -9,24 +9,6 @@ type Template = {
   sampleRow?: any[];
 };
 
-const centreValidationConfig: ValidationConfig = {
-  requiredHeaders: [
-    "centre_code",
-    "centre_name",
-    "centre_type",
-    "business_unit",
-    "owner_manager",
-  ],
-  requiredFields: [
-    "centre_code",
-    "centre_name",
-    "centre_type",
-    "business_unit",
-    "owner_manager",
-  ],
-  numericFields: [],
-};
-
 const bankStatementValidationConfig: ValidationConfig = {
   requiredHeaders: [
     "BankStatementID",
@@ -46,26 +28,6 @@ const bankStatementValidationConfig: ValidationConfig = {
 };
 
 const templates: Template[] = [
-  {
-    id: "centre",
-    name: "Centre Template",
-    type: "Excel",
-    description: "Centre details template",
-    headers: [
-      "centre_code",
-      "centre_name",
-      "centre_type",
-      "business_unit",
-      "owner_manager",
-    ],
-    sampleRow: [
-      "C001",
-      "New York Finance Centre",
-      "Regional",
-      "Finance Division",
-      "John Doe",
-    ],
-  },
   {
     id: "bank_statement",
     name: "Bank Statement Template",
@@ -88,4 +50,4 @@ const templates: Template[] = [
   },
 ];
 
-export { templates, centreValidationConfig, bankStatementValidationConfig };
+export { templates, bankStatementValidationConfig };

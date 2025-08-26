@@ -9,7 +9,7 @@ import {
 } from "../../fx/exposureUpload.tsx/UPLOADER/realValidation.ts";
 import TemplateGrid from "../../CASH/Transaction/templateGrid.tsx";
 import handleDownload  from "../../CASH/Transaction/handleDownload.ts";
-import { templates,centreValidationConfig} from "./config.ts";
+import { templates,bankStatementValidationConfig} from "./config.ts";
 import type {
   PreviewState,
   UploadedFile,
@@ -101,7 +101,7 @@ const Upload: React.FC = () => {
 
     const processFile = async (file: File, fileData: UploadedFile) => {
       try {
-        const validationConfig = centreValidationConfig;
+        const validationConfig = bankStatementValidationConfig;
         const validation = await validateFileContent(file, validationConfig);
 
         if (!validation || !validation.status) {
@@ -173,8 +173,8 @@ const Upload: React.FC = () => {
       <div className="space-y-6">
         <div className="bg-secondary-color-lt border-border p-6 rounded-lg shadow-sm border">
           <FileUpload
-            disabled={!selectedType}
-            title={"Please select a type of Transaction first."}
+            // disabled={!selectedType}
+            // title={"Please select a type of Transaction first."}
             handleFiles={handleFiles}
             handleFileInput={handleFileInput}
           />
@@ -187,6 +187,7 @@ const Upload: React.FC = () => {
               <select
                 className="w-full px-3 py-2 border border-border rounded-md focus:outline-none bg-secondary-color-lt text-secondary-text"
                 value={selectedType}
+                disabled
                 onChange={(e) => {
                   setSelectedType(e.target.value);
                   setFiles([]);
@@ -264,7 +265,7 @@ const Upload: React.FC = () => {
             setFiles={setFiles}
             setPreviewStates={setPreviewStates}
             previewStates={previewStates}
-            validationConfig={centreValidationConfig}
+            validationConfig={bankStatementValidationConfig}
             validatePreviewData={validatePreviewData}
           />
         )}

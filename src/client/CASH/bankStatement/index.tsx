@@ -4,17 +4,17 @@ import { Contrast, FileEdit, UploadCloud } from "lucide-react";
 
 import Layout from "../../common/Layout";
 import Upload from "./upload";
-import Form from "./form";
+// import Form from "./form";
 import ERP from "./erp";
 
 const BankStatementUpload = () => {
   const TAB_CONFIG = [
-    {
-      id: "Form",
-      label: "Bank Statement Manual Entry",
-      icon: FileEdit,
-      visibility: true,
-    },
+    // {
+    //   id: "Form",
+    //   label: "Bank Statement Manual Entry",
+    //   icon: FileEdit,
+    //   visibility: true,
+    // },
     {
       id: "Upload",
       label: "Bank Statement Upload",
@@ -31,7 +31,7 @@ const BankStatementUpload = () => {
 
   const { activeTab, switchTab, isActiveTab } = useVisibleTabs(
     TAB_CONFIG,
-    "Form" 
+    "Upload" 
   );
 
   let currentContent = (
@@ -39,9 +39,9 @@ const BankStatementUpload = () => {
   );
   if (activeTab) {
     switch (activeTab) {
-      case "Form":
-        currentContent = <Form />;
-        break;
+    //   case "Form":
+    //     currentContent = <Form />;
+    //     break;
       case "Upload":
         currentContent = <Upload />;
         break;

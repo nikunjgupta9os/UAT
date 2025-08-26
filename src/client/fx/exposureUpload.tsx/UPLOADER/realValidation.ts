@@ -9,31 +9,36 @@ export const grnValidationConfig: ValidationConfig = {
     "company_code",
     "business_area",
     "document_type",
-    "customer",
+    // "customer",
     "assignment",
     "document_number",
     "document_date",
     "posting_date",
-    "supplier",
+    // "supplier",
     "reference",
     "amount_in_doc_curr",
     "document_currency",
     "amount_in_local_currency",
+    "text",
+    "clearing_document",
+    "clearing_date",
+    "special_gl_ind",
+    "offsetting_account",
+    "currency_2",
+    "company",
   ],
   requiredFields: [
-    "account",
+    // "account",
     "company_code",
-    "business_area",
-    "document_type",
+    "company",
+    // "business_area",
+    // "document_type",
     "document_number",
     "document_date",
     "posting_date",
     // "supplier",
   ],
-  numericFields: [
-    "amount_in_doc_curr",
-    "amount_in_local_currency",
-  ],
+  numericFields: ["amount_in_doc_curr", "amount_in_local_currency"],
 };
 
 // For PO Template
@@ -196,11 +201,7 @@ export const creditorValidationConfig: ValidationConfig = {
     "document_currency",
     "bank_reference",
   ],
-  numericFields: [
-    "gl_account",
-    "posting_key",
-    "amount_in_doc_curr",
-  ],
+  numericFields: ["gl_account", "posting_key", "amount_in_doc_curr"],
 };
 
 // For Debtors Template
@@ -280,8 +281,6 @@ export const templates = [
   },
 ];
 
-
-
 export function validateTemplateData(
   data: string[][],
   config: ValidationConfig
@@ -293,7 +292,11 @@ export function validateTemplateData(
     return errors;
   }
 
-  const headers = data[0].map((h) => String(h || "").trim().toLowerCase());
+  const headers = data[0].map((h) =>
+    String(h || "")
+      .trim()
+      .toLowerCase()
+  );
 
   // Check headers presence and duplicates
   config.requiredHeaders.forEach((requiredHeader) => {
@@ -320,7 +323,9 @@ export function validateTemplateData(
     const row = data[rowIndex];
     if (row.length !== headers.length) {
       errors.push({
-        description: `Row ${rowIndex + 1} has ${row.length} columns, expected ${headers.length}`,
+        description: `Row ${rowIndex + 1} has ${row.length} columns, expected ${
+          headers.length
+        }`,
         row: rowIndex + 1,
       });
       continue;
@@ -360,11 +365,9 @@ export function validateTemplateData(
   return errors;
 }
 
-
-
 export const validateFileContent = (
   file: File,
-  config: ValidationConfig  // Pass config object directly
+  config: ValidationConfig // Pass config object directly
 ): Promise<Partial<UploadedFile>> => {
   return new Promise((resolve) => {
     const validationErrors: ValidationError[] = [];
@@ -487,9 +490,6 @@ export const validateFileContent = (
     }
   });
 };
-
-
-
 
 export const validatePreviewData = (
   data: string[][],
