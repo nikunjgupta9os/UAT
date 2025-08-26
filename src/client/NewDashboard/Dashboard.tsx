@@ -339,6 +339,7 @@ export default function App() {
     return result;
   };
 
+  console.log("bu", buFilter,"  => currency", currencyFilter);
   const filteredData = useMemo(() => {
     return data.filter((row) => {
       const buMatch = buFilter ? row.bu === buFilter : true;
@@ -546,24 +547,34 @@ export default function App() {
         <div className="flex gap-4 items-end mb-4 justify-between">
           <div className="flex gap-2">
             <div style={{ minWidth: 180, maxWidth: 320 }}>
-              <CustomSelect
-                label="BU"
-                options={buOptions}
-                selectedValue={buFilter}
-                onChange={(val) => setBuFilter(val ? val.value : null)}
-                placeholder="Filter by BU"
-                isClearable={true}
-              />
+              <label className="block text-sm font-medium mb-1">BU</label>
+              <select
+                className="w-full border border-gray-300 rounded px-2 h-[36px] bg-white"
+                value={buFilter ?? ""}
+                onChange={e => setBuFilter(e.target.value || null)}
+              >
+                <option value="">All</option>
+                {buOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
             </div>
             <div style={{ minWidth: 180, maxWidth: 320 }}>
-              <CustomSelect
-                label="Currency"
-                options={currencyOptions}
-                selectedValue={currencyFilter}
-                onChange={(val) => setCurrencyFilter(val ? val.value : null)}
-                placeholder="Filter by Currency"
-                isClearable={true}
-              />
+              <label className="block text-sm font-medium mb-1">Currency</label>
+              <select
+                className="w-full border border-gray-300 rounded px-2 h-[36px] bg-white"
+                value={currencyFilter ?? ""}
+                onChange={e => setCurrencyFilter(e.target.value || null)}
+              >
+                <option value="">All</option>
+                {currencyOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
             </div>
             <div style={{ minWidth: 180, maxWidth: 320 }}>
               <CustomSelect

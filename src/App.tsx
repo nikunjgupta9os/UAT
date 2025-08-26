@@ -13,6 +13,7 @@ const Users = lazy(() => import("./client/uam/Users"));
 const UserCreationForm = lazy(
   () => import("./client/uam/Users/UserCreationForm")
 );
+const BankStatementUpload = lazy(() => import("./client/CASH/bankStatement/index.tsx"));
 const NewDashboard = lazy(() => import("./client/NewDashboard/Dashboard"));
 const Roles = lazy(() => import("./client/uam/Roles/index"));
 const RoleCreation = lazy(() => import("./client/uam/Roles/RoleCreationForm"));
@@ -90,6 +91,7 @@ function App() {
               {/* <Route path="/fxbooking" element={<FXForwardBookingForm />} /> */}
               <Route path="/linking-screen" element={<LinkingScreen />} />
               <Route path="/new-dashboard" element={<NewDashboard />} />
+              <Route path="/bank-statement" element={<BankStatementUpload />} />
               {/* <Route path="/exposure-selection" element={<ExposureSelection />} /> */}
               <Route path="/fx-confirmation" element={<FxConfirmationPage />} />
               <Route path="/fxbooking" element={<FxForward />} />
