@@ -84,8 +84,8 @@ const StatsPanel = () => {
   const [loading, setLoading] = useState(true);
 
   // Static values (replace with API if available)
-  const markToMarketPL = "$3.1M";
-  const costOfPremiumPaid = "$1.47M";
+  const markToMarketPL = "$0.00M";
+  const costOfPremiumPaid = "$0.00M";
 
   useEffect(() => {
     const fetchStats = async () => {
