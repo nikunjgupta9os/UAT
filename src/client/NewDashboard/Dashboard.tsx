@@ -87,7 +87,7 @@ const defaultColumns = [
   },
   {
     accessorKey: "debitors",
-    header: "Debitors",
+    header: "Debtors",
     canSort: true,
     isDraggable: true,
     isNumeric: true,
