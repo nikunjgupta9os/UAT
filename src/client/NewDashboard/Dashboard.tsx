@@ -7,6 +7,7 @@ import { Droppable } from "../common/Droppable";
 import CustomSelect from "../common/SearchSelect";
 import Layout from "../common/Layout";
 import * as XLSX from "xlsx";
+import axios from "axios"; // Add this import
 // Define the new Dashboard data type
 export type Dashboard = {
   id: string;
@@ -168,7 +169,7 @@ const LoadingSpinner = () => (
 
 // Main App component
 export default function App() {
-  const [data] = useState(() => makeData(100));
+  const [data, setData] = useState<Dashboard[]>([]);
   const [groupBy, setGroupBy] = useState<string[]>([]);
   const [collapsedGroups, setCollapsedGroups] = useState<
     Record<string, boolean>
@@ -199,6 +200,18 @@ export default function App() {
     return () => {
       document.body.removeChild(script);
     };
+  }, []);
+
+  // Fetch data from API on mount
+  useEffect(() => {
+    axios
+      .get<Dashboard[]>("https://backend-slqi.onrender.com/api/forwardDash/newtable")
+      .then((response) => {
+        setData(response.data);
+      })
+      .catch((error) => {
+        console.error("Failed to fetch dashboard data:", error);
+      });
   }, []);
 
   // Reset pagination when grouping changes
@@ -501,7 +514,7 @@ export default function App() {
   };
 
   return (
-    <Layout title="Dashboard">
+    <Layout title="BU-Currency Wise Exposure Dashboard">
       <div className="p-4 bg-gray-50 min-h-screen font-inter">
         <div className="flex gap-4 items-end mb-4 justify-between">
           <div style={{ minWidth: 180, maxWidth: 320 }}>

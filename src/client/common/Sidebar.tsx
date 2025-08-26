@@ -94,10 +94,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     label: "Dashboard",
     icon: <FileBarChart />,
     subItems: [
+    
       { label: "CFO Dashboard", path: "/cfo-dashboard", icon: <ChartArea /> },
       { label: "FX Ops Dashboard", path: "/ops-dashboard", icon: <SquareChartGantt /> },
+      {
+        label : "BU-Currency Wise Exposure Dashboard",
+        path: "/new-dashboard",
+        icon: <LayoutDashboard />
+      },
       { label: "Hedging Dashboard", path: "/hedging-dashboard", icon: <LayoutDashboard /> },
       { label: "Dashboard Builder", path: "/cfo-dashboard-builder", icon: <Proportions /> },
+      
     ],
   },
   {
