@@ -28,7 +28,7 @@ export const grnValidationConfig: ValidationConfig = {
     "document_number",
     "document_date",
     "posting_date",
-    "supplier",
+    // "supplier",
   ],
   numericFields: [
     "amount_in_doc_curr",
