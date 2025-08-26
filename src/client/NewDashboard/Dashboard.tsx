@@ -184,6 +184,8 @@ export default function App() {
   const [isXLSXLoaded, setIsXLSXLoaded] = useState(false);
   const dragOverRef = useRef<HTMLElement | null>(null);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const [buFilter, setBuFilter] = useState<string | null>(null);
+  const [currencyFilter, setCurrencyFilter] = useState<string | null>(null);
 
   // Dynamically load the XLSX library
   useEffect(() => {
@@ -337,8 +339,16 @@ export default function App() {
     return result;
   };
 
+  const filteredData = useMemo(() => {
+    return data.filter((row) => {
+      const buMatch = buFilter ? row.bu === buFilter : true;
+      const currencyMatch = currencyFilter ? row.currency === currencyFilter : true;
+      return buMatch && currencyMatch;
+    });
+  }, [data, buFilter, currencyFilter]);
+
   const paginatedData = useMemo(() => {
-    const currentData = getGroupedData(data);
+    const currentData = getGroupedData(filteredData);
     if (groupBy.length > 0) {
       // No pagination when grouping
       return currentData;
@@ -346,7 +356,7 @@ export default function App() {
     const start = pagination.pageIndex * pagination.pageSize;
     const end = start + pagination.pageSize;
     return currentData.slice(start, end);
-  }, [data, groupBy, sorting, collapsedGroups, pagination]);
+  }, [filteredData, groupBy, sorting, collapsedGroups, pagination]);
 
   const getExportData = (rows: Dashboard[], groupByKeys: string[]) => {
     const exportData: any[] = [];
@@ -513,26 +523,65 @@ export default function App() {
     return sumRow;
   };
 
+  const buOptions = useMemo(
+    () =>
+      Array.from(new Set(data.map((d) => d.bu)))
+        .filter(Boolean)
+        .map((bu) => ({ value: bu, label: bu })),
+    [data]
+  );
+
+  const currencyOptions = useMemo(
+    () =>
+      Array.from(new Set(data.map((d) => d.currency)))
+        .filter(Boolean)
+        .map((currency) => ({ value: currency, label: currency })),
+    [data]
+  );
+
+
   return (
     <Layout title="BU-Currency Wise Exposure Dashboard">
       <div className="p-4 bg-gray-50 min-h-screen font-inter">
         <div className="flex gap-4 items-end mb-4 justify-between">
-          <div style={{ minWidth: 180, maxWidth: 320 }}>
-            <CustomSelect
-              label="Group By"
-              options={groupByOptions}
-              selectedValue={groupBy}
-              onChange={(vals) => {
-                if (!vals || (Array.isArray(vals) && vals.length === 0)) {
-                  setGroupBy([]);
-                } else {
-                  setGroupBy(Array.isArray(vals) ? vals : [vals]);
-                }
-              }}
-              placeholder="Select column(s) to group by"
-              isClearable={true}
-              isMulti={true}
-            />
+          <div className="flex gap-2">
+            <div style={{ minWidth: 180, maxWidth: 320 }}>
+              <CustomSelect
+                label="BU"
+                options={buOptions}
+                selectedValue={buFilter}
+                onChange={(val) => setBuFilter(val ? val.value : null)}
+                placeholder="Filter by BU"
+                isClearable={true}
+              />
+            </div>
+            <div style={{ minWidth: 180, maxWidth: 320 }}>
+              <CustomSelect
+                label="Currency"
+                options={currencyOptions}
+                selectedValue={currencyFilter}
+                onChange={(val) => setCurrencyFilter(val ? val.value : null)}
+                placeholder="Filter by Currency"
+                isClearable={true}
+              />
+            </div>
+            <div style={{ minWidth: 180, maxWidth: 320 }}>
+              <CustomSelect
+                label="Group By"
+                options={groupByOptions}
+                selectedValue={groupBy}
+                onChange={(vals) => {
+                  if (!vals || (Array.isArray(vals) && vals.length === 0)) {
+                    setGroupBy([]);
+                  } else {
+                    setGroupBy(Array.isArray(vals) ? vals : [vals]);
+                  }
+                }}
+                placeholder="Select column(s) to group by"
+                isClearable={true}
+                isMulti={true}
+              />
+            </div>
           </div>
           <div className="flex flex-row gap-2 h-[40px]">
             <div>
