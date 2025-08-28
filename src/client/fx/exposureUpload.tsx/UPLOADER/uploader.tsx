@@ -306,7 +306,7 @@ const UploadFile: React.FC = () => {
             headers: {
               "Content-Type": "multipart/form-data",
             },
-            timeout: 30000, // 30 second timeout
+            timeout: 100000, // 30 second timeout
           }
         );
 
