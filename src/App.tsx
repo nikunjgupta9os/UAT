@@ -7,7 +7,9 @@ import PreloaderAnimation from "./client/common/Preloader";
 import NotificationProvider from "./client/Notification/Notification.tsx";
 import MTMCalculator from './client/MTMCalculator/MTMCalculator';
 import MTMRateInput from './client/MTMRateInput/MTMRateInput';
+import axios from "axios";
 
+axios.defaults.timeout = 100000; // 60 seconds
 // Lazy load components
 const Users = lazy(() => import("./client/uam/Users"));
 const UserCreationForm = lazy(
