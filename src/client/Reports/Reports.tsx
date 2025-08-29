@@ -6,7 +6,7 @@ import { restrictToFirstScrollableAncestor } from "@dnd-kit/modifiers";
 import Layout from "../common/Layout";
 import CustomSelect from "../common/SearchSelect";
 import { Mail, FileText, Download } from "lucide-react";
-import { exportToExcel, exportToPDF } from "../ui/exportToExcel";
+import { exportToExcel, exportToPDF, formatRowForExport, formatAmount, formatRate } from "../ui/exportToExcel";
 import { ColumnPicker } from "../common/ColumnPicker";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 // import LoadingSpinner from "../ui/LoadingSpinner";
@@ -513,8 +513,6 @@ function Reports() {
   return rows;
 }
 
-// ...existing code...
-
 // Get visible data (grouped or ungrouped)
 const getVisibleRows = () => {
   if (groupBy && groupedData) {
@@ -526,74 +524,73 @@ const getVisibleRows = () => {
 };
 
   const handleExportExcel = () => {
-    // Only export visible columns and visible data
-    const rows = getVisibleRows();
     const cols = visibleColumns;
-    // Map rows to only visible columns
-    const exportRows = rows.map(row => {
-      const obj: Record<string, any> = {};
-      cols.forEach(col => {
-        obj[col.id] = row[col.id];
-      });
-      return obj;
-    });
-    // Add sum row at the end
-    if (rows.length) {
-      let sumRow: Record<string, number | string> = {};
-      cols.forEach((col, colIdx) => {
-        const values = rows.map(r => r[col.id]);
-        if (colIdx === 0) {
-          sumRow[col.id] = 'Total';
-        } else if (values.every(v => typeof v === 'number')) {
-          sumRow[col.id] = values.reduce((a, b) => a + b, 0);
-        } else {
-          // Try to sum if possible (e.g. string numbers)
-          const numericValues = values.map(v => typeof v === 'number' ? v : (typeof v === 'string' && !isNaN(Number(v)) ? Number(v) : null)).filter(v => typeof v === 'number');
-          if (numericValues.length === values.length && numericValues.length > 0) {
-            sumRow[col.id] = numericValues.reduce((a, b) => a + b, 0);
+    const headers = cols.map(col => col.id);
+
+    let exportRows: any[] = [];
+    if (groupBy.length > 0) {
+      exportRows = flattenGroupedDataForExport(groupedData, groupBy, headers);
+    } else {
+      exportRows = filteredData.map(row => formatRowForExport(row, headers));
+      // Add grand total
+      if (exportRows.length) {
+        let sumRow: Record<string, string | number> = {};
+        headers.forEach((h, idx) => {
+          if (idx === 0) {
+            sumRow[h] = 'Total';
+          } else if (h.toLowerCase().includes("amount") || h.toLowerCase().includes("rate")) {
+            const nums = filteredData.map(r => Number(r[h])).filter(n => !isNaN(n));
+            if (nums.length) {
+              const sum = nums.reduce((a, b) => a + b, 0);
+              sumRow[h] = h.toLowerCase().includes("rate") ? formatRate(sum) : formatAmount(sum);
+            } else {
+              sumRow[h] = '';
+            }
           } else {
-            sumRow[col.id] = '';
+            sumRow[h] = '';
           }
-        }
-      });
-      exportRows.push(sumRow);
+        });
+        exportRows.push(sumRow);
+      }
     }
+
+    // Before passing to exportToExcel/exportToPDF
+ 
     exportToExcel(exportRows, `reports_${selectedType || "all"}`, { fxType: selectedType });
   };
 
   const handleExportPDF = () => {
-    // Only export visible columns and visible data
-    const rows = getVisibleRows();
-    const pdfColumns = visibleColumns.map(col => ({
-      header: col.columnDef.header,
-      accessorKey: col.id
-    }));
-    // Add sum row at the end
-    let sumRow: Record<string, number | string> = {};
-    if (rows.length) {
-      visibleColumns.forEach((col, colIdx) => {
-        const values = rows.map(r => r[col.id]);
-        if (colIdx === 0) {
-          sumRow[col.id] = 'Total';
-        } else if (values.every(v => typeof v === 'number')) {
-          sumRow[col.id] = values.reduce((a, b) => a + b, 0);
-        } else {
-          // Try to sum if possible (e.g. string numbers)
-          const numericValues = values.map(v => typeof v === 'number' ? v : (typeof v === 'string' && !isNaN(Number(v)) ? Number(v) : null)).filter(v => typeof v === 'number');
-          if (numericValues.length === values.length && numericValues.length > 0) {
-            sumRow[col.id] = numericValues.reduce((a, b) => a + b, 0);
+    const cols = visibleColumns;
+    const headers = cols.map(col => col.id);
+
+    let exportRows: any[] = [];
+    if (groupBy.length > 0) {
+      exportRows = flattenGroupedDataForExport(groupedData, groupBy, headers);
+    } else {
+      exportRows = filteredData.map(row => formatRowForExport(row, headers));
+      // Add grand total
+      if (exportRows.length) {
+        let sumRow: Record<string, string | number> = {};
+        headers.forEach((h, idx) => {
+          if (idx === 0) {
+            sumRow[h] = 'Total';
+          } else if (h.toLowerCase().includes("amount") || h.toLowerCase().includes("rate")) {
+            const nums = filteredData.map(r => Number(r[h])).filter(n => !isNaN(n));
+            if (nums.length) {
+              const sum = nums.reduce((a, b) => a + b, 0);
+              sumRow[h] = h.toLowerCase().includes("rate") ? formatRate(sum) : formatAmount(sum);
+            } else {
+              sumRow[h] = '';
+            }
           } else {
-            sumRow[col.id] = '';
+            sumRow[h] = '';
           }
-        }
-      });
+        });
+        exportRows.push(sumRow);
+      }
     }
-    exportToPDF(
-      [...rows, Object.keys(sumRow).length > 0 ? sumRow : {}],
-      `reports_${selectedType || "all"}`,
-      pdfColumns,
-      selectedType // Pass selectedType as fxType for the PDF title
-    );
+
+    exportToPDF(exportRows, `reports_${selectedType || "all"}`, cols, selectedType);
   };
 
   const handleEmail = () => {
@@ -923,3 +920,62 @@ const getVisibleRows = () => {
 }
 
 export default Reports;
+
+function flattenGroupedDataForExport(
+  groups: any,
+  groupBy: string[],
+  headers: string[],
+  depth = 0
+): any[] {
+  let rows: any[] = [];
+  if (Array.isArray(groups)) {
+    // Leaf: array of rows
+    const formattedRows = groups.map(row => formatRowForExport(row, headers));
+    rows = rows.concat(formattedRows);
+    // Subtotal row for this group
+    if (formattedRows.length) {
+      let sumRow: Record<string, string | number> = { __rowType: "subtotal" };
+      headers.forEach((h, idx) => {
+        if (idx === 0) {
+          sumRow[h] = "Subtotal";
+        } else if (h.toLowerCase().includes("amount") || h.toLowerCase().includes("rate")) {
+          // Sum from the **raw** group data, not formattedRows!
+          const nums = groups.map((r: any) => Number(r[h])).filter((n: number) => !isNaN(n));
+          if (nums.length) {
+            const sum = nums.reduce((a: number, b: number) => a + b, 0);
+            sumRow[h] = h.toLowerCase().includes("amountt")
+  ? formatRate(sum)
+  : h.toLowerCase().includes("amount")
+    ? formatAmount(sum)
+    : sum;
+
+          } else {
+            sumRow[h] = "";
+          }
+        } else if (idx === 1) {
+          sumRow[h] = `Count: ${formattedRows.length}`;
+        } else {
+          sumRow[h] = "";
+        }
+      });
+      rows.push(sumRow);
+    }
+    return rows;
+  }
+  // Object: group
+  for (const groupKey in groups) {
+    // Group header row
+    const groupHeader: any = { __rowType: "groupHeader" };
+    headers.forEach((h, idx) => {
+      if (idx === 0) {
+        groupHeader[h] = `${groupBy[depth]}: ${groupKey}`;
+      } else {
+        groupHeader[h] = "";
+      }
+    });
+    rows.push(groupHeader);
+    // Recursively flatten subgroups
+    rows = rows.concat(flattenGroupedDataForExport(groups[groupKey], groupBy, headers, depth + 1));
+  }
+  return rows;
+}
